@@ -1,20 +1,10 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": [
-    "typescript",
-    "react",
-    "nextjs",
-    "jsx-a11y"
-  ],
+  "plugins": ["typescript", "react", "nextjs", "jsx-a11y"],
   "categories": {
     "correctness": "error"
   },
-  "ignorePatterns": [
-    ".next",
-    ".open-next",
-    "out",
-    "next-env.d.ts"
-  ],
+  "ignorePatterns": [".next", ".open-next", "out", "next-env.d.ts"],
   "rules": {
     "no-unused-vars": [
       "warn",

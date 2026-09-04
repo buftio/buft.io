@@ -1,0 +1,230 @@
+@keyframes caption-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes window-in {
+  from {
+    opacity: 0;
+    transform: translateY(50px) scale(0.91);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.reduced-motion * {
+  animation: none !important;
+  transition: none !important;
+}
+@media (min-width: 1600px) {
+  .story-caption {
+    top: 30%;
+  }
+}
+@media (max-width: 900px) {
+  .header-note {
+    display: none;
+  }
+  .story-caption {
+    left: 6%;
+    max-width: 350px;
+  }
+  .story-caption h1 {
+    font-size: 76px;
+  }
+  .project-company + h1 {
+    font-size: 60px;
+  }
+  .scroll-note {
+    display: none;
+  }
+  .journey-footer {
+    gap: 14px;
+  }
+  .project-nav {
+    gap: 6px;
+  }
+  .project-dialog {
+    width: 76vw;
+  }
+  .project-article {
+    padding: 25px;
+  }
+  .article-bottom {
+    display: block;
+  }
+  .vertical-note {
+    right: 15px;
+  }
+}
+@media (max-width: 600px) {
+  .site-header {
+    padding: 23px 6%;
+  }
+  .brand {
+    font-size: 25px;
+  }
+  .site-header nav {
+    gap: 15px;
+  }
+  .site-header a {
+    font-size: 11px;
+  }
+  .site-header a:first-child {
+    display: none;
+  }
+  .scene-shade {
+    background: linear-gradient(
+      0deg,
+      #10090b 0%,
+      #10090bcc 24%,
+      transparent 53%,
+      #10090b22 87%
+    );
+  }
+  .story-caption {
+    top: auto;
+    bottom: 135px;
+    left: 7%;
+    right: 7%;
+    max-width: none;
+  }
+  .story-caption h1 {
+    font-size: 58px;
+    margin: 14px 0;
+    line-height: 0.96;
+  }
+  .story-caption h1 br {
+    display: none;
+  }
+  .story-caption h1 br:after {
+    content: ' ';
+  }
+  .story-caption p {
+    font-size: 13px;
+    line-height: 1.65;
+    max-width: 280px;
+  }
+  .story-caption > p br:nth-child(2) {
+    display: none;
+  }
+  .eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+  }
+  .enter-button {
+    font-size: 12px;
+    margin-top: 9px;
+    padding: 10px 0;
+    min-width: 155px;
+  }
+  .project-company {
+    font-size: 15px;
+    margin-top: 12px;
+  }
+  .project-company + h1 {
+    font-size: 44px;
+    max-width: 320px;
+    margin-top: 10px;
+  }
+  .journey-footer {
+    left: 7%;
+    right: 7%;
+    bottom: 26px;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .project-nav {
+    order: 2;
+    width: 100%;
+    max-width: none;
+    gap: 3px;
+  }
+  .project-nav button {
+    font-size: 9px;
+    padding: 7px 2px 0;
+    gap: 10px;
+  }
+  .project-nav .nav-title {
+    bottom: 39px;
+    font-size: 9px;
+  }
+  .journey-actions {
+    margin-left: auto;
+    position: absolute;
+    bottom: 49px;
+    right: 0;
+  }
+  .journey-actions button {
+    width: 32px;
+    height: 32px;
+  }
+  .vertical-note {
+    display: none;
+  }
+  .project-dialog {
+    inset: 18% 4% 3%;
+    width: 92vw;
+    max-height: 79dvh;
+    border-radius: 11px;
+  }
+  .project-article {
+    padding: 22px 20px;
+  }
+  .article-meta {
+    font-size: 8px;
+    gap: 10px;
+  }
+  .article-meta > span:first-child {
+    font-size: 20px;
+  }
+  .project-article h2 {
+    font-size: 36px;
+    margin-top: 23px;
+  }
+  .article-intro {
+    font-size: 14px;
+  }
+  .project-window-bar {
+    height: 42px;
+  }
+  .article-bottom p {
+    font-size: 13px;
+  }
+  .flower-label {
+    transform: scale(0.8);
+  }
+  .flower-label.is-active {
+    transform: scale(0.9);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+.world canvas {
+  touch-action: pan-y;
+}
+@media (max-width: 600px) {
+  .project-dialog {
+    top: 24%;
+    max-height: 73dvh;
+  }
+  .story-caption > p {
+    font-size: 14px;
+  }
+}
+
