@@ -1,0 +1,41 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "typescript",
+    "react",
+    "nextjs",
+    "jsx-a11y"
+  ],
+  "categories": {
+    "correctness": "error"
+  },
+  "ignorePatterns": [
+    ".next",
+    ".open-next",
+    "out",
+    "next-env.d.ts"
+  ],
+  "rules": {
+    "no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "src/components/scene.tsx",
+        "src/components/three/**",
+        "src/app/falling-monks/page.tsx"
+      ],
+      "rules": {
+        "react/immutability": "off",
+        "react/purity": "off",
+        "react/preserve-manual-memoization": "off"
+      }
+    }
+  ]
+}

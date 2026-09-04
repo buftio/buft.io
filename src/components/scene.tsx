@@ -12,7 +12,7 @@ import {
   useGLTF,
   useScroll,
 } from '@react-three/drei'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Canvas, useFrame, useThree, type ThreeElements } from '@react-three/fiber'
 import { Bloom, EffectComposer } from '@react-three/postprocessing'
 import { ReactElement, useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
@@ -94,7 +94,7 @@ function Spiral({
 }: {
   numPoints?: number
   height?: number
-  children: ReactElement
+  children: ReactElement<ThreeElements['mesh']>
 }) {
   const scroll = useScroll()
   const ref = useRef<CurveModifierRef>(null)
