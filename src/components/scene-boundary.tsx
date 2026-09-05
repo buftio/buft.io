@@ -10,6 +10,9 @@ export class SceneBoundary extends Component<
   static getDerivedStateFromError() {
     return { failed: true }
   }
+  componentDidCatch(error: Error) {
+    console.error('3D scene failed to render', error)
+  }
   render() {
     if (this.state.failed)
       return (
@@ -18,6 +21,9 @@ export class SceneBoundary extends Component<
         >
           The 3D scene could not load. You can still explore the project
           stories.
+          <button onClick={() => this.setState({ failed: false })}>
+            Try again
+          </button>
         </output>
       )
     return this.props.children

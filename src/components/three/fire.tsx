@@ -80,6 +80,54 @@ export function Flames({
   )
 }
 
+let glowTexture: THREE.CanvasTexture | null = null
+function getGlowTexture() {
+  if (glowTexture) return glowTexture
+  const canvas = document.createElement('canvas')
+  canvas.width = canvas.height = 128
+  const context = canvas.getContext('2d')!
+  const gradient = context.createRadialGradient(64, 64, 0, 64, 64, 64)
+  gradient.addColorStop(0, 'rgba(255,150,70,1)')
+  gradient.addColorStop(0.35, 'rgba(255,90,25,0.45)')
+  gradient.addColorStop(1, 'rgba(255,40,10,0)')
+  context.fillStyle = gradient
+  context.fillRect(0, 0, 128, 128)
+  glowTexture = new THREE.CanvasTexture(canvas)
+  return glowTexture
+}
+
+export function Glow({
+  reduced = false,
+  scale = 1,
+  opacity = 0.5,
+  position = [0, 0, 0],
+}: {
+  reduced?: boolean
+  scale?: number
+  opacity?: number
+  position?: [number, number, number]
+}) {
+  const ref = useRef<THREE.Sprite>(null)
+  const texture = useMemo(() => getGlowTexture(), [])
+  useFrame(({ clock }) => {
+    if (!ref.current || reduced) return
+    const t = clock.elapsedTime
+    ref.current.material.opacity =
+      opacity * (0.9 + Math.sin(t * 7.3) * 0.06 + Math.sin(t * 3.1) * 0.05)
+  })
+  return (
+    <sprite ref={ref} position={position} scale={scale}>
+      <spriteMaterial
+        map={texture}
+        transparent
+        opacity={opacity}
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+      />
+    </sprite>
+  )
+}
+
 export function Embers({ reduced = false }: { reduced?: boolean }) {
   const ref = useRef<THREE.ShaderMaterial>(null)
   const positions = useMemo(() => {

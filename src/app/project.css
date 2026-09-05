@@ -237,9 +237,22 @@
   background: #dbe3d5;
   display: grid;
   place-items: center;
+  align-content: center;
+  gap: 12px;
   color: #67755a;
   font-size: 13px;
   border-radius: 10px;
+}
+.scene-error button,
+.vignette-loading button {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-size: 12px;
+}
+.scene-error button {
+  display: block;
+  margin-top: 10px;
+  color: #ffb27f;
 }
 .scene-error {
   position: absolute;

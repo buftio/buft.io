@@ -1,10 +1,9 @@
 'use client'
 
 import { Canvas, useFrame } from '@react-three/fiber'
-import { Bloom, EffectComposer } from '@react-three/postprocessing'
 import { Suspense, useRef } from 'react'
 import * as THREE from 'three'
-import { projects, projectAngle } from '@/lib/projects'
+import { projects, projectAngle, projectPosition } from '@/lib/projects'
 import { Flower } from './three/flower'
 import { FireCircle } from './three/fire'
 import { Rock, Samurai } from './three/samurai'
@@ -74,6 +73,43 @@ function CameraRail({ progress, selected, reduced }: SceneProps) {
   return null
 }
 
+function FlowerLights({ active, reduced }: SceneProps) {
+  const lights = useRef<THREE.PointLight[]>([])
+  useFrame((_, delta) => {
+    const step = Math.min(delta, 0.05)
+    lights.current.forEach((light, i) => {
+      if (!light) return
+      const index = Math.max(0, active) + i - 1
+      const inside = index >= 0 && index < projects.length
+      const [x, y, z] = projectPosition(inside ? index : Math.max(0, active))
+      const target = inside ? (i === 1 && active >= 0 ? 4 : 1.2) : 0
+      if (reduced) {
+        light.position.set(x, y + 0.5, z)
+        light.intensity = target
+        return
+      }
+      light.position.x = THREE.MathUtils.damp(light.position.x, x, 5, step)
+      light.position.z = THREE.MathUtils.damp(light.position.z, z, 5, step)
+      light.position.y = y + 0.5
+      light.intensity = THREE.MathUtils.damp(light.intensity, target, 5, step)
+    })
+  })
+  return (
+    <>
+      {[0, 1, 2].map((i) => (
+        <pointLight
+          key={i}
+          ref={(node) => {
+            if (node) lights.current[i] = node
+          }}
+          color="#ff7b26"
+          distance={3}
+        />
+      ))}
+    </>
+  )
+}
+
 export function Scene(props: SceneProps) {
   return (
     <Canvas
@@ -122,24 +158,20 @@ export function Scene(props: SceneProps) {
         </group>
       </Suspense>
       <FireCircle reduced={props.reduced} />
-      {projects.map(
-        (project, index) =>
-          Math.abs(index - Math.max(0, props.active)) <= 1 && (
-            <Flower
-              key={project.id}
-              project={project}
-              index={index}
-              active={props.active === index}
-              open={props.selected === index}
-              reduced={props.reduced}
-              onOpen={() => props.onOpen(index)}
-            />
-          ),
-      )}
+      {projects.map((project, index) => (
+        <Flower
+          key={project.id}
+          project={project}
+          index={index}
+          active={props.active === index}
+          near={Math.abs(index - Math.max(0, props.active)) <= 1}
+          open={props.selected === index}
+          reduced={props.reduced}
+          onOpen={() => props.onOpen(index)}
+        />
+      ))}
+      <FlowerLights {...props} />
       <CameraRail {...props} />
-      <EffectComposer multisampling={0}>
-        <Bloom luminanceThreshold={1} intensity={0.65} mipmapBlur />
-      </EffectComposer>
     </Canvas>
   )
 }

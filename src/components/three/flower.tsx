@@ -6,7 +6,7 @@ import { useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import Image from 'next/image'
 import { projectPosition, type Project } from '@/lib/projects'
-import { Flames } from './fire'
+import { Flames, Glow } from './fire'
 
 function petalGeometry() {
   const geometry = new THREE.BufferGeometry()
@@ -49,6 +49,7 @@ export function Flower({
   project,
   index,
   active,
+  near,
   open,
   reduced,
   onOpen,
@@ -56,11 +57,13 @@ export function Flower({
   project: Project
   index: number
   active: boolean
+  near: boolean
   open: boolean
   reduced: boolean
   onOpen: () => void
 }) {
   const petals = useRef<THREE.Group>(null)
+  const flames = useRef<THREE.Group>(null)
   const bloom = useRef(0)
   const [hovered, setHovered] = useState(false)
   const geometry = useMemo(() => petalGeometry(), [])
@@ -77,7 +80,7 @@ export function Flower({
     [],
   )
   useFrame((_, delta) => {
-    const target = open ? 1 : active || hovered ? 0.6 : 0.1
+    const target = open ? 1 : active || hovered ? 0.6 : near ? 0.1 : 0
     bloom.current = reduced
       ? target
       : THREE.MathUtils.damp(bloom.current, target, 4, Math.min(delta, 0.05))
@@ -85,6 +88,7 @@ export function Flower({
       const petal = pivot.children[0]
       petal.rotation.x = 0.18 + bloom.current * (i < 9 ? 1.24 : 0.88)
     })
+    flames.current?.scale.setScalar(0.22 + bloom.current * 0.32)
   })
   return (
     <group position={projectPosition(index)} scale={0.65}>
@@ -125,21 +129,19 @@ export function Flower({
           metalness={0.7}
         />
       </mesh>
-      <Flames
+      <group ref={flames} position={[0, -0.08, 0]}>
+        <Flames reduced={reduced} />
+      </group>
+      <Glow
+        position={[0, 0.6, 0]}
+        scale={2.6}
+        opacity={0.4}
         reduced={reduced}
-        scale={active ? 0.45 : 0.3}
-        position={[0, -0.08, 0]}
-      />
-      <pointLight
-        position={[0, 0.7, 0]}
-        color="#ff7b26"
-        intensity={active ? 4 : 1.2}
-        distance={3}
       />
       <Billboard position={[0, active ? 0.88 : 1.2, 0]}>
         <Html center distanceFactor={9} zIndexRange={[5, 0]}>
           <button
-            className={`flower-label ${active ? 'is-active' : ''}`}
+            className={`flower-label ${active ? 'is-active' : ''} ${near ? '' : 'is-far'}`}
             onClick={onOpen}
             aria-label={`Open ${project.name}`}
             style={{ '--project-color': project.color } as React.CSSProperties}
@@ -150,6 +152,7 @@ export function Flower({
                 alt=""
                 width={32}
                 height={32}
+                loading={near ? 'eager' : 'lazy'}
                 unoptimized
               />
             ) : (

@@ -60,20 +60,29 @@ export default function ProjectVignette({
   const [paused, setPaused] = useState(false)
   const [beat, setBeat] = useState(0)
   const [line, setLine] = useState(0)
-  const [view, setView] = useState(0)
+  const controls = useRef<React.ComponentRef<typeof OrbitControls>>(null)
   const conversation = project.scene === 'conversation'
+  const cameraPosition: [number, number, number] = conversation
+    ? [5, 4, 6]
+    : [4.5, 3.5, 6]
+  const cameraTarget: [number, number, number] = conversation
+    ? [0, 0.9, -0.3]
+    : [0, 0.6, 0]
+  const resetView = () => {
+    const current = controls.current
+    if (!current) return
+    current.object.position.set(...cameraPosition)
+    current.target.set(...cameraTarget)
+    current.update()
+  }
   const still = paused || reduced
   return (
     <figure className={`project-vignette vignette-${project.id}`}>
       <div className="mini-world">
         <Canvas
-          key={view}
           shadows={{ type: PCFShadowMap }}
           dpr={[1, 1.5]}
-          camera={{
-            position: conversation ? [5, 4, 6] : [4.5, 3.5, 6],
-            fov: conversation ? 26 : 29,
-          }}
+          camera={{ position: cameraPosition, fov: conversation ? 26 : 29 }}
         >
           <color
             attach="background"
@@ -105,7 +114,8 @@ export default function ProjectVignette({
             />
           </Suspense>
           <OrbitControls
-            target={conversation ? [0, 0.9, -0.3] : [0, 0.6, 0]}
+            ref={controls}
+            target={cameraTarget}
             enableZoom={false}
             enablePan={false}
             minPolarAngle={0.5}
@@ -130,10 +140,7 @@ export default function ProjectVignette({
           >
             {paused || reduced ? <Play size={14} /> : <Pause size={14} />}
           </button>
-          <button
-            onClick={() => setView((value) => value + 1)}
-            aria-label="Reset scene view"
-          >
+          <button onClick={resetView} aria-label="Reset scene view">
             <RotateCcw size={14} />
           </button>
         </div>
@@ -147,7 +154,7 @@ export default function ProjectVignette({
           <button
             onClick={() => {
               setLine((value) => (value + 1) % dialogues.length)
-              setView((value) => value + 1)
+              resetView()
             }}
           >
             Another conversation <span aria-hidden="true">↗</span>

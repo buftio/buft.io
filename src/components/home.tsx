@@ -31,17 +31,71 @@ const ProjectVignette = dynamic(() => import('./three/project-vignette'), {
 })
 const resumeUrl =
   'https://docs.google.com/document/d/1yVdeR23Y5sJU6MKffIKWd-uo_GBjAuHN/edit'
+const preloadVignette = () => import('./three/project-vignette')
 const subscribeMotion = (callback: () => void) => {
   const media = window.matchMedia('(prefers-reduced-motion: reduce)')
   media.addEventListener('change', callback)
   return () => media.removeEventListener('change', callback)
 }
 
+function StoryCaption({
+  index,
+  leaving = false,
+  onEnter,
+}: {
+  index: number
+  leaving?: boolean
+  onEnter?: () => void
+}) {
+  const project = index >= 0 ? projects[index] : null
+  return (
+    <div
+      className={`story-caption ${leaving ? 'is-leaving' : ''}`}
+      aria-hidden={leaving || undefined}
+    >
+      <div className="eyebrow">
+        <span className="ember-dot" />
+        {project ? project.field : 'SOFTWARE ENGINEER & CURIOUS HUMAN'}
+      </div>
+      {project ? (
+        <>
+          <span className="project-company">
+            {project.name} <span>{project.period}</span>
+          </span>
+          <h1>{project.title}</h1>
+          <p>{project.summary}</p>
+          <button className="enter-button" onClick={onEnter}>
+            Step inside <ArrowUpRight size={19} />
+          </button>
+        </>
+      ) : (
+        <>
+          <h1>
+            Igor
+            <br /> Ostanin<span className="hot-dot">.</span>
+          </h1>
+          <p>
+            I make things people use.
+            <br /> Sometimes to learn. Sometimes to discover.
+            <br /> Sometimes just to play.
+          </p>
+          <button className="enter-button" onClick={onEnter}>
+            Explore my work <ArrowDown size={18} />
+          </button>
+        </>
+      )}
+    </div>
+  )
+}
+
 export function Home() {
   const progress = useRef(-1)
+  const pending = useRef<number | null>(null)
   const dialog = useRef<HTMLDialogElement>(null)
   const previousFocus = useRef<HTMLElement | null>(null)
   const [active, setActive] = useState(-1)
+  const [leaving, setLeaving] = useState<number | null>(null)
+  const shown = useRef(active)
   const [selected, setSelected] = useState<number | null>(null)
   const [paused, setPaused] = useState(false)
   const prefersReduced = useSyncExternalStore(
@@ -50,12 +104,13 @@ export function Home() {
     () => false,
   )
   const reduced = prefersReduced || paused
-  const project = active >= 0 ? projects[active] : null
   const opened = selected !== null ? projects[selected] : null
 
   const navigate = useCallback(
     (index: number) => {
       const bounded = Math.max(-1, Math.min(projects.length - 1, index))
+      pending.current = bounded
+      setActive(bounded)
       window.scrollTo({
         top: (bounded + 1) * window.innerHeight,
         behavior: reduced ? 'instant' : 'smooth',
@@ -82,12 +137,31 @@ export function Home() {
   }, [])
 
   useEffect(() => {
+    if (shown.current === active) return
+    setLeaving(shown.current)
+    shown.current = active
+    const timer = setTimeout(() => setLeaving(null), 600)
+    return () => clearTimeout(timer)
+  }, [active])
+
+  useEffect(() => {
+    const timer = setTimeout(preloadVignette, 2000)
+    return () => clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
     const onScroll = () => {
       progress.current = Math.max(
         -1,
         Math.min(projects.length - 1, window.scrollY / window.innerHeight - 1),
       )
-      setActive(Math.round(progress.current))
+      const nearest = Math.round(progress.current)
+      if (pending.current !== null && nearest !== pending.current) return
+      pending.current = null
+      setActive(nearest)
+    }
+    const cancelPending = () => {
+      pending.current = null
     }
     const readHash = () => {
       const index = projects.findIndex(
@@ -105,10 +179,14 @@ export function Home() {
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onScroll)
     window.addEventListener('popstate', readHash)
+    window.addEventListener('wheel', cancelPending, { passive: true })
+    window.addEventListener('touchstart', cancelPending, { passive: true })
     return () => {
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onScroll)
       window.removeEventListener('popstate', readHash)
+      window.removeEventListener('wheel', cancelPending)
+      window.removeEventListener('touchstart', cancelPending)
     }
   }, [])
 
@@ -171,44 +249,15 @@ export function Home() {
           </a>
         </nav>
       </header>
-      <div
-        className={`story-caption ${selected !== null ? 'is-hidden' : ''}`}
-        key={project?.id ?? 'intro'}
-      >
-        <div className="eyebrow">
-          <span className="ember-dot" />
-          {project ? project.field : 'SOFTWARE ENGINEER & CURIOUS HUMAN'}
-        </div>
-        {project ? (
-          <>
-            <span className="project-company">
-              {project.name} <span>{project.period}</span>
-            </span>
-            <h1>{project.title}</h1>
-            <p>{project.summary}</p>
-            <button
-              className="enter-button"
-              onClick={() => openProject(active)}
-            >
-              Step inside <ArrowUpRight size={19} />
-            </button>
-          </>
-        ) : (
-          <>
-            <h1>
-              Igor
-              <br /> Ostanin<span className="hot-dot">.</span>
-            </h1>
-            <p>
-              I make things people use.
-              <br /> Sometimes to learn. Sometimes to discover.
-              <br /> Sometimes just to play.
-            </p>
-            <button className="enter-button" onClick={() => navigate(0)}>
-              Explore my work <ArrowDown size={18} />
-            </button>
-          </>
+      <div className={`story-layer ${selected !== null ? 'is-hidden' : ''}`}>
+        {leaving !== null && leaving !== active && (
+          <StoryCaption key={leaving} index={leaving} leaving />
         )}
+        <StoryCaption
+          key={active}
+          index={active}
+          onEnter={() => (active < 0 ? navigate(0) : openProject(active))}
+        />
       </div>
       <div className="vertical-note" aria-hidden="true">
         KEEP THE CURIOSITY. FEED THE FIRE.
