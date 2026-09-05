@@ -37,7 +37,6 @@ export function Samurai({ reduced }: { reduced: boolean }) {
     const result = clone(source.scene)
     result.traverse((object) => {
       if (!(object instanceof THREE.Mesh)) return
-      object.castShadow = true
       const material = (object.material as THREE.MeshStandardMaterial).clone()
       material.emissiveIntensity = 0.08
       material.roughness = 0.72
@@ -73,7 +72,6 @@ export function Rock() {
       material.color.set('#514341')
       material.roughness = 0.93
       object.material = material
-      object.receiveShadow = true
     })
     return result
   }, [source.scene])

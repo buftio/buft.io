@@ -116,6 +116,7 @@ export function Home({ initial = null }: { initial?: number | null }) {
   const [shown, setShown] = useState(active)
   const [leaving, setLeaving] = useState<number | null>(null)
   const [selected, setSelected] = useState<number | null>(initial)
+  const [worldReady, setWorldReady] = useState(initial === null)
   const [paused, setPaused] = useState(false)
   const prefersReduced = useSyncExternalStore(
     subscribeMotion,
@@ -124,6 +125,7 @@ export function Home({ initial = null }: { initial?: number | null }) {
   )
   const reduced = prefersReduced || paused
   const opened = selected !== null ? projects[selected] : null
+  const showScene = worldReady || selected === null
   if (shown !== active) {
     setShown(active)
     setLeaving(shown)
@@ -161,11 +163,12 @@ export function Home({ initial = null }: { initial?: number | null }) {
   }, [])
 
   useEffect(() => {
+    if (!showScene) return
     preload('/sitting.glb', { as: 'fetch', crossOrigin: 'anonymous' })
     preload('/rock.glb', { as: 'fetch', crossOrigin: 'anonymous' })
     const timer = setTimeout(preloadVignette, 2000)
     return () => clearTimeout(timer)
-  }, [])
+  }, [showScene])
 
   useEffect(() => {
     const onScroll = () => {
@@ -232,15 +235,17 @@ export function Home({ initial = null }: { initial?: number | null }) {
         className="world"
         aria-label="A seated samurai surrounded by fire and project flowers"
       >
-        <SceneBoundary>
-          <Scene
-            progress={progress}
-            active={active}
-            selected={selected}
-            reduced={reduced}
-            onOpen={openProject}
-          />
-        </SceneBoundary>
+        {showScene && (
+          <SceneBoundary>
+            <Scene
+              progress={progress}
+              active={active}
+              selected={selected}
+              reduced={reduced}
+              onOpen={openProject}
+            />
+          </SceneBoundary>
+        )}
       </div>
       <div className="scene-shade" />
       <header className="site-header">
@@ -366,7 +371,11 @@ export function Home({ initial = null }: { initial?: number | null }) {
             <h2 id="project-heading">{opened.title}</h2>
             <p className="article-intro">{opened.story}</p>
             <SceneBoundary compact key={opened.id}>
-              <ProjectVignette project={opened} reduced={reduced} />
+              <ProjectVignette
+                project={opened}
+                reduced={reduced}
+                onReady={() => setWorldReady(true)}
+              />
             </SceneBoundary>
             <div className="article-bottom">
               <div>

@@ -2,7 +2,7 @@
 
 import { Billboard, Html } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import Image from 'next/image'
 import { projectPosition, type Project } from '@/lib/projects'
@@ -78,6 +78,13 @@ export function Flower({
         emissiveIntensity: 0.16,
       }),
     [],
+  )
+  useEffect(
+    () => () => {
+      geometry.dispose()
+      material.dispose()
+    },
+    [geometry, material],
   )
   useFrame((_, delta) => {
     const target = open ? 1 : active || hovered ? 0.6 : near ? 0.1 : 0

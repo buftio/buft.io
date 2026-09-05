@@ -1,7 +1,7 @@
 'use client'
 
 import { useFrame } from '@react-three/fiber'
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 
 const flameVertex = `
@@ -61,6 +61,7 @@ export function Flames({
       }),
     [],
   )
+  useEffect(() => () => material.dispose(), [material])
   useFrame((_, delta) => {
     if (!reduced) material.uniforms.uTime.value += Math.min(delta, 0.05)
   })

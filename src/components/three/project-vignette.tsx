@@ -60,9 +60,11 @@ function Ready({ onReady }: { onReady: () => void }) {
 export default function ProjectVignette({
   project,
   reduced,
+  onReady,
 }: {
   project: Project
   reduced: boolean
+  onReady?: () => void
 }) {
   const [paused, setPaused] = useState(false)
   const [beat, setBeat] = useState(0)
@@ -120,7 +122,12 @@ export default function ProjectVignette({
               resolution={256}
               frames={1}
             />
-            <Ready onReady={() => setReady(true)} />
+            <Ready
+              onReady={() => {
+                setReady(true)
+                onReady?.()
+              }}
+            />
           </Suspense>
           <OrbitControls
             ref={controls}
