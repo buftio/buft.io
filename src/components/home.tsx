@@ -32,8 +32,11 @@ const ProjectVignette = dynamic(() => import('./three/project-vignette'), {
 const resumeUrl =
   'https://docs.google.com/document/d/1yVdeR23Y5sJU6MKffIKWd-uo_GBjAuHN/edit'
 const preloadVignette = () => import('./three/project-vignette')
+let motionQuery: MediaQueryList | undefined
+const getMotionQuery = () =>
+  (motionQuery ??= window.matchMedia('(prefers-reduced-motion: reduce)'))
 const subscribeMotion = (callback: () => void) => {
-  const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+  const media = getMotionQuery()
   media.addEventListener('change', callback)
   return () => media.removeEventListener('change', callback)
 }
@@ -42,16 +45,21 @@ function StoryCaption({
   index,
   leaving = false,
   onEnter,
+  onLeft,
 }: {
   index: number
   leaving?: boolean
   onEnter?: () => void
+  onLeft?: () => void
 }) {
   const project = index >= 0 ? projects[index] : null
   return (
     <div
       className={`story-caption ${leaving ? 'is-leaving' : ''}`}
       aria-hidden={leaving || undefined}
+      onAnimationEnd={(event) => {
+        if (event.target === event.currentTarget) onLeft?.()
+      }}
     >
       <div className="eyebrow">
         <span className="ember-dot" />
@@ -94,17 +102,21 @@ export function Home() {
   const dialog = useRef<HTMLDialogElement>(null)
   const previousFocus = useRef<HTMLElement | null>(null)
   const [active, setActive] = useState(-1)
+  const [shown, setShown] = useState(active)
   const [leaving, setLeaving] = useState<number | null>(null)
-  const shown = useRef(active)
   const [selected, setSelected] = useState<number | null>(null)
   const [paused, setPaused] = useState(false)
   const prefersReduced = useSyncExternalStore(
     subscribeMotion,
-    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    () => getMotionQuery().matches,
     () => false,
   )
   const reduced = prefersReduced || paused
   const opened = selected !== null ? projects[selected] : null
+  if (shown !== active) {
+    setShown(active)
+    setLeaving(shown)
+  }
 
   const navigate = useCallback(
     (index: number) => {
@@ -135,14 +147,6 @@ export function Home() {
     window.history.replaceState(null, '', window.location.pathname)
     previousFocus.current?.focus({ preventScroll: true })
   }, [])
-
-  useEffect(() => {
-    if (shown.current === active) return
-    setLeaving(shown.current)
-    shown.current = active
-    const timer = setTimeout(() => setLeaving(null), 600)
-    return () => clearTimeout(timer)
-  }, [active])
 
   useEffect(() => {
     const timer = setTimeout(preloadVignette, 2000)
@@ -250,8 +254,13 @@ export function Home() {
         </nav>
       </header>
       <div className={`story-layer ${selected !== null ? 'is-hidden' : ''}`}>
-        {leaving !== null && leaving !== active && (
-          <StoryCaption key={leaving} index={leaving} leaving />
+        {leaving !== null && leaving !== active && !reduced && (
+          <StoryCaption
+            key={leaving}
+            index={leaving}
+            leaving
+            onLeft={() => setLeaving(null)}
+          />
         )}
         <StoryCaption
           key={active}
