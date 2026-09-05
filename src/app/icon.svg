@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="p" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#4b160a"/>
+      <stop offset="0.5" stop-color="#d9572a"/>
+      <stop offset="1" stop-color="#ffad48"/>
+    </linearGradient>
+    <linearGradient id="f" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#ff2408"/>
+      <stop offset="0.6" stop-color="#ff6b22"/>
+      <stop offset="1" stop-color="#ffd27a"/>
+    </linearGradient>
+    <radialGradient id="g">
+      <stop offset="0" stop-color="#ff6b22" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#ff6b22" stop-opacity="0"/>
+    </radialGradient>
+    <path id="t" d="M0 0C-5.2-4.2-5.2-10.5 0-15.5 5.2-10.5 5.2-4.2 0 0Z" fill="url(#p)"/>
+    <path id="l" d="M0 0C-3.6-3.2-3.2-8.6 0-13 3.2-8.6 3.6-3.2 0 0Z" fill="url(#f)"/>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="#10090b"/>
+  <circle cx="16" cy="19" r="11" fill="url(#g)"/>
+  <g transform="translate(16 21)">
+    <use href="#l" transform="rotate(-24) scale(0.62)"/>
+    <use href="#l" transform="rotate(24) scale(0.62)"/>
+    <use href="#l"/>
+    <use href="#l" transform="scale(0.5)" opacity="0.8" fill="#ffd27a"/>
+  </g>
+  <g transform="translate(16 30)">
+    <use href="#t" transform="rotate(-74) scale(0.82)"/>
+    <use href="#t" transform="rotate(74) scale(0.82)"/>
+    <use href="#t" transform="rotate(-40) scale(0.95)"/>
+    <use href="#t" transform="rotate(40) scale(0.95)"/>
+    <use href="#t" transform="scale(0.72)"/>
+  </g>
+</svg>
