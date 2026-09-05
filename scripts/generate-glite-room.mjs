@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { writeFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
 
 globalThis.FileReader = class {
   readAsArrayBuffer(blob) {
@@ -719,6 +720,12 @@ const glb = await exporter.parseAsync(scene, {
 })
 const out = new URL('../public/glite-room.glb', import.meta.url).pathname
 writeFileSync(out, Buffer.from(glb))
+
+const cli = new URL('../node_modules/.bin/gltf-transform', import.meta.url)
+  .pathname
+for (const step of ['weld', 'quantize', 'meshopt']) {
+  execFileSync(cli, [step, out, out], { stdio: 'inherit' })
+}
 
 const size = bounds.getSize(new THREE.Vector3())
 const center = bounds.getCenter(new THREE.Vector3())

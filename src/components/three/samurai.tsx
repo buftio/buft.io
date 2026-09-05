@@ -1,9 +1,35 @@
 'use client'
 
 import { useGLTF, useAnimations } from '@react-three/drei'
+import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import { clone } from 'three/addons/utils/SkeletonUtils.js'
+
+const fadeDuration = 1.1
+
+function useFadeIn(scene: THREE.Object3D) {
+  const fade = useMemo(() => {
+    const materials: THREE.Material[] = []
+    scene.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return
+      const material = object.material as THREE.Material
+      material.transparent = true
+      material.opacity = 0
+      materials.push(material)
+    })
+    return { materials, elapsed: 0 }
+  }, [scene])
+  useFrame((_, delta) => {
+    if (fade.elapsed >= fadeDuration) return
+    fade.elapsed += Math.min(delta, 0.05)
+    const t = Math.min(fade.elapsed / fadeDuration, 1)
+    for (const material of fade.materials) {
+      material.opacity = t * t * (3 - 2 * t)
+      if (t === 1) material.transparent = false
+    }
+  })
+}
 
 export function Samurai({ reduced }: { reduced: boolean }) {
   const source = useGLTF('/sitting.glb')
@@ -20,6 +46,7 @@ export function Samurai({ reduced }: { reduced: boolean }) {
     })
     return result
   }, [source.scene])
+  useFadeIn(scene)
   const { actions, names } = useAnimations(source.animations, scene)
   useEffect(() => {
     const action = actions[names[0]]
@@ -47,6 +74,7 @@ export function Rock() {
     })
     return result
   }, [source.scene])
+  useFadeIn(scene)
   return (
     <primitive
       object={scene}
