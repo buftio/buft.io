@@ -2,12 +2,13 @@
   "name": "buft3io",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "oxlint --deny-warnings",
-    "format": "prettier --write .",
+    "format": "oxfmt",
     "build:worker": "opennextjs-cloudflare build",
     "dev:worker": "wrangler dev --port 8771",
     "preview:worker": "npm run build:worker && npm run dev:worker",
@@ -46,17 +47,11 @@
     "@types/react-dom": "^19",
     "@types/three": "^0.185.4",
     "babel-plugin-react-compiler": "^1.0.0",
+    "oxfmt": "^0.66.0",
     "oxlint": "^1.81.0",
     "postcss": "^8",
-    "prettier": "^3.9.6",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
     "wrangler": "^4.129.0"
-  },
-  "prettier": {
-    "semi": false,
-    "singleQuote": true,
-    "tabWidth": 2
-  },
-  "type": "module"
+  }
 }

@@ -59,7 +59,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: #747568;
+  color: #5e5f53;
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -154,10 +154,18 @@
   height: 330px;
   overflow: hidden;
   border-radius: 11px;
+  background: #e3ded2;
+}
+.vignette-glite .mini-world {
   background: #dbe3d5;
 }
 .mini-world canvas {
   touch-action: none;
+  opacity: 0;
+  transition: opacity 0.7s ease;
+}
+.mini-world.is-ready canvas {
+  opacity: 1;
 }
 .world-controls {
   position: absolute;
@@ -183,7 +191,7 @@
   font-family: 'DM Mono', monospace;
   font-size: 9px;
   letter-spacing: 0.07em;
-  color: #647963;
+  color: #56664a;
   pointer-events: none;
 }
 .conversation-bubble {
@@ -208,7 +216,7 @@
   font-size: 9px;
   font-family: 'DM Mono', monospace;
   letter-spacing: 0.06em;
-  color: #859475;
+  color: #5f6e52;
 }
 .conversation-bubble p {
   font-size: 13px;
@@ -218,7 +226,7 @@
 }
 .project-vignette figcaption {
   font-size: 11px;
-  color: #80826d;
+  color: #626456;
   display: flex;
   align-items: center;
   justify-content: space-between;

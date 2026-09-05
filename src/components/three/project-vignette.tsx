@@ -50,6 +50,11 @@ const dialogues = [
   ['Could you say that a little slower?', 'Of course. Take your time.'],
 ]
 
+function Ready({ onReady }: { onReady: () => void }) {
+  useEffect(onReady, [onReady])
+  return null
+}
+
 export default function ProjectVignette({
   project,
   reduced,
@@ -60,6 +65,7 @@ export default function ProjectVignette({
   const [paused, setPaused] = useState(false)
   const [beat, setBeat] = useState(0)
   const [line, setLine] = useState(0)
+  const [ready, setReady] = useState(false)
   const controls = useRef<React.ComponentRef<typeof OrbitControls>>(null)
   const conversation = project.scene === 'conversation'
   const cameraPosition: [number, number, number] = conversation
@@ -78,7 +84,7 @@ export default function ProjectVignette({
   const still = paused || reduced
   return (
     <figure className={`project-vignette vignette-${project.id}`}>
-      <div className="mini-world">
+      <div className={`mini-world ${ready ? 'is-ready' : ''}`}>
         <Canvas
           shadows={{ type: PCFShadowMap }}
           dpr={[1, 1.5]}
@@ -112,6 +118,7 @@ export default function ProjectVignette({
               resolution={256}
               frames={1}
             />
+            <Ready onReady={() => setReady(true)} />
           </Suspense>
           <OrbitControls
             ref={controls}

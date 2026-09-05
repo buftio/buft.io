@@ -27,7 +27,9 @@ const Scene = dynamic(() => import('./scene').then((module) => module.Scene), {
 const ProjectVignette = dynamic(() => import('./three/project-vignette'), {
   ssr: false,
   loading: () => (
-    <div className="vignette-loading">Opening this little world…</div>
+    <figure className="project-vignette">
+      <div className="mini-world" />
+    </figure>
   ),
 })
 const resumeUrl =
@@ -105,8 +107,6 @@ function StoryCaption({
 }
 
 export function Home({ initial = null }: { initial?: number | null }) {
-  preload('/sitting.glb', { as: 'fetch', crossOrigin: 'anonymous' })
-  preload('/rock.glb', { as: 'fetch', crossOrigin: 'anonymous' })
   const progress = useRef(-1)
   const pending = useRef<number | null>(null)
   const dialog = useRef<HTMLDialogElement>(null)
@@ -159,6 +159,8 @@ export function Home({ initial = null }: { initial?: number | null }) {
   }, [])
 
   useEffect(() => {
+    preload('/sitting.glb', { as: 'fetch', crossOrigin: 'anonymous' })
+    preload('/rock.glb', { as: 'fetch', crossOrigin: 'anonymous' })
     const timer = setTimeout(preloadVignette, 2000)
     return () => clearTimeout(timer)
   }, [])
@@ -241,7 +243,7 @@ export function Home({ initial = null }: { initial?: number | null }) {
         <button
           className="brand"
           onClick={() => navigate(-1)}
-          aria-label="Back to the garden"
+          aria-label="buft.io, back to the garden"
         >
           buft<span>.io</span>
           <i />
@@ -294,7 +296,7 @@ export function Home({ initial = null }: { initial?: number | null }) {
               key={item.id}
               onClick={() => navigate(index)}
               className={active === index ? 'current' : ''}
-              aria-label={`Go to ${item.name}`}
+              aria-label={`${item.name} ${String(index + 1).padStart(2, '0')}`}
               aria-current={active === index ? 'step' : undefined}
             >
               <span className="nav-title">{item.name}</span>

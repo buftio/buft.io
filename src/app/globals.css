@@ -3,19 +3,19 @@
 
 @font-face {
   font-family: Manrope;
-  src: url('/fonts/manrope-regular.ttf') format('truetype');
+  src: url('/fonts/manrope-regular.woff2') format('woff2');
   font-weight: 400 600;
   font-display: swap;
 }
 @font-face {
   font-family: Manrope;
-  src: url('/fonts/manrope-extrabold.ttf') format('truetype');
+  src: url('/fonts/manrope-extrabold.woff2') format('woff2');
   font-weight: 700 900;
   font-display: swap;
 }
 @font-face {
   font-family: 'DM Mono';
-  src: url('/fonts/dm-mono.ttf') format('truetype');
+  src: url('/fonts/dm-mono.woff2') format('woff2');
   font-weight: 400 500;
   font-display: swap;
 }
