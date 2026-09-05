@@ -1,210 +1,177 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
 
-import {
-  CurveModifier,
-  CurveModifierRef,
-  Environment,
-  MeshReflectorMaterial,
-  Point,
-  Points,
-  ScrollControls,
-  useGLTF,
-  useScroll,
-} from '@react-three/drei'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Bloom, EffectComposer } from '@react-three/postprocessing'
-import { ReactElement, useEffect, useMemo, useRef } from 'react'
+import { Canvas, useFrame } from '@react-three/fiber'
+import { Suspense, useRef } from 'react'
 import * as THREE from 'three'
-import { KeyControlsHandler, KeyControlsProvider } from './key'
+import { projects, projectAngle, projectPosition } from '@/lib/projects'
+import { Flower } from './three/flower'
+import { FireCircle } from './three/fire'
+import { Rock, Samurai } from './three/samurai'
 
-function Monk() {
-  // Load the GLB file
-  const obj = useGLTF('/sitting.glb')
-  const { scene, animations } = obj
+export type SceneProps = {
+  progress: React.RefObject<number>
+  active: number
+  selected: number | null
+  reduced: boolean
+  onOpen: (index: number) => void
+}
 
-  // Animation mixer reference
-  const mixer = useRef<THREE.AnimationMixer | null>(null)
-
-  useEffect(() => {
-    // Initialize the AnimationMixer when the component mounts
-    mixer.current = new THREE.AnimationMixer(scene)
-
-    // Play the first animation clip
-    const action = mixer.current.clipAction(animations[0])
-    action.play()
-
-    // Cleanup the mixer when the component unmounts
-    return () => {
-      mixer.current?.stopAllAction()
-    }
-  }, [scene, animations])
-
-  // Update the animation on every frame
-  useFrame((state, delta) => {
-    if (mixer.current) mixer.current.update(delta) // Advance animation based on time
+function CameraRail({ progress, selected, reduced }: SceneProps) {
+  const current = useRef(-1)
+  const look = useRef(new THREE.Vector3(-1.5, -0.1, 0))
+  const desired = useRef(new THREE.Vector3())
+  const destination = useRef(new THREE.Vector3())
+  const entry = useRef({ project: selected, time: 1 })
+  useFrame(({ camera, size, pointer }, delta) => {
+    const step = Math.min(delta, 0.05)
+    if (entry.current.project !== selected)
+      entry.current = { project: selected, time: 0 }
+    entry.current.time = Math.min(1, entry.current.time + step / 1.1)
+    const dive =
+      selected !== null && !reduced
+        ? Math.sin(entry.current.time * Math.PI) ** 2
+        : 0
+    const target = selected ?? progress.current
+    current.current = reduced
+      ? target
+      : THREE.MathUtils.damp(current.current, target, 3.5, step)
+    const a = projectAngle(current.current)
+    const mobile = size.width < 700
+    const distance =
+      selected !== null
+        ? (mobile ? 11 : 9.6) - dive * 2.2
+        : mobile
+          ? 14.8
+          : 11.8
+    const shift =
+      selected !== null
+        ? mobile
+          ? 0
+          : 3.6 * (1 - dive * 0.55)
+        : mobile
+          ? 0
+          : -1.8
+    const forward = 1.2 + dive * 2.6
+    destination.current.set(
+      Math.sin(a) * distance,
+      selected !== null ? 2.0 - dive : 2.5,
+      Math.cos(a) * distance,
+    )
+    desired.current.set(
+      Math.sin(a) * forward + Math.cos(a) * shift,
+      -0.2 - dive * 0.5,
+      Math.cos(a) * forward - Math.sin(a) * shift,
+    )
+    if (!reduced && selected === null) destination.current.x += pointer.x * 0.1
+    camera.position.lerp(
+      destination.current,
+      reduced ? 1 : 1 - Math.exp(-step * 3.5),
+    )
+    look.current.lerp(desired.current, reduced ? 1 : 1 - Math.exp(-step * 3.5))
+    camera.lookAt(look.current)
   })
+  return null
+}
 
+function FlowerLights({ active, reduced }: SceneProps) {
+  const lights = useRef<THREE.PointLight[]>([])
+  useFrame((_, delta) => {
+    const step = Math.min(delta, 0.05)
+    lights.current.forEach((light, i) => {
+      if (!light) return
+      const index = Math.max(0, active) + i - 1
+      const inside = index >= 0 && index < projects.length
+      const [x, y, z] = projectPosition(inside ? index : Math.max(0, active))
+      const target = inside ? (i === 1 && active >= 0 ? 4 : 1.2) : 0
+      if (reduced) {
+        light.position.set(x, y + 0.5, z)
+        light.intensity = target
+        return
+      }
+      light.position.x = THREE.MathUtils.damp(light.position.x, x, 5, step)
+      light.position.z = THREE.MathUtils.damp(light.position.z, z, 5, step)
+      light.position.y = y + 0.5
+      light.intensity = THREE.MathUtils.damp(light.intensity, target, 5, step)
+    })
+  })
   return (
-    <mesh position={[0.0, 0.0, 0.0]}>
-      <primitive object={scene} />
-    </mesh>
+    <>
+      {[0, 1, 2].map((i) => (
+        <pointLight
+          key={i}
+          ref={(node) => {
+            if (node) lights.current[i] = node
+          }}
+          color="#ff7b26"
+          distance={3}
+        />
+      ))}
+    </>
   )
 }
 
-function Rock() {
-  // Load the GLB file
-  const obj = useGLTF('/rock.glb')
-
+export function Scene(props: SceneProps) {
   return (
-    <mesh
-      scale={2}
-      position={[-1.8, -0.9, -0.3]}
-      rotation={[0, (7 * Math.PI) / 4, 0]}
+    <Canvas
+      dpr={[1, 1.5]}
+      camera={{ position: [-6.5, 2.5, 10], fov: 43 }}
+      gl={{
+        antialias: true,
+        alpha: false,
+        powerPreference: 'high-performance',
+      }}
     >
-      <primitive object={obj.scene} />
-    </mesh>
-  )
-}
-
-function curvePath({
-  numPoints = 100,
-  height = 20,
-  radius = 3,
-  turns = 1,
-  y0 = -2,
-}) {
-  const ps = []
-
-  for (let i = 0; i < numPoints; i++) {
-    const angle = (i / numPoints) * (Math.PI * 2) * turns
-    const x = radius * Math.cos(angle)
-    const y = (i / numPoints) * height // Height interpolation
-    const z = radius * Math.sin(angle)
-    ps.push(new THREE.Vector3(x, y + y0, z))
-  }
-
-  return ps
-}
-
-function Spiral({
-  numPoints = 100,
-  height = 20,
-  children,
-}: {
-  numPoints?: number
-  height?: number
-  children: ReactElement
-}) {
-  const scroll = useScroll()
-  const ref = useRef<CurveModifierRef>(null)
-
-  const camera = useThree((state) => state.camera)
-
-  useFrame(() => {
-    if (!ref.current) return
-
-    //ref.current.uniforms.pathOffset.value = scroll.offset
-
-    const point = curve.getPoint(1 - scroll.offset)
-
-    if (!point) {
-      return
-    }
-
-    camera.position.set(point.x, point.y, point.z)
-    camera.lookAt(0, 0, 0)
-  })
-
-  const { curve, points } = useMemo(() => {
-    const ps = curvePath({ numPoints, height, radius: 5, turns: 2 })
-    return {
-      curve: new THREE.CatmullRomCurve3(ps, false, 'catmullrom', 0.5),
-      points: ps,
-    }
-  }, [numPoints, height])
-
-  return (
-    <>
-      <CurveModifier curve={curve} ref={ref}>
-        {children}
-      </CurveModifier>
-      <Points limit={numPoints}>
-        <pointsMaterial size={0.1} color="blue" opacity={0.3} />
-        {points.map((p, i) => (
-          <Point key={i} position={p} />
-        ))}
-      </Points>
-    </>
-  )
-}
-
-function Olympus() {
-  return (
-    <>
-      <Monk />
-      <Rock />
-    </>
-  )
-}
-
-function _Scene() {
-  return (
-    <>
-      <color attach="background" args={['#101009']} />
-
-      <fog attach="fog" args={['#101009', 20, 30]} />
-
-      <ambientLight intensity={0.25} />
-
-      <mesh position={[0, -2.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[50, 50]} />
-        <MeshReflectorMaterial
-          blur={[400, 100]}
-          mirror={0.75}
-          resolution={1024}
-          mixBlur={1}
-          mixStrength={15}
-          depthScale={1}
-          minDepthThreshold={0.85}
-          color="#151515"
-          metalness={0.6}
-          roughness={1}
+      <color attach="background" args={['#10090b']} />
+      <fog attach="fog" args={['#10090b', 13, 34]} />
+      <ambientLight intensity={0.36} color="#e5d2c9" />
+      <hemisphereLight args={['#b9d6ff', '#382015', 0.7]} />
+      <directionalLight position={[-3, 6, 5]} intensity={2.2} color="#f3c59b" />
+      <directionalLight position={[4, 4, -5]} intensity={1.2} color="#8b99ba" />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2.15, 0]}>
+        <circleGeometry args={[35, 80]} />
+        <meshStandardMaterial
+          color="#10090b"
+          roughness={0.82}
+          metalness={0.2}
         />
       </mesh>
-
-      <ScrollControls pages={10}>
-        <Spiral numPoints={100} height={4}>
-          <mesh position={[0, 0, 0]}>
-            <meshStandardMaterial color="black" />
-            <boxGeometry args={[0, 0, 0]} />
-          </mesh>
-        </Spiral>
-
-        <Olympus />
-      </ScrollControls>
-
-      <Environment preset="sunset" />
-
-      <EffectComposer>
-        <Bloom luminanceThreshold={0.5} intensity={0.1} />
-      </EffectComposer>
-    </>
-  )
-}
-
-export function Scene() {
-  return (
-    <KeyControlsProvider>
-      <Canvas
-        shadows
-        dpr={[1, 1.5]}
-        camera={{ position: [5, 3, 6], fov: 50 }}
-        gl={{ alpha: false }}
-      >
-        <_Scene />
-        <KeyControlsHandler />
-      </Canvas>
-    </KeyControlsProvider>
+      {[2.65, 5.2, 7.7].map((r, i) => (
+        <mesh key={r} rotation={[-Math.PI / 2, 0, 0]} position={[0, -2.12, 0]}>
+          <ringGeometry args={[r, r + 0.012, 128]} />
+          <meshBasicMaterial
+            color={i === 0 ? '#ac5427' : '#694333'}
+            transparent
+            opacity={0.28}
+          />
+        </mesh>
+      ))}
+      <Suspense fallback={null}>
+        <group
+          rotation={[0, -Math.PI / 2, 0]}
+          scale={1.22}
+          position={[0, 0.46, 0]}
+        >
+          <group scale={1.55} position={[0, -0.32, 0]}>
+            <Samurai reduced={props.reduced} />
+          </group>
+          <Rock />
+        </group>
+      </Suspense>
+      <FireCircle reduced={props.reduced} />
+      {projects.map((project, index) => (
+        <Flower
+          key={project.id}
+          project={project}
+          index={index}
+          active={props.active === index}
+          near={Math.abs(index - Math.max(0, props.active)) <= 1}
+          open={props.selected === index}
+          reduced={props.reduced}
+          onOpen={() => props.onOpen(index)}
+        />
+      ))}
+      <FlowerLights {...props} />
+      <CameraRail {...props} />
+    </Canvas>
   )
 }
