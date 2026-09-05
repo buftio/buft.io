@@ -52,10 +52,13 @@ export function Samurai({ reduced }: { reduced: boolean }) {
     const action = actions[names[0]]
     if (!action) return
     action.play()
-    action.paused = reduced
     return () => {
       action.stop()
     }
+  }, [actions, names])
+  useEffect(() => {
+    const action = actions[names[0]]
+    if (action) action.paused = reduced
   }, [actions, names, reduced])
   return <primitive object={scene} />
 }

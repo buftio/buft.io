@@ -67,6 +67,7 @@ function StoryCaption({
     <div
       className={`story-caption ${leaving ? 'is-leaving' : ''}`}
       aria-hidden={leaving || undefined}
+      inert={leaving || undefined}
       onAnimationEnd={(event) => {
         if (event.target === event.currentTarget) onLeft?.()
       }}
@@ -127,6 +128,7 @@ export function Home({ initial = null }: { initial?: number | null }) {
     setShown(active)
     setLeaving(shown)
   }
+  if (reduced && leaving !== null) setLeaving(null)
 
   const navigate = useCallback(
     (index: number) => {
@@ -197,12 +199,14 @@ export function Home({ initial = null }: { initial?: number | null }) {
     window.addEventListener('popstate', readPath)
     window.addEventListener('wheel', cancelPending, { passive: true })
     window.addEventListener('touchstart', cancelPending, { passive: true })
+    window.addEventListener('keydown', cancelPending)
     return () => {
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onScroll)
       window.removeEventListener('popstate', readPath)
       window.removeEventListener('wheel', cancelPending)
       window.removeEventListener('touchstart', cancelPending)
+      window.removeEventListener('keydown', cancelPending)
     }
   }, [])
 

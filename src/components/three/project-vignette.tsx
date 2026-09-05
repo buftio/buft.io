@@ -29,10 +29,12 @@ function Conversation({
     const action = actions.Conversation
     if (!action) return
     action.play()
-    action.paused = paused
     return () => {
       action.stop()
     }
+  }, [actions])
+  useEffect(() => {
+    if (actions.Conversation) actions.Conversation.paused = paused
   }, [actions, paused])
   useFrame(() => {
     const beat = Math.floor((actions.Conversation?.time ?? 0) / 4)

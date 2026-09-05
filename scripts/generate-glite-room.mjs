@@ -3,6 +3,7 @@ import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { writeFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
 
 globalThis.FileReader = class {
   readAsArrayBuffer(blob) {
@@ -718,11 +719,12 @@ const glb = await exporter.parseAsync(scene, {
   animations: [clip],
   onlyVisible: true,
 })
-const out = new URL('../public/glite-room.glb', import.meta.url).pathname
+const out = fileURLToPath(new URL('../public/glite-room.glb', import.meta.url))
 writeFileSync(out, Buffer.from(glb))
 
-const cli = new URL('../node_modules/.bin/gltf-transform', import.meta.url)
-  .pathname
+const cli = fileURLToPath(
+  new URL('../node_modules/.bin/gltf-transform', import.meta.url),
+)
 for (const step of ['weld', 'quantize', 'meshopt']) {
   execFileSync(cli, [step, out, out], { stdio: 'inherit' })
 }
