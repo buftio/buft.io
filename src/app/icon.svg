@@ -8,31 +8,29 @@
     <linearGradient id="f" x1="0" y1="1" x2="0" y2="0">
       <stop offset="0" stop-color="#7a1e08"/>
       <stop offset="0.55" stop-color="#ff6b22"/>
-      <stop offset="1" stop-color="#ffd98a"/>
+      <stop offset="1" stop-color="#ffe0a0"/>
     </linearGradient>
     <radialGradient id="g">
-      <stop offset="0" stop-color="#ff6b22" stop-opacity="0.6"/>
+      <stop offset="0" stop-color="#ff7a2a" stop-opacity="0.9"/>
+      <stop offset="0.45" stop-color="#ff5a1a" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#ff3a0a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="h">
+      <stop offset="0" stop-color="#ffd27a" stop-opacity="0.85"/>
       <stop offset="1" stop-color="#ff6b22" stop-opacity="0"/>
     </radialGradient>
     <path id="t" d="M0 0C-6-4-6.5-11 0-16 6.5-11 6-4 0 0Z"/>
-    <path id="l" d="M0 0C-3.6-3.2-3.2-8.6 0-13 3.2-8.6 3.6-3.2 0 0Z" fill="url(#f)"/>
   </defs>
   <rect width="32" height="32" rx="7" fill="#10090b"/>
-  <circle cx="16" cy="17" r="9" fill="url(#g)"/>
-  <g transform="translate(16 27)" fill="url(#p)">
-    <use href="#t" transform="rotate(-80) scale(0.68)"/>
-    <use href="#t" transform="rotate(80) scale(0.68)"/>
-    <use href="#t" transform="rotate(-50) scale(0.84)"/>
-    <use href="#t" transform="rotate(50) scale(0.84)"/>
-  </g>
-  <g transform="translate(16 20)">
-    <use href="#l" transform="rotate(-20) scale(0.7)"/>
-    <use href="#l" transform="rotate(20) scale(0.7)"/>
-    <use href="#l" transform="scale(1.05)"/>
-  </g>
-  <g transform="translate(16 27)" fill="url(#p)">
-    <use href="#t" transform="rotate(-22) scale(0.8)"/>
-    <use href="#t" transform="rotate(22) scale(0.8)"/>
-    <use href="#t" transform="scale(0.6)"/>
+  <circle cx="16" cy="18" r="15" fill="url(#g)"/>
+  <circle cx="16" cy="15" r="7" fill="url(#h)"/>
+  <g transform="translate(16 27)">
+    <use href="#t" transform="rotate(-80) scale(0.68)" fill="url(#p)"/>
+    <use href="#t" transform="rotate(80) scale(0.68)" fill="url(#p)"/>
+    <use href="#t" transform="rotate(-50) scale(0.84)" fill="url(#p)"/>
+    <use href="#t" transform="rotate(50) scale(0.84)" fill="url(#p)"/>
+    <use href="#t" transform="rotate(-22) scale(0.95)" fill="url(#f)"/>
+    <use href="#t" transform="rotate(22) scale(0.95)" fill="url(#f)"/>
+    <use href="#t" fill="url(#f)"/>
   </g>
 </svg>
