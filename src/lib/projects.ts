@@ -1,5 +1,6 @@
 export type Project = {
   id: string
+  slug: string
   name: string
   field: string
   role: string
@@ -26,6 +27,7 @@ export type Project = {
 export const projects: Project[] = [
   {
     id: 'glite',
+    slug: 'glite2025',
     name: 'Glite',
     field: 'AI × language',
     role: 'Lead full-stack engineer',
@@ -45,6 +47,7 @@ export const projects: Project[] = [
   },
   {
     id: 'quantori',
+    slug: 'quantori2024',
     name: 'Quantori',
     field: 'Science × collaboration',
     role: 'Staff software engineer',
@@ -64,6 +67,7 @@ export const projects: Project[] = [
   },
   {
     id: 'yandex',
+    slug: 'yandex2023',
     name: 'Yandex',
     field: 'Search × human workflows',
     role: 'Senior full-stack engineer',
@@ -82,6 +86,7 @@ export const projects: Project[] = [
   },
   {
     id: 'akts',
+    slug: 'akts2022',
     name: 'AKTS',
     field: 'Commerce × operations',
     role: 'Staff software engineer',
@@ -99,6 +104,7 @@ export const projects: Project[] = [
   },
   {
     id: 'epam',
+    slug: 'epam2021',
     name: 'EPAM',
     field: 'Science × imaging',
     role: 'Software engineer',
@@ -117,6 +123,7 @@ export const projects: Project[] = [
   },
   {
     id: 'sperasoft',
+    slug: 'sperasoft2019',
     name: 'Sperasoft',
     field: 'Games × creative tools',
     role: 'Software engineer',
@@ -136,6 +143,7 @@ export const projects: Project[] = [
   },
   {
     id: 'kontur',
+    slug: 'kontur2017',
     name: 'Kontur',
     field: 'Business × everyday life',
     role: 'Software engineer',
@@ -155,6 +163,7 @@ export const projects: Project[] = [
   },
   {
     id: 'lumiprobe',
+    slug: 'lumiprobe',
     name: 'Lumiprobe',
     field: 'Open source × chemistry',
     role: 'Open-source contributor',
@@ -174,6 +183,7 @@ export const projects: Project[] = [
   },
   {
     id: 'marketdata',
+    slug: 'marketdata2022',
     name: 'MarketData',
     field: 'Commerce × clarity',
     role: 'Technical lead & consultant',

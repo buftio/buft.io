@@ -1,8 +1,23 @@
-import { preload } from 'react-dom'
 import { Home } from '@/components/home'
+import { siteUrl } from '@/lib/site'
+
+const person = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: 'Igor Ostanin',
+  jobTitle: 'Software Engineer',
+  url: siteUrl,
+  sameAs: ['https://github.com/buftio', 'https://www.linkedin.com/in/buftio'],
+}
 
 export default function HomePage() {
-  preload('/sitting.glb', { as: 'fetch', crossOrigin: 'anonymous' })
-  preload('/rock.glb', { as: 'fetch', crossOrigin: 'anonymous' })
-  return <Home />
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(person) }}
+      />
+      <Home />
+    </>
+  )
 }

@@ -17,6 +17,7 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react'
+import { preload } from 'react-dom'
 import { projects } from '@/lib/projects'
 import { SceneBoundary } from './scene-boundary'
 
@@ -32,6 +33,13 @@ const ProjectVignette = dynamic(() => import('./three/project-vignette'), {
 const resumeUrl =
   'https://docs.google.com/document/d/1yVdeR23Y5sJU6MKffIKWd-uo_GBjAuHN/edit'
 const preloadVignette = () => import('./three/project-vignette')
+const projectPath = (index: number) => `/p/${projects[index].slug}`
+const projectAt = (path: string, hash: string) => {
+  const index = projects.findIndex((item) => `/p/${item.slug}` === path)
+  return index >= 0
+    ? index
+    : projects.findIndex((item) => `#${item.id}` === hash)
+}
 let motionQuery: MediaQueryList | undefined
 const getMotionQuery = () =>
   (motionQuery ??= window.matchMedia('(prefers-reduced-motion: reduce)'))
@@ -96,7 +104,9 @@ function StoryCaption({
   )
 }
 
-export function Home() {
+export function Home({ initial = null }: { initial?: number | null }) {
+  preload('/sitting.glb', { as: 'fetch', crossOrigin: 'anonymous' })
+  preload('/rock.glb', { as: 'fetch', crossOrigin: 'anonymous' })
   const progress = useRef(-1)
   const pending = useRef<number | null>(null)
   const dialog = useRef<HTMLDialogElement>(null)
@@ -104,7 +114,7 @@ export function Home() {
   const [active, setActive] = useState(-1)
   const [shown, setShown] = useState(active)
   const [leaving, setLeaving] = useState<number | null>(null)
-  const [selected, setSelected] = useState<number | null>(null)
+  const [selected, setSelected] = useState<number | null>(initial)
   const [paused, setPaused] = useState(false)
   const prefersReduced = useSyncExternalStore(
     subscribeMotion,
@@ -138,13 +148,13 @@ export function Home() {
       behavior: 'instant',
     })
     setSelected(index)
-    window.history.pushState(null, '', `#${projects[index].id}`)
+    window.history.pushState(null, '', projectPath(index))
   }, [])
 
   const closeProject = useCallback(() => {
     dialog.current?.close()
     setSelected(null)
-    window.history.replaceState(null, '', window.location.pathname)
+    window.history.replaceState(null, '', '/')
     previousFocus.current?.focus({ preventScroll: true })
   }, [])
 
@@ -167,28 +177,28 @@ export function Home() {
     const cancelPending = () => {
       pending.current = null
     }
-    const readHash = () => {
-      const index = projects.findIndex(
-        (item) => `#${item.id}` === window.location.hash,
-      )
+    const readPath = () => {
+      const index = projectAt(window.location.pathname, window.location.hash)
       setSelected(index < 0 ? null : index)
-      if (index >= 0)
-        window.scrollTo({
-          top: (index + 1) * window.innerHeight,
-          behavior: 'instant',
-        })
+      if (index < 0) return
+      if (window.location.hash)
+        window.history.replaceState(null, '', projectPath(index))
+      window.scrollTo({
+        top: (index + 1) * window.innerHeight,
+        behavior: 'instant',
+      })
     }
-    readHash()
+    readPath()
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onScroll)
-    window.addEventListener('popstate', readHash)
+    window.addEventListener('popstate', readPath)
     window.addEventListener('wheel', cancelPending, { passive: true })
     window.addEventListener('touchstart', cancelPending, { passive: true })
     return () => {
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onScroll)
-      window.removeEventListener('popstate', readHash)
+      window.removeEventListener('popstate', readPath)
       window.removeEventListener('wheel', cancelPending)
       window.removeEventListener('touchstart', cancelPending)
     }
