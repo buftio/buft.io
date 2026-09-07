@@ -32,10 +32,11 @@ export const projects: Project[] = [
     field: 'AI × language',
     role: 'Lead full-stack engineer',
     period: 'From 2025',
-    title: 'Find your voice.',
-    summary: 'A little less thinking. A lot more speaking.',
+    title: 'An English tutor',
+    summary:
+      'Voice conversations, a personal dictionary, and short daily exercises.',
     story:
-      'The interesting part of learning a language is the moment you stop rehearsing and just talk. At Glite, I built voice agents and speech evaluation that made that moment possible.',
+      'I led full-stack development at Glite, working on voice agents, speech evaluation, and a picture exercise that helped learners see what their words meant.',
     details: [
       'Built the Image Test from first interaction to spoken feedback.',
       'Led the engineering team and used real learning journeys to improve the experience.',

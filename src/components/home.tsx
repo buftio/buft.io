@@ -32,6 +32,7 @@ const ProjectVignette = dynamic(() => import('./three/project-vignette'), {
     </figure>
   ),
 })
+const GliteStory = dynamic(() => import('./glite/story'))
 const resumeUrl =
   'https://docs.google.com/document/d/1yVdeR23Y5sJU6MKffIKWd-uo_GBjAuHN/edit'
 const preloadVignette = () => import('./three/project-vignette')
@@ -344,7 +345,7 @@ export function Home({ initial = null }: { initial?: number | null }) {
       />
       {opened && (
         <dialog
-          className="project-dialog"
+          className={`project-dialog ${opened.id === 'glite' ? 'glite-dialog' : ''}`}
           ref={dialog}
           onCancel={closeProject}
           aria-labelledby="project-heading"
@@ -355,51 +356,59 @@ export function Home({ initial = null }: { initial?: number | null }) {
               <i />
               <i />
             </span>
-            <span>{opened.name.toLowerCase()} / a closer look</span>
+            <span>
+              {opened.id === 'glite'
+                ? 'Glite · 2025'
+                : `${opened.name.toLowerCase()} / a closer look`}
+            </span>
             <button onClick={closeProject} aria-label="Close project">
               <X size={19} />
             </button>
           </div>
-          <article
-            className="project-article"
-            style={{ '--project-color': opened.color } as React.CSSProperties}
-          >
-            <div className="article-meta">
-              <span>{opened.name}</span>
-              <span>{opened.field}</span>
-            </div>
-            <h2 id="project-heading">{opened.title}</h2>
-            <p className="article-intro">{opened.story}</p>
-            <SceneBoundary compact key={opened.id}>
-              <ProjectVignette
-                project={opened}
-                reduced={reduced}
-                onReady={() => setWorldReady(true)}
-              />
-            </SceneBoundary>
-            <div className="article-bottom">
-              <div>
-                <span className="eyebrow">MY PART</span>
-                <h3>{opened.role}</h3>
-                {opened.details.map((detail) => (
-                  <p key={detail}>{detail}</p>
-                ))}
+          {opened.id === 'glite' ? (
+            <GliteStory reduced={reduced} onReady={() => setWorldReady(true)} />
+          ) : (
+            <article
+              className="project-article"
+              style={{ '--project-color': opened.color } as React.CSSProperties}
+            >
+              <div className="article-meta">
+                <span>{opened.name}</span>
+                <span>{opened.field}</span>
               </div>
-              {opened.url && (
-                <a
-                  className="visit-link"
-                  href={opened.url}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {opened.id === 'lumiprobe'
-                    ? 'View the code'
-                    : 'Visit website'}{' '}
-                  <ArrowUpRight size={17} />
-                </a>
-              )}
-            </div>
-          </article>
+              <h2 id="project-heading">{opened.title}</h2>
+              <p className="article-intro">{opened.story}</p>
+              <SceneBoundary compact key={opened.id}>
+                <ProjectVignette
+                  project={opened}
+                  reduced={reduced}
+                  onReady={() => setWorldReady(true)}
+                />
+              </SceneBoundary>
+              <div className="article-bottom">
+                <div>
+                  <span className="eyebrow">MY PART</span>
+                  <h3>{opened.role}</h3>
+                  {opened.details.map((detail) => (
+                    <p key={detail}>{detail}</p>
+                  ))}
+                </div>
+                {opened.url && (
+                  <a
+                    className="visit-link"
+                    href={opened.url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {opened.id === 'lumiprobe'
+                      ? 'View the code'
+                      : 'Visit website'}{' '}
+                    <ArrowUpRight size={17} />
+                  </a>
+                )}
+              </div>
+            </article>
+          )}
         </dialog>
       )}
     </main>

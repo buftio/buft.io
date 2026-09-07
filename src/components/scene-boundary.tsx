@@ -3,7 +3,12 @@
 import { Component, type ReactNode } from 'react'
 
 export class SceneBoundary extends Component<
-  { children: ReactNode; compact?: boolean },
+  {
+    children: ReactNode
+    compact?: boolean
+    onFailure?: () => void
+    onRetry?: () => void | Promise<void>
+  },
   { failed: boolean }
 > {
   state = { failed: false }
@@ -12,6 +17,7 @@ export class SceneBoundary extends Component<
   }
   componentDidCatch(error: Error) {
     console.error('3D scene failed to render', error)
+    this.props.onFailure?.()
   }
   render() {
     if (this.state.failed)
@@ -21,7 +27,12 @@ export class SceneBoundary extends Component<
         >
           The 3D scene could not load. You can still explore the project
           stories.
-          <button onClick={() => this.setState({ failed: false })}>
+          <button
+            onClick={async () => {
+              await this.props.onRetry?.()
+              this.setState({ failed: false })
+            }}
+          >
             Try again
           </button>
         </output>

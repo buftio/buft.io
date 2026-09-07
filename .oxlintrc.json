@@ -19,6 +19,7 @@
       "files": [
         "src/components/scene.tsx",
         "src/components/three/**",
+        "src/components/glite/cafe.tsx",
         "src/app/falling-monks/page.tsx"
       ],
       "rules": {
