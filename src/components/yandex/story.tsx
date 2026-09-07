@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useReducer, useRef, useEffect, useState } from 'react'
-import { Pause, Play, Users, Coins, ClipboardCheck } from 'lucide-react'
+import { Users, Coins, ClipboardCheck } from 'lucide-react'
 import { SceneBoundary } from '../scene-boundary'
 import { candidates, vacancy } from './candidates'
 import {
@@ -32,7 +32,6 @@ export default function YandexStory({
   const [stage, setStage] = useState<OfficeStage>('review')
   const candidateIndex = game.current
   const finished = game.finished
-  const [paused, setPaused] = useState(false)
   const paper = useRef<HTMLDivElement>(null)
   const desk = useRef<HTMLDivElement>(null)
   const feedback = useRef<HTMLDivElement>(null)
@@ -100,7 +99,7 @@ export default function YandexStory({
               candidate={game.current}
               hired={hired}
               stage={game.finished ? 'closed' : stage}
-              paused={reduced || paused}
+              paused={reduced}
               onReady={onReady}
             />
           </SceneBoundary>
@@ -109,16 +108,6 @@ export default function YandexStory({
           <i />
           {game.finished ? 'OFFICE CLOSED' : `NOW MEETING / ${candidate.name}`}
         </div>
-        <button
-          className="hiring-motion"
-          onClick={() => setPaused((value) => !value)}
-          disabled={reduced}
-          aria-label={
-            paused ? 'Resume office animation' : 'Pause office animation'
-          }
-        >
-          {paused || reduced ? <Play size={15} /> : <Pause size={15} />}
-        </button>
       </div>
       <div className="hiring-daybar" aria-label="Hiring day resources">
         <strong>

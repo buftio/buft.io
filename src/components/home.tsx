@@ -1,15 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import {
-  ArrowDown,
-  ArrowLeft,
-  ArrowRight,
-  ArrowUpRight,
-  Pause,
-  Play,
-  X,
-} from 'lucide-react'
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight, X } from 'lucide-react'
 import {
   useCallback,
   useEffect,
@@ -120,13 +112,11 @@ export function Home({ initial = null }: { initial?: number | null }) {
   const [leaving, setLeaving] = useState<number | null>(null)
   const [selected, setSelected] = useState<number | null>(initial)
   const [worldReady, setWorldReady] = useState(initial === null)
-  const [paused, setPaused] = useState(false)
-  const prefersReduced = useSyncExternalStore(
+  const reduced = useSyncExternalStore(
     subscribeMotion,
     () => getMotionQuery().matches,
     () => false,
   )
-  const reduced = prefersReduced || paused
   const opened = selected !== null ? projects[selected] : null
   const showScene = worldReady || selected === null
   if (shown !== active) {
@@ -358,12 +348,6 @@ export function Home({ initial = null }: { initial?: number | null }) {
             disabled={active === projects.length - 1}
           >
             <ArrowRight size={19} />
-          </button>
-          <button
-            aria-label={paused ? 'Resume animation' : 'Pause animation'}
-            onClick={() => setPaused((value) => !value)}
-          >
-            {paused ? <Play size={15} /> : <Pause size={15} />}
           </button>
         </div>
       </footer>

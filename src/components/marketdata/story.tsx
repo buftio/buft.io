@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useRef, useState } from 'react'
-import { ArrowDown, Pause, Play, SkipForward } from 'lucide-react'
+import { ArrowDown, SkipForward } from 'lucide-react'
 import { SceneBoundary } from '../scene-boundary'
 import { Designer } from './designer'
 import { initialDesign } from './design'
@@ -61,18 +61,9 @@ export default function MarketDataStory({
               <span>Find it</span>
             </button>
           )}
-          {reduced ? (
+          {reduced && (
             <button onClick={workshop.advance}>
               <SkipForward size={16} /> Next stop
-            </button>
-          ) : (
-            <button
-              onClick={() => workshop.setPaused(!workshop.paused)}
-              aria-label={
-                workshop.paused ? 'Resume the workshop' : 'Pause the workshop'
-              }
-            >
-              {workshop.paused ? <Play size={16} /> : <Pause size={16} />}
             </button>
           )}
         </div>
@@ -99,7 +90,7 @@ export default function MarketDataStory({
                 clock={workshop.clock}
                 marker={carpetPosition}
                 reduced={reduced}
-                paused={reduced || workshop.paused}
+                paused={reduced}
                 onReady={onReady}
               />
             </SceneBoundary>
@@ -158,7 +149,7 @@ export default function MarketDataStory({
             <Collection
               carpets={workshop.carpets}
               onFly={workshop.fly}
-              paused={reduced || workshop.paused}
+              paused={reduced}
             />
           </SceneBoundary>
         )}

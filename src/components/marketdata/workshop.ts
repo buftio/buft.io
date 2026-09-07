@@ -28,7 +28,6 @@ export function useWorkshop(reduced: boolean) {
   const [carpets, setCarpets] = useState<Carpet[]>([])
   const [queue, setQueue] = useState<Run[]>([])
   const [ready, setReady] = useState(false)
-  const [paused, setPaused] = useState(false)
   const [storageError, setStorageError] = useState(false)
   const [progress, setProgress] = useState(0)
   const [lastFinished, setLastFinished] = useState('')
@@ -120,7 +119,7 @@ export function useWorkshop(reduced: boolean) {
     const tick = (now: number) => {
       const delta = Math.min((now - previous) / 1000, 0.05)
       previous = now
-      if (!paused && !reduced && !document.hidden) {
+      if (!reduced && !document.hidden) {
         move(delta)
         if (now - announced > 180) {
           publish()
@@ -145,7 +144,7 @@ export function useWorkshop(reduced: boolean) {
       window.removeEventListener('pagehide', persist)
       persist()
     }
-  }, [ready, paused, reduced, persist, publish, move])
+  }, [ready, reduced, persist, publish, move])
   const make = (design: RugDesign, name: string) => {
     const total = savedCarpets.current.length + clock.current.runs.length
     const rug: Run = {
@@ -179,8 +178,6 @@ export function useWorkshop(reduced: boolean) {
     carpets,
     queue,
     ready,
-    paused,
-    setPaused,
     storageError,
     progress,
     clock,

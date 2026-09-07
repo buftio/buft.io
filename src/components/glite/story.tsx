@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
-import { ArrowUpRight, RotateCcw, LampDesk, Pause, Play } from 'lucide-react'
+import { ArrowUpRight, RotateCcw, LampDesk } from 'lucide-react'
 import { SceneBoundary } from '../scene-boundary'
 import { Dictionary, QuizPhone } from './exercises'
 const Cafe = dynamic(() => import('./cafe'), { ssr: false })
@@ -17,7 +17,6 @@ export default function GliteStory({
   const [corrected, setCorrected] = useState(false)
   const [word, setWord] = useState('desert')
   const [evening, setEvening] = useState(true)
-  const [paused, setPaused] = useState(false)
   const lookup = (value: string) => {
     setWord(value)
     document.getElementById('glite-dictionary')?.scrollIntoView({
@@ -106,7 +105,7 @@ export default function GliteStory({
             <Cafe
               corrected={corrected}
               evening={evening}
-              paused={paused || reduced}
+              paused={reduced}
               onReady={onReady}
               onLamp={() => setEvening((value) => !value)}
             />
@@ -119,13 +118,6 @@ export default function GliteStory({
             aria-pressed={evening}
           >
             <LampDesk size={17} />
-          </button>
-          <button
-            onClick={() => setPaused((value) => !value)}
-            aria-label={paused ? 'Play café animation' : 'Pause café animation'}
-            disabled={reduced}
-          >
-            {paused || reduced ? <Play size={15} /> : <Pause size={15} />}
           </button>
         </div>
       </section>
