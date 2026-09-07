@@ -15,13 +15,16 @@ export function useRugTexture(design: RugDesign) {
     const canvas = document.createElement('canvas')
     canvas.width = 270
     canvas.height = 390
-    const ctx = canvas.getContext('2d')!
-    paintRug(ctx, design, canvas.width, canvas.height)
     const result = new CanvasTexture(canvas)
     result.colorSpace = SRGBColorSpace
     result.anisotropy = 4
     return result
-  }, [design])
+  }, [])
+  useLayoutEffect(() => {
+    const canvas = texture.image as HTMLCanvasElement
+    paintRug(canvas.getContext('2d')!, design, canvas.width, canvas.height)
+    texture.needsUpdate = true
+  }, [design, texture])
   useEffect(() => () => texture.dispose(), [texture])
   return texture
 }

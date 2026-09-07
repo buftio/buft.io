@@ -52,10 +52,13 @@ export function Designer({
   const colors = colorsFor(design)
   const paint = (index: number) => {
     if (index < 0 || index >= COLS * ROWS) return
+    const reflected = mirror
+      ? Math.floor(index / COLS) * COLS + COLS - 1 - (index % COLS)
+      : index
+    if (design.pixels[index] === ink && design.pixels[reflected] === ink) return
     const pixels = [...design.pixels]
     pixels[index] = ink
-    if (mirror)
-      pixels[Math.floor(index / COLS) * COLS + COLS - 1 - (index % COLS)] = ink
+    pixels[reflected] = ink
     onDesign({ ...design, pixels })
   }
   const paintAt = (x: number, y: number) => {
