@@ -23,7 +23,6 @@ export default function MarketDataStory({
   const workshop = useWorkshop(reduced)
   const stop = stops[stopAt(workshop.progress)] ?? stops[0]
   const shown = workshop.active?.design ?? design
-  const count = workshop.carpets.length
   return (
     <article className="market-story">
       <header className="market-intro">
@@ -33,21 +32,15 @@ export default function MarketDataStory({
           turning its everyday paperwork into software.
         </p>
       </header>
-      <div className="workshop-status">
-        <div className="workshop-status-text" aria-live="polite">
-          <i className={workshop.active ? 'is-working' : ''} />
-          <span>
-            {workshop.active ? (
-              <>
-                <strong>{workshop.active.name}</strong> · {stop.name}
-              </>
-            ) : (
-              'A little carpet factory. Yours to try.'
-            )}
-          </span>
-        </div>
-        <div className="workshop-actions">
-          {workshop.active && (
+      {workshop.active && (
+        <div className="workshop-status">
+          <div className="workshop-status-text" aria-live="polite">
+            <i className="is-working" />
+            <span>
+              <strong>{workshop.active.name}</strong> · {stop.name}
+            </span>
+          </div>
+          <div className="workshop-actions">
             <button
               onClick={() =>
                 carpetPosition.current?.scrollIntoView({
@@ -60,14 +53,14 @@ export default function MarketDataStory({
               <ArrowDown size={16} />
               <span>Find it</span>
             </button>
-          )}
-          {reduced && (
-            <button onClick={workshop.advance}>
-              <SkipForward size={16} /> Next stop
-            </button>
-          )}
+            {reduced && (
+              <button onClick={workshop.advance}>
+                <SkipForward size={16} /> Next stop
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
       <div className="market-workshop">
         <div className="market-designer-position">
           <Designer
@@ -144,7 +137,7 @@ export default function MarketDataStory({
             : ''}
         </p>
         {storageErrorMessage(workshop.storageError)}
-        {count > 0 && (
+        {workshop.ready && (
           <SceneBoundary compact>
             <Collection
               carpets={workshop.carpets}
