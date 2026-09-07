@@ -94,6 +94,9 @@
 .market-workshop {
   position: relative;
 }
+.market-environment {
+  position: relative;
+}
 .market-designer-position {
   position: absolute;
   right: 0;
@@ -104,6 +107,7 @@
 .market-journey {
   position: relative;
   aspect-ratio: 1 / 2;
+  pointer-events: none;
 }
 .market-canvas {
   position: absolute;
@@ -126,6 +130,7 @@
   position: absolute;
   width: 39%;
   z-index: 1;
+  pointer-events: auto;
 }
 .market-copy-invoices {
   left: 0;
@@ -177,7 +182,9 @@
   left: 13%;
 }
 .market-party {
+  position: relative;
   margin-top: 8px;
+  pointer-events: none;
 }
 .carpet-party-world {
   position: relative;

@@ -1,10 +1,12 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { partyLayout } from '../src/components/marketdata/party-layout.ts'
 import {
   moveRuns,
   nextDeparture,
   spaceRuns,
   STAGGER,
+  ARRIVAL_END,
 } from '../src/components/marketdata/workshop-state.ts'
 
 const rug = (id, progress) => ({
@@ -13,6 +15,14 @@ const rug = (id, progress) => ({
   design: { palette: 'ruby', pattern: 'medallion', pixels: [1, 2, 3] },
   createdAt: 1,
   progress,
+})
+test('reserving another party place keeps existing guests in their places', () => {
+  const guests = Array.from({ length: 12 }, (_, i) => rug(`guest-${i}`, 0))
+  for (const narrow of [false, true]) {
+    const before = partyLayout(guests, narrow)
+    const after = partyLayout([...guests, rug('new-arrival', 0)], narrow)
+    assert.deepEqual(after.places.slice(0, guests.length), before.places)
+  }
 })
 test('old waiting rugs become staggered departures without changing the leading rug', () => {
   const migrated = spaceRuns([
@@ -41,15 +51,28 @@ test('several trucks run concurrently and keep their distance', () => {
     )
 })
 test('finishing a rug preserves the next rug progress and saved designs', () => {
-  const first = rug('first', 0.99)
-  const second = rug('second', 0.91)
+  const first = rug('first', ARRIVAL_END - 0.01)
+  const second = rug('second', ARRIVAL_END - 0.09)
   const result = moveRuns([first, second], 0.6)
   assert.equal(result.finished[0].id, 'first')
   assert.equal(result.finished[0].design, first.design)
   assert.equal(result.pending[0].id, 'second')
-  assert.ok(Math.abs(result.pending[0].progress - 0.93) < 1e-10)
-  assert.equal(first.progress, 0.99)
+  assert.ok(Math.abs(result.pending[0].progress - (ARRIVAL_END - 0.07)) < 1e-10)
+  assert.equal(first.progress, ARRIVAL_END - 0.01)
   assert.equal(moveRuns(result.pending, 0).finished.length, 0)
+})
+test('reaching home keeps the same delivery alive until its party flight finishes', () => {
+  const start = rug('arriving', 0.99)
+  const flight = moveRuns([start], 0.6)
+  assert.equal(flight.finished.length, 0)
+  assert.equal(flight.pending[0].id, start.id)
+  assert.ok(flight.pending[0].progress > 1)
+  const restored = spaceRuns(JSON.parse(JSON.stringify(flight.pending)))
+  assert.deepEqual(restored, flight.pending)
+  const landed = moveRuns(restored, 5)
+  assert.equal(landed.pending.length, 0)
+  assert.equal(landed.finished.length, 1)
+  assert.equal(landed.finished[0].id, start.id)
 })
 test('negative launch delays survive a reload and every rug finishes exactly once', () => {
   const queued = spaceRuns(

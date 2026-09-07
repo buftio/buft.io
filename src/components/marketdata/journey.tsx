@@ -1,6 +1,6 @@
 'use client'
 
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, type RefObject } from 'react'
 import { Group, Vector3 } from 'three'
 import { Mill, Warehouse, Shop } from './models'
@@ -8,13 +8,16 @@ import { Rug } from './rug'
 import { CostSheet } from './cost-sheet'
 import { type RugDesign } from './design'
 import { type Run, type WorkshopClock } from './workshop-state'
-import { journeyLayout } from './journey-layout'
+import { type JourneyLayout } from './journey-layout'
 import { Road, Island } from './ground'
 import { Delivery } from './delivery'
 
 type Props = {
   design: RugDesign
   queue: Run[]
+  guestIds: string[]
+  layout: JourneyLayout
+  narrow: boolean
   clock: RefObject<WorkshopClock>
   marker: RefObject<HTMLSpanElement | null>
   paused: boolean
@@ -22,9 +25,12 @@ type Props = {
   onReady: () => void
 }
 
-function World({
+export default function Journey({
   design,
   queue,
+  guestIds,
+  layout,
+  narrow,
   clock,
   marker,
   paused,
@@ -32,13 +38,6 @@ function World({
   onReady,
 }: Props) {
   const { camera, size } = useThree()
-  const narrow = window.matchMedia('(max-width: 650px)').matches
-  const width = narrow ? 6.7 : 11
-  const height = (width * size.height) / size.width
-  const layout = useMemo(
-    () => journeyLayout(width, height, narrow),
-    [width, height, narrow],
-  )
   const preview = useMemo<Run>(
     () => ({ id: 'preview', name: '', design, createdAt: 0, progress: 0 }),
     [design],
@@ -56,12 +55,6 @@ function World({
   const weaving = useRef<Group>(null)
   const invoiceClock = useRef({ progress: 0, time: 0 })
   const v = useMemo(() => new Vector3(), [])
-  useEffect(() => {
-    camera.position.set(0, 30, 44)
-    camera.lookAt(0, 0, 0)
-    camera.zoom = size.width / width
-    camera.updateProjectionMatrix()
-  }, [camera, size.width, width])
   useEffect(onReady, [onReady])
   useFrame(() => {
     const t = clock.current.time
@@ -92,28 +85,6 @@ function World({
   })
   return (
     <>
-      <ambientLight intensity={0.55} />
-      <hemisphereLight args={['#fff4dc', '#7b9288', 1]} />
-      <directionalLight
-        position={[-10, 30, 25]}
-        intensity={2.5}
-        color="#fff1d7"
-        castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-camera-left={-35}
-        shadow-camera-right={35}
-        shadow-camera-top={45}
-        shadow-camera-bottom={-45}
-        shadow-camera-far={120}
-        shadow-bias={-0.0003}
-        shadow-normalBias={0.035}
-        shadow-radius={4}
-      />
-      <directionalLight
-        position={[10, 15, -10]}
-        intensity={0.5}
-        color="#b6d7db"
-      />
       <Road curve={layout.roads.truck} />
       <Road curve={layout.roads.flight} flight />
       <Road curve={layout.roads.home} />
@@ -154,6 +125,7 @@ function World({
         <Delivery
           key={rug.id}
           rug={rug}
+          variant={Math.max(0, guestIds.indexOf(rug.id))}
           clock={clock}
           layout={layout}
           narrow={narrow}
@@ -174,20 +146,5 @@ function World({
         />
       </group>
     </>
-  )
-}
-
-export default function Journey(props: Props) {
-  return (
-    <Canvas
-      shadows="soft"
-      resize={{ offsetSize: true, debounce: 0 }}
-      orthographic
-      camera={{ position: [0, 30, 44], zoom: 70, near: 0.1, far: 150 }}
-      dpr={[1, 1.5]}
-      gl={{ alpha: true, antialias: true }}
-    >
-      <World {...props} />
-    </Canvas>
   )
 }

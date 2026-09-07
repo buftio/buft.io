@@ -5,6 +5,7 @@ import { useMemo, useRef, type RefObject } from 'react'
 import { Group, MathUtils, Vector3 } from 'three'
 import { DeliveryTruck, Cart, Shopper } from './models'
 import { Rug } from './rug'
+import { colorsFor } from './design'
 import { type Run, type WorkshopClock } from './workshop-state'
 import { type JourneyLayout } from './journey-layout'
 
@@ -13,6 +14,7 @@ const between = (p: number, a: number, b: number) =>
 
 export function Delivery({
   rug,
+  variant,
   clock,
   layout,
   narrow,
@@ -21,6 +23,7 @@ export function Delivery({
   paused,
 }: {
   rug: Run
+  variant: number
   clock: RefObject<WorkshopClock>
   layout: JourneyLayout
   narrow: boolean
@@ -77,8 +80,9 @@ export function Delivery({
       customer.current.rotation.y = Math.atan2(tangent.x, tangent.z)
     }
     if (purchase.current) purchase.current.visible = p >= 0.76
-    if (happy.current) happy.current.visible = p >= 0.95 && p < 1
-    if (focused && marker.current && p >= 0.23) {
+    if (happy.current)
+      happy.current.visible = rug.id === 'preview' && p >= 0.95 && p < 1
+    if (focused && marker.current && p >= 0.23 && p < 0.95) {
       const target =
         p < 0.43
           ? truck
@@ -127,7 +131,7 @@ export function Delivery({
         </group>
       </group>
       <group ref={customer} visible={false} scale={0.8}>
-        <Shopper color="#48778a" variant={1} />
+        <Shopper color={colorsFor(rug.design)[2]} variant={variant} />
         <group position={[0.6, 0, 0.55]}>
           <Cart />
           <group ref={purchase} position={[0, 0.4, 0]}>

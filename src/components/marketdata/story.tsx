@@ -1,15 +1,16 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { ArrowDown, SkipForward } from 'lucide-react'
 import { SceneBoundary } from '../scene-boundary'
 import { Designer } from './designer'
 import { initialDesign } from './design'
 import { stops, stopAt, useWorkshop } from './workshop'
+import { partyLayout } from './party-layout'
+import Collection from './collection'
 
-const Journey = dynamic(() => import('./journey'), { ssr: false })
-const Collection = dynamic(() => import('./collection'), { ssr: false })
+const WorkshopScene = dynamic(() => import('./scene'), { ssr: false })
 
 export default function MarketDataStory({
   reduced,
@@ -20,7 +21,18 @@ export default function MarketDataStory({
 }) {
   const [design, setDesign] = useState(initialDesign)
   const carpetPosition = useRef<HTMLSpanElement>(null)
+  const route = useRef<HTMLDivElement>(null)
+  const party = useRef<HTMLElement>(null)
+  const controls = useRef(new Map<string, HTMLButtonElement>())
   const workshop = useWorkshop(reduced)
+  const wide = useMemo(
+    () => partyLayout(workshop.guests, false),
+    [workshop.guests],
+  )
+  const narrow = useMemo(
+    () => partyLayout(workshop.guests, true),
+    [workshop.guests],
+  )
   const stop = stops[stopAt(workshop.progress)] ?? stops[0]
   const shown = workshop.active?.design ?? design
   return (
@@ -71,82 +83,99 @@ export default function MarketDataStory({
             queued={workshop.queue.length}
           />
         </div>
-        <div className="market-journey">
+        <div className="market-environment">
           <figure
             className="market-canvas"
-            aria-label="A clay carpet factory, delivery truck, warehouse, flying carpet, shop, and a happy customer"
+            aria-label="A clay carpet factory, delivery truck, warehouse, shop, and customers flying home to a carpet party"
           >
             <SceneBoundary compact onFailure={onReady}>
-              <Journey
+              <WorkshopScene
                 design={shown}
                 queue={workshop.queue}
+                guests={workshop.guests}
+                wide={wide}
+                narrow={narrow}
                 clock={workshop.clock}
                 marker={carpetPosition}
+                route={route}
+                party={party}
+                controls={controls}
                 reduced={reduced}
-                paused={reduced}
+                onFly={workshop.fly}
                 onReady={onReady}
               />
             </SceneBoundary>
           </figure>
-          <span
-            ref={carpetPosition}
-            className="market-carpet-position"
-            aria-hidden="true"
-          />
-          <div id="market-mill" className="market-stop market-stop-mill">
-            <span>01</span> The mill
+          <div className="market-journey" ref={route}>
+            <span
+              ref={carpetPosition}
+              className="market-carpet-position"
+              aria-hidden="true"
+            />
+            <div id="market-mill" className="market-stop market-stop-mill">
+              <span>01</span> The mill
+            </div>
+            <div
+              id="market-freight"
+              className="market-stop market-stop-freight"
+            >
+              <span>02</span> On the road
+            </div>
+            <div className="market-copy market-copy-invoices">
+              <p>
+                Factory invoices used to be checked by hand. I automated those
+                checks so each delivery no longer needed someone to go through
+                the paperwork.
+              </p>
+            </div>
+            <div
+              id="market-storage"
+              className="market-stop market-stop-storage"
+            >
+              <span>03</span> Into storage
+            </div>
+            <div id="market-flight" className="market-stop market-stop-flight">
+              <span>04</span> A flying delivery
+            </div>
+            <div className="market-copy market-copy-costs">
+              <p>
+                Cost planning lived in Excel. I built tools that did the same
+                calculations automatically, without the repeated copying,
+                checking, and recalculating.
+              </p>
+            </div>
+            <div id="market-shop" className="market-stop market-stop-shop">
+              <span>05</span> In the shop
+            </div>
+            <div className="market-copy market-copy-owner">
+              <p>
+                The work connected the factory&apos;s daily operations, from an
+                invoice arriving to understanding what a carpet cost.
+              </p>
+            </div>
           </div>
-          <div id="market-freight" className="market-stop market-stop-freight">
-            <span>02</span> On the road
-          </div>
-          <div className="market-copy market-copy-invoices">
-            <p>
-              Factory invoices used to be checked by hand. I automated those
-              checks so each delivery no longer needed someone to go through the
-              paperwork.
+          <section
+            className="market-party"
+            aria-label="Carpet party"
+            ref={party}
+          >
+            <p className="sr-only" aria-live="polite">
+              {workshop.lastFinished
+                ? `${workshop.lastFinished} joined the party.`
+                : ''}
             </p>
-          </div>
-          <div id="market-storage" className="market-stop market-stop-storage">
-            <span>03</span> Into storage
-          </div>
-          <div id="market-flight" className="market-stop market-stop-flight">
-            <span>04</span> A flying delivery
-          </div>
-          <div className="market-copy market-copy-costs">
-            <p>
-              Cost planning lived in Excel. I built tools that did the same
-              calculations automatically, without the repeated copying,
-              checking, and recalculating.
-            </p>
-          </div>
-          <div id="market-shop" className="market-stop market-stop-shop">
-            <span>05</span> In the shop
-          </div>
-          <div className="market-copy market-copy-owner">
-            <p>
-              The work connected the factory&apos;s daily operations, from an
-              invoice arriving to understanding what a carpet cost.
-            </p>
-          </div>
+            {storageErrorMessage(workshop.storageError)}
+            <Collection
+              carpets={workshop.guests}
+              pending={workshop.queue.map((run) => run.id)}
+              wide={wide}
+              narrow={narrow}
+              controls={controls}
+              onFly={workshop.fly}
+            />
+          </section>
         </div>
       </div>
-      <section className="market-party" aria-label="Carpet party">
-        <p className="sr-only" aria-live="polite">
-          {workshop.lastFinished
-            ? `${workshop.lastFinished} joined the party.`
-            : ''}
-        </p>
-        {storageErrorMessage(workshop.storageError)}
-        {workshop.ready && (
-          <SceneBoundary compact>
-            <Collection
-              carpets={workshop.carpets}
-              onFly={workshop.fly}
-              paused={reduced}
-            />
-          </SceneBoundary>
-        )}
-      </section>
     </article>
   )
 }
