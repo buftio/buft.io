@@ -33,6 +33,26 @@
   z-index: 1;
   padding-bottom: 8px;
 }
+.glite-story::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 80% 12%, #f8bd6166, transparent 42%),
+    repeating-radial-gradient(
+      ellipse at 90% 45%,
+      transparent 0 45px,
+      #ba87310c 46px 48px,
+      transparent 49px 95px
+    ),
+    linear-gradient(140deg, #eac69266, #e6ae5755 40%, #f4d5a044);
+  opacity: 0;
+  transition: opacity 800ms ease;
+}
+.glite-story.is-desert::before {
+  opacity: 1;
+}
 .glite-intro > div {
   display: flex;
   align-items: baseline;
@@ -125,12 +145,14 @@
 .plate-note {
   position: absolute;
   bottom: 12px;
-  left: 45%;
+  left: 0;
+  width: 100%;
+  text-align: center;
   font-family: Georgia, serif;
   font-style: italic;
-  font-size: 19px;
+  font-size: 15px;
   color: #625740;
-  transform: rotate(-6deg);
+  transform: rotate(-3deg);
   pointer-events: none;
 }
 .glite-scene-controls {

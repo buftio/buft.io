@@ -26,7 +26,7 @@ export default function GliteStory({
     })
   }
   return (
-    <article className="glite-story">
+    <article className={`glite-story${corrected ? '' : ' is-desert'}`}>
       <header className="glite-intro">
         <div>
           <h2 id="project-heading">Glite</h2>
@@ -69,8 +69,8 @@ export default function GliteStory({
             <p className="tutor-reply" aria-live="polite">
               <span>Tutor</span>
               {corrected
-                ? 'Cake. That makes more sense.'
-                : 'That might be a little dry.'}
+                ? 'Much better. I was getting sand in my circuits.'
+                : 'Good news: no rain. Bad news: no cake.'}
             </p>
           </div>
           <button
@@ -95,8 +95,8 @@ export default function GliteStory({
           className="glite-cafe"
           aria-label={
             corrected
-              ? 'The plate now holds a strawberry cake beside the learner and AI tutor.'
-              : 'A tiny desert with sand and a cactus sits on the café table beside the learner and AI tutor.'
+              ? 'The sand disappears, the café returns, and the plate holds a strawberry cake. The tutor takes off its sun hat and sunglasses.'
+              : 'The entire café is buried in desert dunes. Giant cacti surround the table, a tumbleweed rolls past, and even the sun wears sunglasses. The tutor has put on a safari hat. The lamp is half buried in sand.'
           }
         >
           <SceneBoundary
@@ -115,7 +115,9 @@ export default function GliteStory({
             />
           </SceneBoundary>
           <span className="plate-note" aria-live="polite">
-            {corrected ? 'dessert' : 'desert'}
+            {corrected
+              ? 'dessert. civilisation restored.'
+              : 'desert. the whole thing, apparently.'}
           </span>
         </figure>
         <div className="glite-scene-controls">
@@ -144,7 +146,8 @@ export default function GliteStory({
             could become something to look up, save, and practise.
           </p>
           <p>
-            Here, one extra <em>s</em> changes what arrives on the plate.
+            Here, one extra <em>s</em> gets us out of the desert and back to
+            cake.
           </p>
         </div>
         <Dictionary word={word} onWord={setWord} />

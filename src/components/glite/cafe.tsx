@@ -1,10 +1,16 @@
 'use client'
 
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Canvas, createPortal, useFrame, useThree } from '@react-three/fiber'
 import { ContactShadows, useAnimations, useGLTF } from '@react-three/drei'
 import { Suspense, useEffect, useMemo, useRef } from 'react'
 import { clone } from 'three/addons/utils/SkeletonUtils.js'
-import { Group, MathUtils, Vector3 } from 'three'
+import { MathUtils } from 'three'
+import {
+  Clay,
+  DesertEnvironment,
+  DesertHat,
+  Reveal,
+} from '../three/glite-desert'
 
 type Props = {
   corrected: boolean
@@ -18,42 +24,7 @@ export function clearCafe() {
   useGLTF.clear('/glite-room.glb')
 }
 
-function Clay({
-  position = [0, 0, 0],
-  scale = [1, 1, 1],
-  color,
-}: {
-  position?: [number, number, number]
-  scale?: [number, number, number]
-  color: string
-}) {
-  return (
-    <mesh position={position} scale={scale}>
-      <sphereGeometry args={[1, 24, 16]} />
-      <meshStandardMaterial color={color} roughness={0.9} />
-    </mesh>
-  )
-}
-
 function Plate({ corrected, paused }: Pick<Props, 'corrected' | 'paused'>) {
-  const desert = useRef<Group>(null)
-  const dessert = useRef<Group>(null)
-  const target = useMemo(() => new Vector3(), [])
-  useFrame((_, delta) => {
-    for (const [ref, show] of [
-      [desert, !corrected],
-      [dessert, corrected],
-    ] as const) {
-      if (!ref.current) continue
-      const size = show ? 1 : 0.001
-      target.setScalar(size)
-      ref.current.scale.lerp(
-        target,
-        paused ? 1 : 1 - Math.exp(-Math.min(delta, 0.05) * 7),
-      )
-      ref.current.visible = ref.current.scale.x > 0.005
-    }
-  })
   return (
     <group position={[0, 0.78, 0]}>
       <mesh>
@@ -64,7 +35,7 @@ function Plate({ corrected, paused }: Pick<Props, 'corrected' | 'paused'>) {
         <torusGeometry args={[0.42, 0.023, 12, 48]} />
         <meshStandardMaterial color="#4a9384" roughness={0.6} />
       </mesh>
-      <group ref={desert} scale={corrected ? 0.001 : 1}>
+      <Reveal show={!corrected} paused={paused}>
         <Clay
           position={[0, 0.05, 0]}
           scale={[0.36, 0.09, 0.34]}
@@ -107,8 +78,8 @@ function Plate({ corrected, paused }: Pick<Props, 'corrected' | 'paused'>) {
             color="#51856b"
           />
         </group>
-      </group>
-      <group ref={dessert} scale={corrected ? 1 : 0.001}>
+      </Reveal>
+      <Reveal show={corrected} paused={paused}>
         {[0.07, 0.15, 0.23].map((y, i) => (
           <mesh key={y} position={[0, y, 0]}>
             <cylinderGeometry args={[0.29, 0.29, 0.08, 48]} />
@@ -143,16 +114,17 @@ function Plate({ corrected, paused }: Pick<Props, 'corrected' | 'paused'>) {
           scale={[0.085, 0.018, 0.065]}
           color="#4f815c"
         />
-      </group>
+      </Reveal>
     </group>
   )
 }
 
 function Characters({
+  corrected,
   paused,
   onReady,
   onLamp,
-}: Pick<Props, 'paused' | 'onReady' | 'onLamp'>) {
+}: Pick<Props, 'corrected' | 'paused' | 'onReady' | 'onLamp'>) {
   const source = useGLTF('/glite-room.glb')
   const scene = useMemo(() => {
     const result = clone(source.scene)
@@ -177,6 +149,50 @@ function Characters({
     })
     return result
   }, [source.scene])
+  const decor = useMemo(
+    () =>
+      ['Plant', 'BookStack', 'Rug', 'RugInner']
+        .map((name) => scene.getObjectByName(name))
+        .filter((item) => item !== undefined)
+        .map((object) => ({ object, scale: object.scale.clone() })),
+    [scene],
+  )
+  const lamp = scene.getObjectByName('Lamp')
+  const lampBase = scene.getObjectByName('LampBase')
+  const head = scene.getObjectByName('TutorHead')
+  const decorAmount = useRef(corrected ? 1 : 0.001)
+  useFrame((_, delta) => {
+    const speed = paused ? 1000 : 7
+    decorAmount.current = paused
+      ? corrected
+        ? 1
+        : 0.001
+      : MathUtils.damp(
+          decorAmount.current,
+          corrected ? 1 : 0.001,
+          speed,
+          Math.min(delta, 0.05),
+        )
+    for (const { object, scale } of decor) {
+      object.scale.copy(scale).multiplyScalar(decorAmount.current)
+      object.visible = decorAmount.current > 0.005
+    }
+    if (lampBase) lampBase.visible = corrected
+    if (lamp) {
+      lamp.position.y = MathUtils.damp(
+        lamp.position.y,
+        corrected ? 0 : -0.8,
+        speed,
+        Math.min(delta, 0.05),
+      )
+      lamp.rotation.z = MathUtils.damp(
+        lamp.rotation.z,
+        corrected ? 0 : -0.5,
+        speed,
+        Math.min(delta, 0.05),
+      )
+    }
+  })
   const { actions } = useAnimations(source.animations, scene)
   useEffect(() => {
     actions.Conversation?.play()
@@ -189,18 +205,22 @@ function Characters({
   }, [actions, paused])
   useEffect(onReady, [onReady])
   return (
-    <primitive
-      object={scene}
-      onClick={(event: {
-        object: { name: string }
-        stopPropagation: () => void
-      }) => {
-        if (event.object.name.startsWith('Lamp')) {
-          event.stopPropagation()
-          onLamp()
-        }
-      }}
-    />
+    <>
+      <primitive
+        object={scene}
+        onClick={(event: {
+          object: { name: string }
+          stopPropagation: () => void
+        }) => {
+          if (event.object.name.startsWith('Lamp')) {
+            event.stopPropagation()
+            onLamp()
+          }
+        }}
+      />
+      {head &&
+        createPortal(<DesertHat show={!corrected} paused={paused} />, head)}
+    </>
   )
 }
 
@@ -208,16 +228,28 @@ function Camera() {
   const { camera, size } = useThree()
   useEffect(() => {
     camera.position.set(4.2, 4.4, 6)
-    camera.lookAt(0, 0.65, -0.2)
-    camera.zoom = Math.min(size.width / 5.4, size.height / 3.7)
+    camera.lookAt(0, 0.85, -0.2)
+    camera.zoom = Math.min(size.width / 6, size.height / 4.2)
     camera.updateProjectionMatrix()
   }, [camera, size])
   return null
 }
 
-function Lighting({ evening, paused }: Pick<Props, 'evening' | 'paused'>) {
+function Lighting({
+  corrected,
+  evening,
+  paused,
+}: Pick<Props, 'corrected' | 'evening' | 'paused'>) {
   const lamp = useRef<import('three').PointLight>(null)
+  const sun = useRef<import('three').DirectionalLight>(null)
   useFrame((_, delta) => {
+    if (sun.current)
+      sun.current.intensity = MathUtils.damp(
+        sun.current.intensity,
+        corrected ? 2.5 : 3.4,
+        paused ? 1000 : 5,
+        Math.min(delta, 0.05),
+      )
     if (lamp.current)
       lamp.current.intensity = MathUtils.damp(
         lamp.current.intensity,
@@ -230,7 +262,12 @@ function Lighting({ evening, paused }: Pick<Props, 'evening' | 'paused'>) {
     <>
       <ambientLight intensity={1.2} />
       <hemisphereLight args={['#fff1d3', '#768374', 1.4]} />
-      <directionalLight position={[3, 6, 5]} intensity={2.5} color="#ffe9c3" />
+      <directionalLight
+        ref={sun}
+        position={[3, 6, 5]}
+        intensity={2.5}
+        color="#ffe9c3"
+      />
       <pointLight
         ref={lamp}
         position={[1.65, 1.6, -1.35]}
@@ -251,14 +288,20 @@ export default function Cafe(props: Props) {
       gl={{ alpha: true, antialias: true }}
     >
       <Camera />
-      <Lighting evening={props.evening} paused={props.paused} />
+      <Lighting
+        corrected={props.corrected}
+        evening={props.evening}
+        paused={props.paused}
+      />
       <Suspense fallback={null}>
         <Characters
+          corrected={props.corrected}
           paused={props.paused}
           onReady={props.onReady}
           onLamp={props.onLamp}
         />
         <Plate corrected={props.corrected} paused={props.paused} />
+        <DesertEnvironment show={!props.corrected} paused={props.paused} />
         <ContactShadows
           position={[0, -0.04, 0]}
           opacity={0.3}
@@ -266,7 +309,7 @@ export default function Cafe(props: Props) {
           blur={2.5}
           far={3}
           resolution={256}
-          frames={1}
+          frames={props.paused ? 1 : 120}
         />
       </Suspense>
     </Canvas>
