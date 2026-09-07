@@ -285,7 +285,7 @@ export function Home({ initial = null }: { initial?: number | null }) {
           buft<span>.io</span>
           <i />
         </button>
-        <span className="header-note">A FEW THINGS I HAVE BUILT</span>
+        <span className="header-note">THINGS I HAVE BUILT</span>
         <nav aria-label="Profile links">
           <a href="https://github.com/buftio" target="_blank" rel="noreferrer">
             GitHub <ArrowUpRight size={13} />

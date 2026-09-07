@@ -32,7 +32,7 @@ export const projects: Project[] = [
     field: 'AI × language',
     role: 'Lead full-stack engineer',
     period: 'From 2025',
-    title: 'An English tutor',
+    title: 'English learning app',
     summary:
       'Voice conversations, a personal dictionary, and short daily exercises.',
     story:
