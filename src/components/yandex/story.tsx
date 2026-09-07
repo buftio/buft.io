@@ -61,15 +61,21 @@ export default function YandexStory({
       setStage('review')
   }
   useEffect(() => {
-    if (file.decision)
+    if (file.decision) {
+      feedback.current?.querySelector('h3')?.focus({ preventScroll: true })
       feedback.current?.scrollIntoView({
         behavior: reduced ? 'instant' : 'smooth',
         block: 'center',
       })
+    }
   }, [file.decision, reduced])
   useEffect(() => {
     const page = `${candidateIndex}:${finished}`
     if (lastPage.current !== page) {
+      const heading = finished
+        ? desk.current?.querySelector<HTMLElement>('.hiring-results h3')
+        : paper.current?.querySelector<HTMLElement>('.hiring-file h3')
+      heading?.focus({ preventScroll: true })
       const target = finished
         ? desk.current
         : window.matchMedia('(max-width: 600px)').matches
@@ -98,7 +104,15 @@ export default function YandexStory({
             <HiringOffice
               candidate={game.current}
               hired={hired}
-              stage={game.finished ? 'closed' : stage}
+              stage={
+                game.finished
+                  ? 'closed'
+                  : file.decision
+                    ? file.decision.kind === 'hire'
+                      ? 'hired'
+                      : 'rejected'
+                    : stage
+              }
               paused={reduced}
               onReady={onReady}
             />

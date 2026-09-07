@@ -85,7 +85,7 @@ export function CandidateFile({
           <small>
             APPLICATION / {String(game.current + 1).padStart(2, '0')}
           </small>
-          <h3>{candidate.name}</h3>
+          <h3 tabIndex={-1}>{candidate.name}</h3>
         </div>
         <div className="hiring-initials" aria-hidden="true">
           {candidate.name

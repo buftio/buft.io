@@ -25,7 +25,7 @@ export function Receipt({
         {decision.kind === 'hire' ? 'OFFER SIGNED' : 'FILE CLOSED'} /{' '}
         {candidates[game.current].name}
       </small>
-      <h3>
+      <h3 tabIndex={-1}>
         {decision.score === 3
           ? 'That decision holds up.'
           : decision.score === 1
@@ -70,7 +70,7 @@ export function DayReview({
       aria-label="End of day review"
     >
       <small>END OF DAY / RECRUITMENT</small>
-      <h3>
+      <h3 tabIndex={-1}>
         {score.perfect
           ? 'Two seats. Two good fits.'
           : score.goodHires === 2
