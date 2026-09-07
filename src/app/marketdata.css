@@ -91,11 +91,6 @@
 .workshop-actions button:hover {
   background: #ccd6bf;
 }
-.workshop-queue {
-  font-size: 13px;
-  color: #697963;
-  margin: -8px 0 18px;
-}
 .market-workshop {
   position: relative;
 }
@@ -169,7 +164,7 @@
   transform: rotate(34deg);
 }
 .market-stop-storage {
-  top: 49%;
+  top: 53%;
   right: 11%;
 }
 .market-stop-flight {
@@ -181,72 +176,36 @@
   top: 77%;
   left: 13%;
 }
-.market-stop-owner {
-  top: 97%;
-  right: 10%;
+.market-party {
+  margin-top: 8px;
 }
-.market-collection {
-  border-top: 1px solid #a7b298;
-  padding-top: 28px;
-  margin-top: 28px;
+.carpet-party-world {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--party-ratio);
 }
-.collection-heading h3 {
-  font-size: 25px;
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  margin: 0 0 9px;
+.carpet-party-world canvas {
+  touch-action: pan-y;
 }
-.collection-heading p {
-  font-size: 14px;
-  color: #6b7862;
-  margin: 0;
+.party-hit {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100px;
+  height: 110px;
+  border: 0;
+  border-radius: 45%;
+  background: transparent;
+  padding: 0;
+  pointer-events: none;
+}
+.party-hit:focus-visible {
+  background: #eec89218;
+  outline-offset: -5px !important;
 }
 .workshop-storage-note {
   font-size: 13px;
   color: #8e483f;
-}
-.carpet-collection-world {
-  position: relative;
-  width: 100%;
-  height: calc(var(--rug-rows) * 250px);
-  min-height: 250px;
-  margin-top: 15px;
-}
-.carpet-collection-labels {
-  display: grid;
-  position: absolute;
-  inset: 0;
-  gap: 0 20px;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-  font-size: 13px;
-  color: #66745e;
-  pointer-events: none;
-}
-.carpet-collection-labels li {
-  display: flex;
-  gap: 8px;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 8px;
-  overflow-wrap: anywhere;
-}
-.carpet-collection-labels button {
-  pointer-events: auto;
-  padding: 1px 9px;
-  border: 1px solid #9dab8e;
-  font-size: 12px;
-  color: #6b3944;
-}
-.show-carpets {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin: 25px auto 0;
-  border: 1px solid #9ca88d;
-  padding: 10px 18px;
-  font-size: 14px;
 }
 .market-story :is(button, input):focus-visible {
   outline: 2px solid #7a404a;
@@ -324,14 +283,16 @@
   .market-copy-invoices {
     top: 20%;
     left: 0;
+    width: 67%;
   }
   .market-copy-costs {
-    top: 53%;
+    top: 57%;
     right: 0;
   }
   .market-copy-owner {
     top: 80%;
     left: 0;
+    width: 70%;
   }
   .market-stop-mill {
     top: 16%;
@@ -342,25 +303,18 @@
     left: 55%;
   }
   .market-stop-storage {
-    top: 47%;
-    right: 4%;
+    top: 51%;
+    right: 22%;
   }
   .market-stop-flight {
-    top: 61%;
+    top: 64%;
     left: 60%;
   }
   .market-stop-shop {
     top: 74%;
     left: 8%;
   }
-  .market-stop-owner {
-    top: 98%;
-    right: 5%;
-  }
-  .collection-heading h3 {
-    font-size: 22px;
-  }
-  .carpet-collection-world {
-    height: calc(var(--mobile-rug-rows) * 200px);
+  .carpet-party-world {
+    aspect-ratio: var(--party-mobile-ratio);
   }
 }

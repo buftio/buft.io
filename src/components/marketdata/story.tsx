@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useMemo, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { ArrowDown, Pause, Play, SkipForward } from 'lucide-react'
 import { SceneBoundary } from '../scene-boundary'
 import { Designer } from './designer'
@@ -19,16 +19,11 @@ export default function MarketDataStory({
   onReady: () => void
 }) {
   const [design, setDesign] = useState(initialDesign)
-  const [visibleCarpets, setVisibleCarpets] = useState(12)
   const carpetPosition = useRef<HTMLSpanElement>(null)
   const workshop = useWorkshop(reduced)
   const stop = stops[stopAt(workshop.progress)] ?? stops[0]
   const shown = workshop.active?.design ?? design
   const count = workshop.carpets.length
-  const collection = useMemo(
-    () => workshop.carpets.slice(0, visibleCarpets),
-    [workshop.carpets, visibleCarpets],
-  )
   return (
     <article className="market-story">
       <header className="market-intro">
@@ -82,13 +77,6 @@ export default function MarketDataStory({
           )}
         </div>
       </div>
-      {workshop.queue.length > 1 && (
-        <p className="workshop-queue">
-          {workshop.queue.length - 1} more{' '}
-          {workshop.queue.length === 2 ? 'carpet' : 'carpets'} waiting for the
-          loom.
-        </p>
-      )}
       <div className="market-workshop">
         <div className="market-designer-position">
           <Designer
@@ -107,6 +95,7 @@ export default function MarketDataStory({
             <SceneBoundary compact onFailure={onReady}>
               <Journey
                 design={shown}
+                queue={workshop.queue}
                 clock={workshop.clock}
                 marker={carpetPosition}
                 reduced={reduced}
@@ -155,61 +144,23 @@ export default function MarketDataStory({
               invoice arriving to understanding what a carpet cost.
             </p>
           </div>
-          <div id="market-owner" className="market-stop market-stop-owner">
-            <span>06</span> Home, eventually
-          </div>
         </div>
       </div>
-      <section
-        className="market-collection"
-        aria-label="Your carpet collection"
-      >
-        <div className="collection-heading">
-          <h3>
-            {count
-              ? `${count} ${count === 1 ? 'carpet' : 'carpets'}, ${count === 1 ? 'one happy owner' : 'all with a home'}`
-              : 'Room for your carpets'}
-          </h3>
-          <p>
-            {count
-              ? 'Your designs stay in this browser. Come back and make another.'
-              : 'Make one above. Its owner will settle in here.'}
-          </p>
-        </div>
+      <section className="market-party" aria-label="Carpet party">
         <p className="sr-only" aria-live="polite">
           {workshop.lastFinished
-            ? `${workshop.lastFinished} has a happy owner and has joined your collection.`
+            ? `${workshop.lastFinished} joined the party.`
             : ''}
         </p>
         {storageErrorMessage(workshop.storageError)}
         {count > 0 && (
-          <>
-            <div
-              className="carpet-collection-world"
-              style={
-                {
-                  '--rug-rows': Math.ceil(collection.length / 3),
-                  '--mobile-rug-rows': Math.ceil(collection.length / 2),
-                } as React.CSSProperties
-              }
-            >
-              <SceneBoundary compact>
-                <Collection
-                  carpets={collection}
-                  onFly={workshop.fly}
-                  paused={reduced || workshop.paused}
-                />
-              </SceneBoundary>
-            </div>
-            {count > visibleCarpets && (
-              <button
-                className="show-carpets"
-                onClick={() => setVisibleCarpets((value) => value + 12)}
-              >
-                Show more carpets <ArrowDown size={15} />
-              </button>
-            )}
-          </>
+          <SceneBoundary compact>
+            <Collection
+              carpets={workshop.carpets}
+              onFly={workshop.fly}
+              paused={reduced || workshop.paused}
+            />
+          </SceneBoundary>
         )}
       </section>
     </article>
@@ -219,7 +170,7 @@ export default function MarketDataStory({
 function storageErrorMessage(failed: boolean) {
   return failed ? (
     <output className="workshop-storage-note">
-      Browser storage is unavailable. New carpets will stay for this visit.
+      Your last changes could not be saved.
     </output>
   ) : null
 }

@@ -2,83 +2,88 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { isCarpet, type Carpet, type RugDesign } from './design'
+import {
+  DURATION,
+  moveRuns,
+  nextDeparture,
+  spaceRuns,
+  type Run,
+  type WorkshopClock,
+} from './workshop-state'
 
 export const stops = [
-  { at: 0, name: 'On the loom', section: 'market-mill' },
-  { at: 0.23, name: 'Truck to the warehouse', section: 'market-freight' },
-  {
-    at: 0.43,
-    name: 'Invoice checked. Stock updated.',
-    section: 'market-storage',
-  },
-  { at: 0.51, name: 'Express carpet flight', section: 'market-flight' },
-  { at: 0.69, name: 'A customer found their favorite', section: 'market-shop' },
-  { at: 0.85, name: 'On the way home', section: 'market-owner' },
+  { at: 0, name: 'On the loom' },
+  { at: 0.23, name: 'Truck to the warehouse' },
+  { at: 0.43, name: 'Invoice checked. Stock updated.' },
+  { at: 0.51, name: 'Express carpet flight' },
+  { at: 0.69, name: 'A customer found their favorite' },
+  { at: 0.85, name: 'On the way home' },
+  { at: 0.95, name: 'Home' },
 ] as const
 export const stopAt = (progress: number) =>
-  stops.findLastIndex((stop) => progress >= stop.at)
+  stops.findLastIndex((stop) => Math.max(0, progress) >= stop.at)
 const STORAGE = 'buft.marketdata.workshop.v1'
-const DURATION = 30
-type Pending = Carpet & { progress: number }
-type SavedWorkshop = { version: 1; carpets: Carpet[]; queue: Pending[] }
 
 export function useWorkshop(reduced: boolean) {
   const [carpets, setCarpets] = useState<Carpet[]>([])
-  const [queue, setQueue] = useState<Pending[]>([])
+  const [queue, setQueue] = useState<Run[]>([])
   const [ready, setReady] = useState(false)
   const [paused, setPaused] = useState(false)
   const [storageError, setStorageError] = useState(false)
   const [progress, setProgress] = useState(0)
   const [lastFinished, setLastFinished] = useState('')
-  const clock = useRef({ progress: 0, time: 0 })
-  const current = useRef<SavedWorkshop>({ version: 1, carpets: [], queue: [] })
-  const active = queue[0]
+  const clock = useRef<WorkshopClock>({ progress: 0, time: 0, runs: [] })
+  const savedCarpets = useRef<Carpet[]>([])
   const persist = useCallback(() => {
     try {
-      const snapshot = current.current
       localStorage.setItem(
         STORAGE,
         JSON.stringify({
-          ...snapshot,
-          queue: snapshot.queue.map((rug, i) =>
-            i === 0 ? { ...rug, progress: clock.current.progress } : rug,
-          ),
+          version: 2,
+          carpets: savedCarpets.current,
+          queue: clock.current.runs,
         }),
       )
     } catch {
       setStorageError(true)
     }
   }, [])
+  const publish = useCallback(() => {
+    setQueue(clock.current.runs)
+    setProgress(clock.current.progress)
+  }, [])
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       try {
         const raw = localStorage.getItem(STORAGE)
         if (raw) {
-          const saved = JSON.parse(raw) as SavedWorkshop
+          const saved = JSON.parse(raw)
           if (
-            saved.version !== 1 ||
+            ![1, 2].includes(saved.version) ||
             !Array.isArray(saved.carpets) ||
             !Array.isArray(saved.queue)
           )
             throw new Error('Invalid workshop')
-          const validCarpets = saved.carpets.filter(isCarpet)
-          const validQueue = saved.queue.filter(
-            (rug) =>
-              isCarpet(rug) &&
-              Number.isFinite(rug.progress) &&
-              rug.progress >= 0 &&
-              rug.progress < 1 &&
-              !validCarpets.some((c) => c.id === rug.id),
+          const completed = saved.carpets.filter(isCarpet) as Carpet[]
+          const seen = new Set(completed.map((rug) => rug.id))
+          savedCarpets.current = completed
+          clock.current.runs = spaceRuns(
+            saved.queue.filter((rug: Run) => {
+              if (
+                !isCarpet(rug) ||
+                !Number.isFinite(rug.progress) ||
+                rug.progress >= 1 ||
+                seen.has(rug.id)
+              )
+                return false
+              if (saved.version === 1 && rug.progress < 0) return false
+              seen.add(rug.id)
+              return true
+            }),
           )
-          current.current = {
-            version: 1,
-            carpets: validCarpets,
-            queue: validQueue,
-          }
-          clock.current.progress = validQueue[0]?.progress ?? 0
-          setProgress(clock.current.progress)
-          setCarpets(validCarpets)
-          setQueue(validQueue)
+          clock.current.progress = clock.current.runs[0]?.progress ?? 0
+          setCarpets(completed)
+          publish()
         }
       } catch {
         setStorageError(true)
@@ -86,24 +91,26 @@ export function useWorkshop(reduced: boolean) {
       setReady(true)
     })
     return () => cancelAnimationFrame(frame)
-  }, [])
-  const complete = useCallback(() => {
-    const first = current.current.queue[0]
-    if (!first) return
-    const { progress: _progress, ...carpet } = first
-    const next = {
-      ...current.current,
-      carpets: [...current.current.carpets, carpet],
-      queue: current.current.queue.slice(1),
-    }
-    current.current = next
-    clock.current.progress = next.queue[0]?.progress ?? 0
-    setCarpets(next.carpets)
-    setQueue(next.queue)
-    setProgress(clock.current.progress)
-    setLastFinished(carpet.name)
-    persist()
-  }, [persist])
+  }, [publish])
+  const move = useCallback(
+    (seconds: number) => {
+      const state = clock.current
+      state.time += seconds
+      if (state.runs.length) {
+        const { pending, finished } = moveRuns(state.runs, seconds)
+        state.runs = pending
+        state.progress = pending[0]?.progress ?? 0
+        if (finished.length) {
+          savedCarpets.current = [...savedCarpets.current, ...finished]
+          setCarpets(savedCarpets.current)
+          setLastFinished(finished.map((rug) => rug.name).join(', '))
+          publish()
+          persist()
+        }
+      } else state.progress = (state.progress + seconds / DURATION) % 1
+    },
+    [persist, publish],
+  )
   useEffect(() => {
     if (!ready) return
     let previous = performance.now()
@@ -114,17 +121,12 @@ export function useWorkshop(reduced: boolean) {
       const delta = Math.min((now - previous) / 1000, 0.05)
       previous = now
       if (!paused && !reduced && !document.hidden) {
-        clock.current.time += delta
-        clock.current.progress += delta / DURATION
-        if (clock.current.progress >= 1) {
-          if (current.current.queue.length) complete()
-          else clock.current.progress = 0
-        }
+        move(delta)
         if (now - announced > 180) {
-          setProgress(clock.current.progress)
+          publish()
           announced = now
         }
-        if (current.current.queue.length && now - savedAt > 1000) {
+        if (clock.current.runs.length && now - savedAt > 1000) {
           persist()
           savedAt = now
         }
@@ -143,41 +145,34 @@ export function useWorkshop(reduced: boolean) {
       window.removeEventListener('pagehide', persist)
       persist()
     }
-  }, [ready, paused, reduced, persist, complete])
+  }, [ready, paused, reduced, persist, publish, move])
   const make = (design: RugDesign, name: string) => {
-    const total = current.current.carpets.length + current.current.queue.length
-    const rug: Pending = {
+    const total = savedCarpets.current.length + clock.current.runs.length
+    const rug: Run = {
       id: crypto.randomUUID(),
       name: name || `Carpet No. ${total + 1}`,
       design: { ...design, pixels: [...design.pixels] },
       createdAt: Date.now(),
-      progress: 0,
+      progress: nextDeparture(clock.current.runs),
     }
-    const next = [...current.current.queue, rug]
-    current.current = { ...current.current, queue: next }
-    if (next.length === 1) {
-      clock.current.progress = 0
-      setProgress(0)
-    }
-    setQueue(next)
+    clock.current.runs = [...clock.current.runs, rug]
+    clock.current.progress = clock.current.runs[0].progress
+    publish()
     persist()
   }
   const fly = (id: string) => {
-    const next = current.current.carpets.map((carpet, index) =>
+    savedCarpets.current = savedCarpets.current.map((carpet, index) =>
       carpet.id === id
         ? { ...carpet, flying: !(carpet.flying ?? index % 3 === 2) }
         : carpet,
     )
-    current.current = { ...current.current, carpets: next }
-    setCarpets(next)
+    setCarpets(savedCarpets.current)
     persist()
   }
   const advance = () => {
-    const next = stops[stopAt(clock.current.progress) + 1]
-    if (next) clock.current.progress = next.at + 0.005
-    else if (current.current.queue.length) complete()
-    else clock.current.progress = 0
-    setProgress(clock.current.progress)
+    const next = stops[stopAt(clock.current.progress) + 1]?.at ?? 1
+    move((next + 0.005 - clock.current.progress) * DURATION)
+    publish()
     persist()
   }
   return {
@@ -189,7 +184,7 @@ export function useWorkshop(reduced: boolean) {
     storageError,
     progress,
     clock,
-    active,
+    active: queue[0],
     make,
     fly,
     advance,

@@ -1,118 +1,63 @@
 'use client'
 
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { useEffect, useRef, useState } from 'react'
-import { Group, MathUtils } from 'three'
-import { Shopper } from './models'
-import { Rug } from './rug'
-import { colorsFor, type Carpet } from './design'
+import { Canvas, useThree } from '@react-three/fiber'
+import { useEffect, useMemo, useRef, type RefObject } from 'react'
+import { type Carpet } from './design'
+import { partyLayout, type PartyLayout } from './party-layout'
+import { PartyGuest } from './party-guest'
+import { PartyDecor } from './party-decor'
 
-function OwnedCarpet({
-  carpet,
-  index,
-  columns,
-  rows,
-  rowHeight,
-  flying,
-  paused,
-  onToggle,
-}: {
-  carpet: Carpet
-  index: number
-  columns: number
-  rows: number
-  rowHeight: number
-  flying: boolean
-  paused: boolean
-  onToggle: () => void
-}) {
-  const root = useRef<Group>(null)
-  const time = useRef(index * 1.7)
-  const lift = useRef(flying ? 0.3 : 0)
-  const x = ((index % columns) - (columns - 1) / 2) * 3.6
-  const y = ((rows - 1) / 2 - Math.floor(index / columns)) * rowHeight + 0.1
-  useFrame((_, delta) => {
-    if (!root.current) return
-    if (!paused) time.current += Math.min(delta, 0.05)
-    lift.current = paused
-      ? flying
-        ? 0.3
-        : 0
-      : MathUtils.damp(lift.current, flying ? 0.3 : 0, 4, delta)
-    root.current.position.y =
-      y +
-      lift.current +
-      (flying && !paused ? Math.sin(time.current * 1.6) * 0.08 : 0)
-    root.current.rotation.z =
-      flying && !paused ? Math.sin(time.current * 1.3) * 0.07 : -0.04
-  })
-  return (
-    <group>
-      <mesh position={[x, y - 0.05, -0.5]} scale={[1, 0.35, 1]}>
-        <circleGeometry args={[1, 32]} />
-        <meshBasicMaterial color="#6a8060" transparent opacity={0.12} />
-      </mesh>
-      <group
-        ref={root}
-        position={[x, y, 0]}
-        rotation={[0.78, -0.2, -0.04]}
-        onClick={(event) => {
-          event.stopPropagation()
-          onToggle()
-        }}
-      >
-        <Rug design={carpet.design} width={1.6} length={2.1} />
-        <group position={[0, 0.06, -0.1]}>
-          <Shopper
-            pose={flying ? 'fly' : index % 2 ? 'stand' : 'sit'}
-            color={colorsFor(carpet.design)[2]}
-            variant={index}
-          />
-        </group>
-      </group>
-    </group>
-  )
-}
-
-function Gallery({
+function Party({
   carpets,
-  toggle,
+  wide,
+  narrow,
   paused,
-  onColumns,
+  controls,
+  onFly,
 }: {
   carpets: Carpet[]
-  toggle: (id: string) => void
+  wide: PartyLayout
+  narrow: PartyLayout
   paused: boolean
-  onColumns: (columns: number) => void
+  controls: RefObject<Map<string, HTMLButtonElement>>
+  onFly: (id: string) => void
 }) {
   const { camera, size } = useThree()
-  const columns = window.matchMedia('(max-width: 650px)').matches ? 2 : 3
-  const rows = Math.ceil(carpets.length / columns)
-  const zoom = size.width / (columns * 3.6)
-  const rowHeight = size.height / zoom / rows
+  const layout = window.matchMedia('(max-width: 650px)').matches ? narrow : wide
   useEffect(() => {
-    camera.position.set(0, 0, 30)
-    camera.lookAt(0, 0, 0)
-    camera.zoom = zoom
+    camera.position.set(0, 30, 38 + layout.focus)
+    camera.lookAt(0, 0, layout.focus)
+    camera.zoom = size.width / layout.width
     camera.updateProjectionMatrix()
-    onColumns(columns)
-  }, [camera, zoom, columns, onColumns])
+  }, [camera, size.width, layout])
   return (
     <>
-      <ambientLight intensity={1.5} />
-      <hemisphereLight args={['#fff1d5', '#829780', 1.6]} />
-      <directionalLight position={[-3, 6, 12]} intensity={3} />
+      <ambientLight intensity={0.8} />
+      <hemisphereLight args={['#fff1d5', '#829780', 1.3]} />
+      <directionalLight
+        position={[-8, 20, 12]}
+        intensity={2.6}
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-camera-left={-25}
+        shadow-camera-right={25}
+        shadow-camera-top={30}
+        shadow-camera-bottom={-30}
+        shadow-camera-far={80}
+        shadow-normalBias={0.025}
+        shadow-bias={-0.0002}
+        shadow-radius={4}
+      />
+      <PartyDecor layout={layout} />
       {carpets.map((carpet, index) => (
-        <OwnedCarpet
+        <PartyGuest
           key={carpet.id}
           carpet={carpet}
           index={index}
-          rows={rows}
-          rowHeight={rowHeight}
-          columns={columns}
+          place={layout.places[index]}
           paused={paused}
-          flying={carpet.flying ?? index % 3 === 2}
-          onToggle={() => toggle(carpet.id)}
+          controls={controls}
+          onFly={onFly}
         />
       ))}
     </>
@@ -128,43 +73,49 @@ export default function Collection({
   paused: boolean
   onFly: (id: string) => void
 }) {
-  const [columns, setColumns] = useState(3)
+  const controls = useRef(new Map<string, HTMLButtonElement>())
+  const wide = useMemo(() => partyLayout(carpets, false), [carpets])
+  const narrow = useMemo(() => partyLayout(carpets, true), [carpets])
   return (
-    <>
+    <div
+      className="carpet-party-world"
+      style={
+        {
+          '--party-ratio': `${wide.width} / ${wide.height}`,
+          '--party-mobile-ratio': `${narrow.width} / ${narrow.height}`,
+        } as React.CSSProperties
+      }
+    >
       <Canvas
+        shadows="soft"
         resize={{ offsetSize: true, debounce: 0 }}
         orthographic
-        camera={{ position: [0, 0, 30], zoom: 70 }}
+        camera={{ position: [0, 30, 38], zoom: 70, near: 0.1, far: 200 }}
         dpr={[1, 1.5]}
         gl={{ alpha: true, antialias: true }}
       >
-        <Gallery
+        <Party
           carpets={carpets}
-          toggle={onFly}
+          wide={wide}
+          narrow={narrow}
           paused={paused}
-          onColumns={setColumns}
+          controls={controls}
+          onFly={onFly}
         />
       </Canvas>
-      <ol
-        className="carpet-collection-labels"
-        style={{
-          gridTemplateColumns: `repeat(${columns}, 1fr)`,
-          gridTemplateRows: `repeat(${Math.ceil(carpets.length / columns)}, 1fr)`,
-        }}
-      >
-        {carpets.map((carpet, i) => (
-          <li key={carpet.id}>
-            <span>{carpet.name}</span>
-            <button
-              onClick={() => onFly(carpet.id)}
-              aria-pressed={carpet.flying ?? i % 3 === 2}
-              aria-label={`Fly ${carpet.name}`}
-            >
-              {(carpet.flying ?? i % 3 === 2) ? 'Land' : 'Fly'}
-            </button>
-          </li>
-        ))}
-      </ol>
-    </>
+      {carpets.map((carpet, i) => (
+        <button
+          key={carpet.id}
+          className="party-hit"
+          ref={(element) => {
+            if (element) controls.current.set(carpet.id, element)
+            else controls.current.delete(carpet.id)
+          }}
+          onClick={() => onFly(carpet.id)}
+          aria-label={`Fly ${carpet.name}`}
+          aria-pressed={carpet.flying ?? i % 3 === 2}
+        />
+      ))}
+    </div>
   )
 }

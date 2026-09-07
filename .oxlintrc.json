@@ -23,6 +23,8 @@
         "src/components/marketdata/journey.tsx",
         "src/components/marketdata/collection.tsx",
         "src/components/marketdata/cost-sheet.tsx",
+        "src/components/marketdata/delivery.tsx",
+        "src/components/marketdata/party-guest.tsx",
         "src/app/falling-monks/page.tsx"
       ],
       "rules": {
