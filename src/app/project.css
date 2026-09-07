@@ -13,6 +13,7 @@
   z-index: 50;
   box-shadow: 0 30px 100px #0009;
   overflow: auto;
+  overscroll-behavior: none;
   scrollbar-width: thin;
   animation: window-in 0.75s 0.55s both cubic-bezier(0.2, 0.7, 0.1, 1);
 }
@@ -51,6 +52,10 @@
   padding: 6px;
   display: grid;
   place-items: center;
+  border-radius: 50%;
+}
+.project-window-bar button:focus-visible {
+  outline-offset: 3px;
 }
 .project-article {
   padding: 30px 36px 34px;
