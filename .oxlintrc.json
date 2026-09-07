@@ -25,6 +25,7 @@
         "src/components/marketdata/cost-sheet.tsx",
         "src/components/marketdata/delivery.tsx",
         "src/components/marketdata/party-guest.tsx",
+        "src/components/yandex/office.tsx",
         "src/app/falling-monks/page.tsx"
       ],
       "rules": {

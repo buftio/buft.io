@@ -7,6 +7,8 @@ import './glite-objects.css'
 import './glite.css'
 import './marketdata-designer.css'
 import './marketdata.css'
+import './yandex.css'
+import './yandex-responsive.css'
 
 const description =
   'Software, curiosity, and a little fire. Explore Igor Ostanin’s work in AI, science, games, and the tools people use.'
