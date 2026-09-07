@@ -186,16 +186,17 @@ export const projects: Project[] = [
     id: 'marketdata',
     slug: 'marketdata2022',
     name: 'MarketData',
-    field: 'Commerce × clarity',
+    field: 'Manufacturing × software',
     role: 'Technical lead & consultant',
     period: '2022',
-    title: 'See what is happening.',
-    summary: 'Useful signals for sellers. Clearer signals for the team.',
+    title: 'Carpet factory software',
+    summary:
+      'Automated invoice checks and cost planning, from the factory floor to the shop.',
     story:
-      'I joined a marketplace analytics team to work out what needed attention and make the next steps practical. Better workflows and shared monitoring gave the team a clearer view of its own product.',
+      'I built the backend and frontend from scratch for a carpet factory, turning its everyday paperwork into software.',
     details: [
-      'Audited the product and turned the findings into an engineering roadmap.',
-      'Introduced shared monitoring, logging, and development workflows.',
+      'Automated factory invoice checks that people had been doing by hand.',
+      'Built tools that ran the same cost calculations as the existing Excel sheets, automatically.',
     ],
     color: '#a7d9c2',
     scene: 'metrics',

@@ -1,0 +1,188 @@
+.carpet-designer {
+  padding: 20px;
+  background: #f8f4e5;
+  border: 1px solid #b8b79a;
+  border-radius: 15px;
+  box-shadow: 3px 5px 0 #bcc5ac55;
+}
+.designer-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 17px;
+}
+.designer-heading h3 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+.designer-heading > span {
+  color: #76806b;
+  font-size: 12px;
+}
+.designer-workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 17px;
+  align-items: start;
+}
+.design-swatch {
+  position: relative;
+  padding: 0;
+  box-shadow: 3px 5px 6px #34262a26;
+}
+.rug-preview {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.rug-drawing {
+  position: absolute;
+  left: 12%;
+  top: 8.3%;
+  width: 76%;
+  height: 83.4%;
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(13, 1fr);
+  touch-action: none;
+}
+.rug-drawing button {
+  min-width: 0;
+  min-height: 0;
+  border-radius: 0;
+  box-shadow: inset 0 0 0 0.4px #fff3;
+  padding: 0;
+}
+.rug-drawing button:focus-visible {
+  outline-offset: 0 !important;
+  outline-color: white !important;
+  border-radius: 3px;
+  z-index: 2;
+}
+.designer-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  min-width: 0;
+}
+.rug-palettes {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.rug-palettes button {
+  display: flex;
+  height: 26px;
+  border-radius: 100px;
+  overflow: hidden;
+  padding: 0;
+  border: 2px solid #fff4;
+}
+.rug-palettes button[aria-pressed='true'] {
+  box-shadow: 0 0 0 2px #5c6954;
+}
+.rug-palettes i {
+  flex: 1;
+}
+.rug-patterns {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rug-patterns button {
+  font-size: 13px;
+  padding: 4px 7px;
+  text-align: left;
+  border: 1px solid transparent;
+}
+.rug-patterns button[aria-pressed='true'] {
+  border-color: #a7b296;
+  background: #e5e9d2;
+}
+.draw-toggle {
+  text-align: left;
+  font-size: 13px;
+  font-weight: 800;
+  color: #754148;
+  padding: 4px 0;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.rug-surprise {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  text-align: left;
+  color: #6c7863;
+}
+.rug-brushes > fieldset {
+  display: flex;
+  gap: 6px;
+}
+.carpet-designer fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.rug-brushes button {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #f8f4e5;
+}
+.rug-brushes button[aria-pressed='true'] {
+  box-shadow: 0 0 0 2px #768368;
+}
+.rug-brushes label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  margin-top: 12px;
+}
+.rug-brushes input {
+  accent-color: #754148;
+}
+.carpet-name {
+  display: block;
+  margin: 17px 0 14px;
+}
+.carpet-name span {
+  display: block;
+  font-size: 12px;
+  color: #6c7863;
+  margin-bottom: 5px;
+}
+.carpet-name input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  border-bottom: 1px solid #b4ba9e;
+  background: transparent;
+  color: #334538;
+  padding: 8px 0;
+  font: inherit;
+  font-size: 13px;
+}
+.carpet-name input::placeholder {
+  color: #92917c;
+}
+.make-carpet {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: #793e48;
+  color: #fff0d6;
+  padding: 12px 15px;
+  border-radius: 9px;
+  font-size: 14px;
+  box-shadow: 0 3px 0 #4f3038;
+}
+.make-carpet:hover {
+  background: #904751;
+}

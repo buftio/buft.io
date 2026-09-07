@@ -33,6 +33,7 @@ const ProjectVignette = dynamic(() => import('./three/project-vignette'), {
   ),
 })
 const GliteStory = dynamic(() => import('./glite/story'))
+const MarketDataStory = dynamic(() => import('./marketdata/story'))
 const resumeUrl =
   'https://docs.google.com/document/d/1yVdeR23Y5sJU6MKffIKWd-uo_GBjAuHN/edit'
 const preloadVignette = () => import('./three/project-vignette')
@@ -372,7 +373,7 @@ export function Home({ initial = null }: { initial?: number | null }) {
       />
       {opened && (
         <dialog
-          className={`project-dialog ${opened.id === 'glite' ? 'glite-dialog' : ''}`}
+          className={`project-dialog ${opened.id === 'glite' ? 'glite-dialog' : opened.id === 'marketdata' ? 'market-dialog' : ''}`}
           ref={dialog}
           onCancel={closeProject}
           aria-labelledby="project-heading"
@@ -381,7 +382,9 @@ export function Home({ initial = null }: { initial?: number | null }) {
             <span>
               {opened.id === 'glite'
                 ? 'Glite · 2025'
-                : `${opened.name.toLowerCase()} / a closer look`}
+                : opened.id === 'marketdata'
+                  ? `${opened.name} · ${opened.period}`
+                  : `${opened.name.toLowerCase()} / a closer look`}
             </span>
             <button onClick={closeProject} aria-label="Close project">
               <X size={19} />
@@ -389,6 +392,11 @@ export function Home({ initial = null }: { initial?: number | null }) {
           </div>
           {opened.id === 'glite' ? (
             <GliteStory reduced={reduced} onReady={() => setWorldReady(true)} />
+          ) : opened.id === 'marketdata' ? (
+            <MarketDataStory
+              reduced={reduced}
+              onReady={() => setWorldReady(true)}
+            />
           ) : (
             <article
               className="project-article"

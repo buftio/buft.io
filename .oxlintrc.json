@@ -20,6 +20,9 @@
         "src/components/scene.tsx",
         "src/components/three/**",
         "src/components/glite/cafe.tsx",
+        "src/components/marketdata/journey.tsx",
+        "src/components/marketdata/collection.tsx",
+        "src/components/marketdata/cost-sheet.tsx",
         "src/app/falling-monks/page.tsx"
       ],
       "rules": {
