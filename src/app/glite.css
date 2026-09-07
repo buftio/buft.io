@@ -218,16 +218,6 @@
   outline: 2px solid #385e49;
   outline-offset: 4px;
 }
-@keyframes glite-feed-in {
-  from {
-    opacity: 0.5;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
 @media (max-width: 1050px) {
   .glite-dialog {
     width: 82vw;

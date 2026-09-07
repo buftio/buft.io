@@ -25,9 +25,9 @@
   top: 0;
   background: #181512;
   color: #c3b2a3;
-  display: flex;
+  display: grid;
+  grid-template-columns: 31px minmax(0, 1fr) 31px;
   align-items: center;
-  justify-content: space-between;
   height: 49px;
   padding: 0 18px;
   z-index: 3;
@@ -36,17 +36,8 @@
   border-bottom: 1px solid #665041;
 }
 .project-window-bar > span:first-child {
-  display: flex;
-  gap: 5px;
-}
-.project-window-bar i {
-  width: 6px;
-  height: 6px;
-  background: #816c59;
-  border-radius: 50%;
-}
-.project-window-bar i:first-child {
-  background: #d68661;
+  grid-column: 2;
+  text-align: center;
 }
 .project-window-bar button {
   padding: 6px;

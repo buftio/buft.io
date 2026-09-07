@@ -219,16 +219,43 @@ export function Home({ initial = null }: { initial?: number | null }) {
     const element = dialog.current
     const focus = previousFocus.current
     const oldOverflow = document.body.style.overflow
+    let backdropPress = false
+    const isOutside = (event: MouseEvent) => {
+      if (!element || event.target !== element) return false
+      const bounds = element.getBoundingClientRect()
+      return (
+        event.clientX < bounds.left ||
+        event.clientX > bounds.right ||
+        event.clientY < bounds.top ||
+        event.clientY > bounds.bottom
+      )
+    }
+    const onPointerDown = (event: PointerEvent) => {
+      backdropPress = event.button === 0 && isOutside(event)
+    }
+    const onPointerCancel = () => {
+      backdropPress = false
+    }
+    const onClick = (event: MouseEvent) => {
+      if (backdropPress && isOutside(event)) closeProject()
+      backdropPress = false
+    }
+    element?.addEventListener('pointerdown', onPointerDown)
+    element?.addEventListener('pointercancel', onPointerCancel)
+    element?.addEventListener('click', onClick)
     document.body.style.overflow = 'hidden'
     element?.showModal()
     return () => {
+      element?.removeEventListener('pointerdown', onPointerDown)
+      element?.removeEventListener('pointercancel', onPointerCancel)
+      element?.removeEventListener('click', onClick)
       element?.close()
       document.body.style.overflow = oldOverflow
       requestAnimationFrame(() => {
         if (focus?.isConnected) focus.focus({ preventScroll: true })
       })
     }
-  }, [selected])
+  }, [selected, closeProject])
 
   return (
     <main className={`portfolio ${reduced ? 'reduced-motion' : ''}`}>
@@ -351,11 +378,6 @@ export function Home({ initial = null }: { initial?: number | null }) {
           aria-labelledby="project-heading"
         >
           <div className="project-window-bar">
-            <span>
-              <i />
-              <i />
-              <i />
-            </span>
             <span>
               {opened.id === 'glite'
                 ? 'Glite · 2025'

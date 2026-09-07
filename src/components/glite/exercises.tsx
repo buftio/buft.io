@@ -145,6 +145,7 @@ export function QuizPhone({ onLookup }: { onLookup: (word: string) => void }) {
   const [answers, setAnswers] = useState<number[]>([])
   const [finished, setFinished] = useState(false)
   const heading = useRef<HTMLHeadingElement>(null)
+  const feed = useRef<HTMLDivElement>(null)
   const moveFocus = useRef(false)
   const question = questions[index]
   const answer = answers[index] ?? null
@@ -162,12 +163,7 @@ export function QuizPhone({ onLookup }: { onLookup: (word: string) => void }) {
   useEffect(() => {
     if (moveFocus.current) {
       heading.current?.focus({ preventScroll: true })
-      if (finished) {
-        heading.current?.closest('.glite-phone')?.scrollIntoView({
-          block: 'center',
-          behavior: 'instant',
-        })
-      }
+      feed.current?.scrollTo({ top: 0, behavior: 'instant' })
       moveFocus.current = false
     }
   }, [index, finished])
@@ -204,100 +200,111 @@ export function QuizPhone({ onLookup }: { onLookup: (word: string) => void }) {
             {finished ? 'Your result' : `${index + 1} / ${questions.length}`}
           </span>
         </div>
-        {finished ? (
-          <div className="phone-feed quiz-result" key="result">
-            <div className="quiz-score" aria-hidden="true">
-              <svg viewBox="0 0 120 120">
-                <circle className="score-track" cx="60" cy="60" r="52" />
-                <circle
-                  className="score-progress"
-                  cx="60"
-                  cy="60"
-                  r="52"
-                  pathLength="100"
-                  strokeDasharray={`${percent} 100`}
-                />
-              </svg>
-              <strong>
-                {percent}
-                <span>%</span>
-              </strong>
-            </div>
-            <h3 ref={heading} tabIndex={-1}>
-              <span className="sr-only">{percent}% correct. </span>
-              {score} of {questions.length} correct
-            </h3>
-            <p>{encouragement}</p>
-            <ul className="quiz-recap" aria-label="Your answers">
-              {questions.map((item, i) => (
-                <li key={item.idiom}>
-                  {answers[i] === item.answer ? (
-                    <Check size={14} aria-label="Correct" />
-                  ) : (
-                    <RotateCcw size={13} aria-label="To practise" />
-                  )}
-                  <button onClick={() => onLookup(item.idiom)}>
-                    {item.idiom}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : (
-          <div className="phone-feed" key={index}>
-            <h3 ref={heading} tabIndex={-1}>
-              {question.sentence}
-            </h3>
-            <p>What does it mean?</p>
-            <div className="quiz-choices">
-              {question.choices.map((choice, i) => (
-                <button
-                  key={choice}
-                  onClick={() =>
-                    setAnswers((values) =>
-                      values[index] === undefined ? [...values, i] : values,
-                    )
-                  }
-                  aria-disabled={answer !== null}
-                  aria-pressed={answer !== null ? answer === i : undefined}
-                  className={
-                    answer !== null
-                      ? i === question.answer
-                        ? 'correct'
-                        : i === answer
-                          ? 'incorrect'
-                          : ''
-                      : ''
-                  }
-                >
-                  <span>{String.fromCharCode(65 + i)}</span>
-                  {choice}
-                  {answer !== null && i === question.answer && (
-                    <>
-                      <Check size={16} aria-hidden="true" />
-                      <span className="sr-only">Correct answer</span>
-                    </>
-                  )}
-                  {answer === i && i !== question.answer && (
-                    <span className="sr-only">Incorrect answer</span>
-                  )}
-                </button>
-              ))}
-            </div>
-            {answer !== null && (
-              <output className="quiz-feedback">
+        <div
+          ref={feed}
+          className={`phone-feed${finished ? ' quiz-result' : ''}`}
+        >
+          {finished ? (
+            <>
+              <div className="quiz-score" aria-hidden="true">
+                <svg viewBox="0 0 120 120">
+                  <circle className="score-track" cx="60" cy="60" r="52" />
+                  <circle
+                    className="score-progress"
+                    cx="60"
+                    cy="60"
+                    r="52"
+                    pathLength="100"
+                    strokeDasharray={`${percent} 100`}
+                  />
+                </svg>
                 <strong>
-                  {answer === question.answer ? 'That is it.' : 'Not quite.'}
-                </strong>{' '}
-                {question.explanation}
+                  {percent}
+                  <span>%</span>
+                </strong>
+              </div>
+              <h3 ref={heading} tabIndex={-1}>
+                <span className="sr-only">{percent}% correct. </span>
+                {score} of {questions.length} correct
+              </h3>
+              <p>{encouragement}</p>
+              <ul className="quiz-recap" aria-label="Your answers">
+                {questions.map((item, i) => (
+                  <li key={item.idiom}>
+                    {answers[i] === item.answer ? (
+                      <Check size={14} aria-label="Correct" />
+                    ) : (
+                      <RotateCcw size={13} aria-label="To practise" />
+                    )}
+                    <button onClick={() => onLookup(item.idiom)}>
+                      {item.idiom}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <>
+              <h3 ref={heading} tabIndex={-1}>
+                {question.sentence}
+              </h3>
+              <p>What does it mean?</p>
+              <div className="quiz-choices">
+                {question.choices.map((choice, i) => (
+                  <button
+                    key={choice}
+                    onClick={() =>
+                      setAnswers((values) =>
+                        values[index] === undefined ? [...values, i] : values,
+                      )
+                    }
+                    aria-disabled={answer !== null}
+                    aria-pressed={answer !== null ? answer === i : undefined}
+                    className={
+                      answer !== null
+                        ? i === question.answer
+                          ? 'correct'
+                          : i === answer
+                            ? 'incorrect'
+                            : ''
+                        : ''
+                    }
+                  >
+                    <span className="quiz-letter">
+                      {String.fromCharCode(65 + i)}
+                    </span>
+                    <span className="quiz-choice-text">{choice}</span>
+                    {answer !== null && i === question.answer && (
+                      <>
+                        <Check size={16} aria-hidden="true" />
+                        <span className="sr-only">Correct answer</span>
+                      </>
+                    )}
+                    {answer === i && i !== question.answer && (
+                      <span className="sr-only">Incorrect answer</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              <output className="quiz-feedback" aria-live="polite">
+                {answer !== null && (
+                  <>
+                    <strong>
+                      {answer === question.answer
+                        ? 'That is it.'
+                        : 'Not quite.'}
+                    </strong>{' '}
+                    {question.explanation}
+                  </>
+                )}
               </output>
-            )}
-          </div>
-        )}
+            </>
+          )}
+        </div>
         <div className="phone-actions">
           {finished ? (
             <button className="quiz-restart" onClick={restart}>
-              <RotateCcw size={16} /> Try again
+              <RotateCcw size={16} /> {percent}% · Try again
             </button>
           ) : (
             <>
