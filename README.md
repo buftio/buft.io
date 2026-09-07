@@ -18,7 +18,7 @@ npm run build:worker
 npm run dev:worker
 ```
 
-The last command serves the production Worker locally at http://localhost:8771 with local storage. The existing `deploy:worker` command publishes to buft.io.
+The last command fills the local page cache and serves the production Worker at http://localhost:8771. The `deploy:worker` command fills the remote page cache and publishes to buft.io.
 
 ## Content and assets
 
@@ -28,4 +28,4 @@ Project stories live in `src/lib/projects.ts`. Their factual basis and brand sou
 
 The original seated character and rock are retained with Meshopt and WebP compression, without mesh simplification. Together they are 1,360,040 bytes, down from 7,910,796 bytes. Their source versions remain in Git history. Original scene implementation was inspired by The Year of Greta.
 
-Use the project numbers or previous/next buttons as an alternative to scrolling. The project windows use native dialogs with focus trapping and Escape to close. Motion follows the system preference and can also be paused. The stories remain usable if WebGL is unavailable.
+Use the project numbers or previous/next buttons as an alternative to scrolling. The project windows use native dialogs with focus trapping and Escape to close. Motion follows the system's reduced-motion preference. The stories remain usable if WebGL is unavailable.

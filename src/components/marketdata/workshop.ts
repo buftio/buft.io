@@ -35,7 +35,9 @@ export function useWorkshop(reduced: boolean) {
   const [lastFinished, setLastFinished] = useState('')
   const clock = useRef<WorkshopClock>({ progress: 0, time: 0, runs: [] })
   const savedCarpets = useRef<Carpet[]>([])
+  const storageLoaded = useRef(false)
   const persist = useCallback(() => {
+    if (!storageLoaded.current) return
     try {
       localStorage.setItem(
         STORAGE,
@@ -86,6 +88,7 @@ export function useWorkshop(reduced: boolean) {
           setGuests([...completed, ...clock.current.runs])
           publish()
         }
+        storageLoaded.current = true
       } catch {
         setStorageError(true)
       }
