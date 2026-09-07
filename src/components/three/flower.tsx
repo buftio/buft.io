@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import Image from 'next/image'
 import { projectPosition, type Project } from '@/lib/projects'
-import { Flames, Glow } from './fire'
+import { Flames } from './fire'
 
 function petalGeometry() {
   const geometry = new THREE.BufferGeometry()
@@ -139,12 +139,6 @@ export function Flower({
       <group ref={flames} position={[0, -0.08, 0]}>
         <Flames reduced={reduced} />
       </group>
-      <Glow
-        position={[0, 0.6, 0]}
-        scale={2.6}
-        opacity={0.4}
-        reduced={reduced}
-      />
       <Billboard position={[0, active ? 0.88 : 1.2, 0]}>
         <Html center distanceFactor={9} zIndexRange={[5, 0]}>
           <button
