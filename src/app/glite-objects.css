@@ -126,18 +126,24 @@
   width: 40%;
   max-width: 300px;
 }
-.table-scribble {
+.glite-test-scale strong {
   display: block;
-  margin-top: 45px;
-  font-family: Georgia, serif;
-  font-style: italic;
-  font-size: 23px;
-  transform: rotate(8deg);
-  color: #766441;
+  font-size: clamp(27px, 3vw, 36px);
+  line-height: 1.15;
+  letter-spacing: -0.045em;
+  color: #315b45;
+  margin: 24px 0 7px;
+}
+.glite-test-scale span {
+  font-size: 14px;
+  color: #58604d;
 }
 .glite-phone {
   position: relative;
   width: 278px;
+  max-width: 100%;
+  height: 620px;
+  scroll-margin-top: 44px;
   flex-shrink: 0;
   transform: perspective(1100px) rotateX(8deg) rotateZ(-7deg);
   background: #263a35;
@@ -159,6 +165,10 @@
   background: #657c6f;
 }
 .phone-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
   border-radius: 28px;
   background: #f3f5e9;
   overflow: hidden;
@@ -171,6 +181,7 @@
   justify-content: space-between;
   font-size: 10px;
   font-weight: 800;
+  flex-shrink: 0;
 }
 .phone-camera {
   display: block;
@@ -183,7 +194,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 22px 0;
+  margin: 16px 0;
+  flex-shrink: 0;
 }
 .phone-app > span:first-child {
   font-size: 26px;
@@ -195,8 +207,17 @@
   color: #61705c;
 }
 .phone-feed {
-  min-height: 340px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding: 6px;
+  margin: -6px;
   animation: glite-feed-in 0.3s ease both;
+}
+.phone-feed h3:focus {
+  outline: none;
 }
 .phone-feed h3 {
   font-size: 23px;
@@ -212,6 +233,7 @@
 .quiz-choices {
   display: grid;
   gap: 8px;
+  min-width: 0;
 }
 .quiz-choices button {
   display: flex;
@@ -224,6 +246,7 @@
   border: 1px solid #c2cdb9;
   border-radius: 10px;
   padding: 11px 9px;
+  min-width: 0;
 }
 .quiz-choices button > span {
   font-size: 12px;
@@ -233,7 +256,7 @@
   flex-shrink: 0;
   margin-left: auto;
 }
-.quiz-choices button:hover:not(:disabled) {
+.quiz-choices button:hover:not([aria-disabled='true']) {
   border-color: #315e43;
 }
 .quiz-choices button.correct {
@@ -244,7 +267,7 @@
   background: #efdad0;
   border-color: #ab7663;
 }
-.quiz-choices button:disabled {
+.quiz-choices button[aria-disabled='true'] {
   opacity: 1;
   cursor: default;
 }
@@ -259,6 +282,7 @@
   justify-content: space-between;
   gap: 10px;
   padding-top: 18px;
+  flex-shrink: 0;
 }
 .phone-actions button {
   display: flex;
@@ -273,4 +297,70 @@
   background: #324139;
   border-radius: 4px;
   margin: 12px auto 0;
+  flex-shrink: 0;
+}
+.quiz-result {
+  text-align: center;
+}
+.quiz-score {
+  position: relative;
+  width: 148px;
+  height: 148px;
+  margin: 4px auto 18px;
+  display: grid;
+  place-items: center;
+}
+.quiz-score svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke-width: 7;
+  transform: rotate(-90deg);
+}
+.score-track {
+  stroke: #dce5cf;
+}
+.score-progress {
+  stroke: #608456;
+}
+.quiz-score strong {
+  font-size: 43px;
+  letter-spacing: -0.07em;
+}
+.quiz-score strong span {
+  font-size: 23px;
+  margin-left: 3px;
+}
+.quiz-result h3 {
+  font-size: 20px;
+}
+.quiz-result > p {
+  line-height: 1.5;
+}
+.quiz-recap {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+  text-align: left;
+}
+.quiz-recap li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #536849;
+}
+.quiz-recap button {
+  padding: 5px 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.phone-actions .quiz-restart {
+  justify-content: center;
+  width: 100%;
+  border-radius: 10px;
+  background: #d7e9c7;
+  padding: 11px;
 }

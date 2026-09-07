@@ -92,12 +92,24 @@
   width: 39%;
 }
 .glite-transcript {
-  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 10px 0 18px;
 }
 .glite-transcript p {
   font-size: 15px;
   line-height: 1.55;
-  margin: 14px 0;
+  margin: 0;
+  max-width: 93%;
+  padding: 12px 16px;
+  box-shadow: 0 3px 9px #63492712;
+}
+.glite-transcript .tutor-line {
+  align-self: flex-start;
+  background: #faf1d9;
+  border: 1px solid #b5ab8b;
+  border-radius: 18px 18px 18px 5px;
 }
 .glite-transcript p > span {
   display: block;
@@ -107,8 +119,10 @@
   margin-bottom: 3px;
 }
 .glite-transcript .learner-line {
-  padding-left: 15px;
-  border-left: 2px solid #849269;
+  align-self: flex-end;
+  background: #dce6c5;
+  border: 1px solid #9cae85;
+  border-radius: 18px 18px 5px 18px;
 }
 .learner-line button {
   text-decoration: underline;
@@ -142,19 +156,6 @@
 .glite-cafe canvas {
   touch-action: pan-y;
 }
-.plate-note {
-  position: absolute;
-  bottom: 12px;
-  left: 0;
-  width: 100%;
-  text-align: center;
-  font-family: Georgia, serif;
-  font-style: italic;
-  font-size: 15px;
-  color: #625740;
-  transform: rotate(-3deg);
-  pointer-events: none;
-}
 .glite-scene-controls {
   position: relative;
   display: flex;
@@ -163,11 +164,6 @@
   align-items: center;
   margin: 19px 0 0;
   z-index: 2;
-}
-.glite-scene-controls > span {
-  margin-right: auto;
-  font-size: 12px;
-  color: #5d604d;
 }
 .glite-scene-controls button {
   display: grid;
@@ -282,10 +278,6 @@
   .conversation-copy {
     display: contents;
   }
-  .conversation-copy > p {
-    order: 3;
-    margin: 22px 0 0;
-  }
   .glite-cafe {
     position: relative;
     width: calc(100% + 40px);
@@ -295,15 +287,9 @@
     bottom: auto;
     margin: -10px -20px 0;
   }
-  .plate-note {
-    bottom: 1px;
-  }
   .glite-transcript {
     order: 1;
     margin-top: 17px;
-  }
-  .glite-transcript p {
-    margin: 10px 0;
   }
   .glite-scene-controls {
     order: 4;
@@ -313,10 +299,6 @@
   .glite-correction {
     order: 2;
     align-self: flex-start;
-  }
-  .glite-scene-controls > span {
-    max-width: 180px;
-    font-size: 12px;
   }
   .glite-words {
     padding-top: 33px;
@@ -362,9 +344,6 @@
   .practice-copy {
     width: 100%;
     max-width: none;
-  }
-  .table-scribble {
-    display: none;
   }
   .glite-phone {
     transform: perspective(1100px) rotateX(5deg) rotateZ(-4deg);

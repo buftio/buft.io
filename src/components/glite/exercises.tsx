@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { ArrowRight, BookOpen, Search, Check } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { ArrowRight, BookOpen, Search, Check, RotateCcw } from 'lucide-react'
 
 const entries = [
   {
@@ -142,11 +142,46 @@ const questions = [
 
 export function QuizPhone({ onLookup }: { onLookup: (word: string) => void }) {
   const [index, setIndex] = useState(0)
-  const [answer, setAnswer] = useState<number | null>(null)
+  const [answers, setAnswers] = useState<number[]>([])
+  const [finished, setFinished] = useState(false)
+  const heading = useRef<HTMLHeadingElement>(null)
+  const moveFocus = useRef(false)
   const question = questions[index]
+  const answer = answers[index] ?? null
+  const score = answers.filter(
+    (value, i) => value === questions[i].answer,
+  ).length
+  const percent = Math.round((score / questions.length) * 100)
+  const encouragement = [
+    'Four new expressions to take with you. Give them another try.',
+    'One down, three to practise. You have made a start.',
+    'Two down, two to practise. You are getting there.',
+    'Nice work. Just one expression to revisit.',
+    'All four! Ready to try them in a conversation?',
+  ][score]
+  useEffect(() => {
+    if (moveFocus.current) {
+      heading.current?.focus({ preventScroll: true })
+      if (finished) {
+        heading.current?.closest('.glite-phone')?.scrollIntoView({
+          block: 'center',
+          behavior: 'instant',
+        })
+      }
+      moveFocus.current = false
+    }
+  }, [index, finished])
   const next = () => {
-    setIndex((value) => (value + 1) % questions.length)
-    setAnswer(null)
+    if (answer === null) return
+    moveFocus.current = true
+    if (index === questions.length - 1) setFinished(true)
+    else setIndex((value) => value + 1)
+  }
+  const restart = () => {
+    moveFocus.current = true
+    setIndex(0)
+    setAnswers([])
+    setFinished(false)
   }
   return (
     <div className="glite-phone">
@@ -159,57 +194,133 @@ export function QuizPhone({ onLookup }: { onLookup: (word: string) => void }) {
         </div>
         <div className="phone-app">
           <span>glite</span>
-          <span>
-            {index + 1} / {questions.length}
+          <span
+            aria-label={
+              finished
+                ? 'Your result'
+                : `Question ${index + 1} of ${questions.length}`
+            }
+          >
+            {finished ? 'Your result' : `${index + 1} / ${questions.length}`}
           </span>
         </div>
-        <div className="phone-feed" key={index}>
-          <span className="object-caption">A quick question</span>
-          <h3>{question.sentence}</h3>
-          <p>What does it mean?</p>
-          <div className="quiz-choices">
-            {question.choices.map((choice, i) => (
+        {finished ? (
+          <div className="phone-feed quiz-result" key="result">
+            <div className="quiz-score" aria-hidden="true">
+              <svg viewBox="0 0 120 120">
+                <circle className="score-track" cx="60" cy="60" r="52" />
+                <circle
+                  className="score-progress"
+                  cx="60"
+                  cy="60"
+                  r="52"
+                  pathLength="100"
+                  strokeDasharray={`${percent} 100`}
+                />
+              </svg>
+              <strong>
+                {percent}
+                <span>%</span>
+              </strong>
+            </div>
+            <h3 ref={heading} tabIndex={-1}>
+              <span className="sr-only">{percent}% correct. </span>
+              {score} of {questions.length} correct
+            </h3>
+            <p>{encouragement}</p>
+            <ul className="quiz-recap" aria-label="Your answers">
+              {questions.map((item, i) => (
+                <li key={item.idiom}>
+                  {answers[i] === item.answer ? (
+                    <Check size={14} aria-label="Correct" />
+                  ) : (
+                    <RotateCcw size={13} aria-label="To practise" />
+                  )}
+                  <button onClick={() => onLookup(item.idiom)}>
+                    {item.idiom}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <div className="phone-feed" key={index}>
+            <h3 ref={heading} tabIndex={-1}>
+              {question.sentence}
+            </h3>
+            <p>What does it mean?</p>
+            <div className="quiz-choices">
+              {question.choices.map((choice, i) => (
+                <button
+                  key={choice}
+                  onClick={() =>
+                    setAnswers((values) =>
+                      values[index] === undefined ? [...values, i] : values,
+                    )
+                  }
+                  aria-disabled={answer !== null}
+                  aria-pressed={answer !== null ? answer === i : undefined}
+                  className={
+                    answer !== null
+                      ? i === question.answer
+                        ? 'correct'
+                        : i === answer
+                          ? 'incorrect'
+                          : ''
+                      : ''
+                  }
+                >
+                  <span>{String.fromCharCode(65 + i)}</span>
+                  {choice}
+                  {answer !== null && i === question.answer && (
+                    <>
+                      <Check size={16} aria-hidden="true" />
+                      <span className="sr-only">Correct answer</span>
+                    </>
+                  )}
+                  {answer === i && i !== question.answer && (
+                    <span className="sr-only">Incorrect answer</span>
+                  )}
+                </button>
+              ))}
+            </div>
+            {answer !== null && (
+              <output className="quiz-feedback">
+                <strong>
+                  {answer === question.answer ? 'That is it.' : 'Not quite.'}
+                </strong>{' '}
+                {question.explanation}
+              </output>
+            )}
+          </div>
+        )}
+        <div className="phone-actions">
+          {finished ? (
+            <button className="quiz-restart" onClick={restart}>
+              <RotateCcw size={16} /> Try again
+            </button>
+          ) : (
+            <>
               <button
-                key={choice}
-                onClick={() => setAnswer(i)}
-                disabled={answer !== null}
-                className={
-                  answer !== null
-                    ? i === question.answer
-                      ? 'correct'
-                      : i === answer
-                        ? 'incorrect'
-                        : ''
-                    : ''
+                onClick={() => onLookup(question.idiom)}
+                aria-label={`Look up ${question.idiom}`}
+              >
+                <BookOpen size={16} /> Look up
+              </button>
+              <button
+                onClick={next}
+                disabled={answer === null}
+                aria-label={
+                  index === questions.length - 1
+                    ? 'See quiz results'
+                    : 'Next idiom question'
                 }
               >
-                <span>{String.fromCharCode(65 + i)}</span>
-                {choice}
-                {answer !== null && i === question.answer && (
-                  <Check size={16} />
-                )}
+                {index === questions.length - 1 ? 'Results' : 'Next'}{' '}
+                <ArrowRight size={16} />
               </button>
-            ))}
-          </div>
-          {answer !== null && (
-            <output className="quiz-feedback">
-              <strong>
-                {answer === question.answer ? 'That is it.' : 'Almost.'}
-              </strong>{' '}
-              {question.explanation}
-            </output>
+            </>
           )}
-        </div>
-        <div className="phone-actions">
-          <button
-            onClick={() => onLookup(question.idiom)}
-            aria-label={`Look up ${question.idiom}`}
-          >
-            <BookOpen size={16} /> Look up
-          </button>
-          <button onClick={next} aria-label="Next idiom question">
-            Next <ArrowRight size={16} />
-          </button>
         </div>
         <div className="phone-home" aria-hidden="true" />
       </div>

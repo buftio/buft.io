@@ -33,9 +33,10 @@ export default function GliteStory({
           <span>English practice, with an AI tutor.</span>
         </div>
         <p>
-          I led full-stack development at Glite. I worked on voice agents,
-          speech evaluation, and an exercise that turned a learner&apos;s
-          description into a picture.
+          I led full-stack development at Glite and built the Image Test:
+          describe a picture, see what the AI understood, and talk it through. I
+          built the production voice agent pipeline and speech evaluation behind
+          it.
         </p>
       </header>
 
@@ -44,12 +45,8 @@ export default function GliteStory({
         aria-label="An illustrated language exercise"
       >
         <div className="glite-prose conversation-copy">
-          <p>
-            The picture made misunderstandings visible. Say what you mean, see
-            what the model understood, then try again.
-          </p>
           <div className="glite-transcript">
-            <p>
+            <p className="tutor-line">
               <span>Tutor</span>What would you like after dinner?
             </p>
             <p className="learner-line">
@@ -66,7 +63,7 @@ export default function GliteStory({
                 </>
               )}
             </p>
-            <p className="tutor-reply" aria-live="polite">
+            <p className="tutor-line tutor-reply" aria-live="polite">
               <span>Tutor</span>
               {corrected
                 ? 'Much better. I was getting sand in my circuits.'
@@ -114,14 +111,8 @@ export default function GliteStory({
               onLamp={() => setEvening((value) => !value)}
             />
           </SceneBoundary>
-          <span className="plate-note" aria-live="polite">
-            {corrected
-              ? 'dessert. civilisation restored.'
-              : 'desert. the whole thing, apparently.'}
-          </span>
         </figure>
         <div className="glite-scene-controls">
-          <span>A small recreation of the exercise.</span>
           <button
             onClick={() => setEvening((value) => !value)}
             aria-label={evening ? 'Turn café lamp off' : 'Turn café lamp on'}
@@ -142,12 +133,9 @@ export default function GliteStory({
       <section className="glite-words" aria-label="Dictionary">
         <div className="glite-prose">
           <p>
-            The dictionary was a big part of Glite. A word from a conversation
-            could become something to look up, save, and practise.
-          </p>
-          <p>
-            Here, one extra <em>s</em> gets us out of the desert and back to
-            cake.
+            The dictionary connected the learning experience. Look up a word,
+            save it, practise it in the question feed, then use it in a
+            conversation.
           </p>
         </div>
         <Dictionary word={word} onWord={setWord} />
@@ -156,23 +144,22 @@ export default function GliteStory({
       <section className="glite-practice" aria-label="Idiom practice">
         <QuizPhone onLookup={lookup} />
         <div className="glite-prose practice-copy">
-          <p>
-            There was also a feed of short questions. A little practice between
-            conversations, with words you could take back into the next one.
+          <p>I scaled the acquisition tests that brought people into Glite.</p>
+          <p className="glite-test-scale">
+            <strong>Hundreds of thousands</strong>
+            <span>of test users per month</span>
           </p>
           <p>
-            Answer a question, then look up the expression in the dictionary.
+            I used PostHog experiments and funnel analysis to improve the
+            journey from taking a test to using the app.
           </p>
-          <span className="table-scribble" aria-hidden="true">
-            a piece of cake ↙
-          </span>
         </div>
       </section>
 
       <footer className="glite-outro">
         <p>
-          I built the Image Test from the first interaction through spoken
-          feedback, and led the team working on the learning experience.
+          I also built and operated the voice AI infrastructure, handling mixed
+          CPU- and I/O-bound workloads, and led a team of three developers.
         </p>
         <a href="https://glite.ai" target="_blank" rel="noreferrer">
           Visit Glite <ArrowUpRight size={16} />
