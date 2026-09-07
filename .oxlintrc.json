@@ -19,6 +19,15 @@
       "files": [
         "src/components/scene.tsx",
         "src/components/three/**",
+        "src/components/glite/cafe.tsx",
+        "src/components/marketdata/journey.tsx",
+        "src/components/marketdata/scene.tsx",
+        "src/components/marketdata/collection.tsx",
+        "src/components/marketdata/cost-sheet.tsx",
+        "src/components/marketdata/delivery.tsx",
+        "src/components/marketdata/party-guest.tsx",
+        "src/components/marketdata/rug.tsx",
+        "src/components/yandex/office.tsx",
         "src/app/falling-monks/page.tsx"
       ],
       "rules": {

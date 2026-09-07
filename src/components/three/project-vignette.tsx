@@ -8,7 +8,7 @@ import {
   useGLTF,
 } from '@react-three/drei'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import { Pause, Play, RotateCcw } from 'lucide-react'
+import { RotateCcw } from 'lucide-react'
 import { clone } from 'three/addons/utils/SkeletonUtils.js'
 import { PCFShadowMap } from 'three'
 import type { Project } from '@/lib/projects'
@@ -66,7 +66,6 @@ export default function ProjectVignette({
   reduced: boolean
   onReady?: () => void
 }) {
-  const [paused, setPaused] = useState(false)
   const [beat, setBeat] = useState(0)
   const [line, setLine] = useState(0)
   const [ready, setReady] = useState(false)
@@ -85,7 +84,6 @@ export default function ProjectVignette({
     current.target.set(...cameraTarget)
     current.update()
   }
-  const still = paused || reduced
   return (
     <figure className={`project-vignette vignette-${project.id}`}>
       <div className={`mini-world ${ready ? 'is-ready' : ''}`}>
@@ -109,9 +107,9 @@ export default function ProjectVignette({
           />
           <Suspense fallback={null}>
             {conversation ? (
-              <Conversation paused={still} onBeat={setBeat} />
+              <Conversation paused={reduced} onBeat={setBeat} />
             ) : (
-              <ProjectWorld project={project} paused={still} />
+              <ProjectWorld project={project} paused={reduced} />
             )}
             <ContactShadows
               position={[0, -0.25, 0]}
@@ -147,15 +145,6 @@ export default function ProjectVignette({
           </div>
         )}
         <div className="world-controls">
-          <button
-            onClick={() => setPaused((value) => !value)}
-            aria-label={
-              paused ? 'Play project animation' : 'Pause project animation'
-            }
-            disabled={reduced}
-          >
-            {paused || reduced ? <Play size={14} /> : <Pause size={14} />}
-          </button>
           <button onClick={resetView} aria-label="Reset scene view">
             <RotateCcw size={14} />
           </button>

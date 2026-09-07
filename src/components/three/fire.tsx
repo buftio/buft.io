@@ -32,7 +32,7 @@ const flameFragment = `
     float edge=abs(p.x-0.5)*2.0;
     float shape=1.0-edge-p.y*0.82+n*0.48-0.23;
     float flame=smoothstep(0.06,0.3,shape);
-    float fade=pow(1.0-p.y,1.25)*smoothstep(0.0,0.08,p.y);
+    float fade=pow(clamp(1.0-p.y,0.0,1.0),1.25)*smoothstep(0.0,0.08,p.y);
     vec3 color=mix(vec3(1.0,0.045,0.004),vec3(1.0,0.44,0.055),clamp(shape*1.6,0.0,1.0));
     color=mix(color,vec3(1.0,0.7,0.24),pow(max(0.0,shape),3.0));
     gl_FragColor=vec4(color*1.3,flame*fade*0.48);
@@ -78,54 +78,6 @@ export function Flames({
         </mesh>
       ))}
     </group>
-  )
-}
-
-let glowTexture: THREE.CanvasTexture | null = null
-function getGlowTexture() {
-  if (glowTexture) return glowTexture
-  const canvas = document.createElement('canvas')
-  canvas.width = canvas.height = 128
-  const context = canvas.getContext('2d')!
-  const gradient = context.createRadialGradient(64, 64, 0, 64, 64, 64)
-  gradient.addColorStop(0, 'rgba(255,150,70,1)')
-  gradient.addColorStop(0.35, 'rgba(255,90,25,0.45)')
-  gradient.addColorStop(1, 'rgba(255,40,10,0)')
-  context.fillStyle = gradient
-  context.fillRect(0, 0, 128, 128)
-  glowTexture = new THREE.CanvasTexture(canvas)
-  return glowTexture
-}
-
-export function Glow({
-  reduced = false,
-  scale = 1,
-  opacity = 0.5,
-  position = [0, 0, 0],
-}: {
-  reduced?: boolean
-  scale?: number
-  opacity?: number
-  position?: [number, number, number]
-}) {
-  const ref = useRef<THREE.Sprite>(null)
-  const texture = useMemo(() => getGlowTexture(), [])
-  useFrame(({ clock }) => {
-    if (!ref.current || reduced) return
-    const t = clock.elapsedTime
-    ref.current.material.opacity =
-      opacity * (0.9 + Math.sin(t * 7.3) * 0.06 + Math.sin(t * 3.1) * 0.05)
-  })
-  return (
-    <sprite ref={ref} position={position} scale={scale}>
-      <spriteMaterial
-        map={texture}
-        transparent
-        opacity={opacity}
-        depthWrite={false}
-        blending={THREE.AdditiveBlending}
-      />
-    </sprite>
   )
 }
 

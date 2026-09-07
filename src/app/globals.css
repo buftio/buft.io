@@ -76,8 +76,10 @@ a {
   color: inherit;
   text-decoration: none;
 }
-button:focus-visible,
-a:focus-visible {
+:where(button, a, input, textarea, select, summary, [tabindex]) {
+  border-radius: 8px;
+}
+:is(button, a, input, textarea, select, summary, [tabindex]):focus-visible {
   outline: 2px solid #ffad68;
   outline-offset: 7px;
 }
@@ -402,6 +404,7 @@ h1 {
     transform 0.35s;
   transform: scale(0.8);
   padding: 8px;
+  border-radius: 12px;
 }
 .flower-label.is-active,
 .flower-label:hover {

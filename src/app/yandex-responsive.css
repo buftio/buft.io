@@ -1,0 +1,115 @@
+@media (max-width: 950px) {
+  .hiring-papers {
+    grid-template-columns: minmax(170px, 0.8fr) minmax(0, 1.3fr);
+  }
+  .hiring-tools {
+    grid-column: 1 / -1;
+    transform: none;
+  }
+  .hiring-tools-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 14px;
+  }
+  .hiring-offer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 18px;
+  }
+  .hiring-intro {
+    display: block;
+  }
+  .hiring-intro p {
+    margin-top: 8px;
+  }
+}
+@media (max-width: 600px) {
+  .yandex-dialog {
+    width: 94vw;
+    inset: 12% 3% 3%;
+    max-height: 85dvh;
+  }
+  .hiring-intro {
+    padding: 20px;
+  }
+  .hiring-intro h2 {
+    font-size: 27px;
+  }
+  .hiring-intro p {
+    font-size: 14px;
+  }
+  .hiring-office {
+    height: 205px;
+  }
+  .hiring-office-note {
+    left: 12px;
+    top: 12px;
+    font-size: 11px;
+  }
+  .hiring-daybar {
+    top: 42px;
+    padding: 12px 18px;
+    gap: 9px 18px;
+    font-size: 12px;
+  }
+  .hiring-daybar > strong {
+    flex-basis: 100%;
+  }
+  .hiring-desk {
+    padding: 22px 15px;
+  }
+  .hiring-papers {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .hiring-file,
+  .hiring-desk {
+    scroll-margin-top: 145px;
+  }
+  .hiring-paper {
+    padding: 19px;
+  }
+  .hiring-vacancy {
+    transform: none;
+  }
+  .hiring-vacancy h3 {
+    font-size: 19px;
+  }
+  .hiring-file {
+    min-height: 360px;
+  }
+  .hiring-tools {
+    grid-column: auto;
+  }
+  .hiring-tools-list {
+    grid-template-columns: 1fr;
+  }
+  .hiring-offer {
+    display: block;
+  }
+  .hiring-decisions {
+    gap: 13px;
+    justify-content: space-between;
+  }
+  .hiring-decision-note {
+    flex-basis: 100%;
+  }
+  .hiring-stamp {
+    min-width: 120px;
+    padding: 12px 15px;
+    font-size: 16px;
+  }
+  .hiring-receipt {
+    padding: 20px;
+  }
+  .hiring-outro {
+    padding: 20px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hiring-story *,
+  .hiring-story *::before {
+    animation: none !important;
+    transition: none !important;
+  }
+}

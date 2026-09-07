@@ -7,6 +7,7 @@ import { projects, projectAngle, projectPosition } from '@/lib/projects'
 import { Flower } from './three/flower'
 import { FireCircle } from './three/fire'
 import { Rock, Samurai } from './three/samurai'
+import { GardenBloom } from './three/garden-bloom'
 
 export type SceneProps = {
   progress: React.RefObject<number>
@@ -172,6 +173,7 @@ export function Scene(props: SceneProps) {
       ))}
       <FlowerLights {...props} />
       <CameraRail {...props} />
+      <GardenBloom />
     </Canvas>
   )
 }

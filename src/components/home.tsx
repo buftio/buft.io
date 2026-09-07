@@ -1,15 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import {
-  ArrowDown,
-  ArrowLeft,
-  ArrowRight,
-  ArrowUpRight,
-  Pause,
-  Play,
-  X,
-} from 'lucide-react'
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight, X } from 'lucide-react'
 import {
   useCallback,
   useEffect,
@@ -32,6 +24,9 @@ const ProjectVignette = dynamic(() => import('./three/project-vignette'), {
     </figure>
   ),
 })
+const GliteStory = dynamic(() => import('./glite/story'))
+const MarketDataStory = dynamic(() => import('./marketdata/story'))
+const YandexStory = dynamic(() => import('./yandex/story'))
 const resumeUrl =
   'https://docs.google.com/document/d/1yVdeR23Y5sJU6MKffIKWd-uo_GBjAuHN/edit'
 const preloadVignette = () => import('./three/project-vignette')
@@ -117,13 +112,11 @@ export function Home({ initial = null }: { initial?: number | null }) {
   const [leaving, setLeaving] = useState<number | null>(null)
   const [selected, setSelected] = useState<number | null>(initial)
   const [worldReady, setWorldReady] = useState(initial === null)
-  const [paused, setPaused] = useState(false)
-  const prefersReduced = useSyncExternalStore(
+  const reduced = useSyncExternalStore(
     subscribeMotion,
     () => getMotionQuery().matches,
     () => false,
   )
-  const reduced = prefersReduced || paused
   const opened = selected !== null ? projects[selected] : null
   const showScene = worldReady || selected === null
   if (shown !== active) {
@@ -218,16 +211,43 @@ export function Home({ initial = null }: { initial?: number | null }) {
     const element = dialog.current
     const focus = previousFocus.current
     const oldOverflow = document.body.style.overflow
+    let backdropPress = false
+    const isOutside = (event: MouseEvent) => {
+      if (!element || event.target !== element) return false
+      const bounds = element.getBoundingClientRect()
+      return (
+        event.clientX < bounds.left ||
+        event.clientX > bounds.right ||
+        event.clientY < bounds.top ||
+        event.clientY > bounds.bottom
+      )
+    }
+    const onPointerDown = (event: PointerEvent) => {
+      backdropPress = event.button === 0 && isOutside(event)
+    }
+    const onPointerCancel = () => {
+      backdropPress = false
+    }
+    const onClick = (event: MouseEvent) => {
+      if (backdropPress && isOutside(event)) closeProject()
+      backdropPress = false
+    }
+    element?.addEventListener('pointerdown', onPointerDown)
+    element?.addEventListener('pointercancel', onPointerCancel)
+    element?.addEventListener('click', onClick)
     document.body.style.overflow = 'hidden'
     element?.showModal()
     return () => {
+      element?.removeEventListener('pointerdown', onPointerDown)
+      element?.removeEventListener('pointercancel', onPointerCancel)
+      element?.removeEventListener('click', onClick)
       element?.close()
       document.body.style.overflow = oldOverflow
       requestAnimationFrame(() => {
         if (focus?.isConnected) focus.focus({ preventScroll: true })
       })
     }
-  }, [selected])
+  }, [selected, closeProject])
 
   return (
     <main className={`portfolio ${reduced ? 'reduced-motion' : ''}`}>
@@ -257,7 +277,7 @@ export function Home({ initial = null }: { initial?: number | null }) {
           buft<span>.io</span>
           <i />
         </button>
-        <span className="header-note">A FEW THINGS I HAVE BUILT</span>
+        <span className="header-note">THINGS I HAVE BUILT</span>
         <nav aria-label="Profile links">
           <a href="https://github.com/buftio" target="_blank" rel="noreferrer">
             GitHub <ArrowUpRight size={13} />
@@ -329,12 +349,6 @@ export function Home({ initial = null }: { initial?: number | null }) {
           >
             <ArrowRight size={19} />
           </button>
-          <button
-            aria-label={paused ? 'Resume animation' : 'Pause animation'}
-            onClick={() => setPaused((value) => !value)}
-          >
-            {paused ? <Play size={15} /> : <Pause size={15} />}
-          </button>
         </div>
       </footer>
       <div
@@ -344,62 +358,77 @@ export function Home({ initial = null }: { initial?: number | null }) {
       />
       {opened && (
         <dialog
-          className="project-dialog"
+          className={`project-dialog ${opened.id === 'glite' ? 'glite-dialog' : opened.id === 'marketdata' ? 'market-dialog' : opened.id === 'yandex' ? 'yandex-dialog' : ''}`}
           ref={dialog}
           onCancel={closeProject}
           aria-labelledby="project-heading"
         >
           <div className="project-window-bar">
             <span>
-              <i />
-              <i />
-              <i />
+              {opened.id === 'glite'
+                ? 'Glite · 2025'
+                : opened.id === 'marketdata' || opened.id === 'yandex'
+                  ? `${opened.name} · ${opened.period}`
+                  : `${opened.name.toLowerCase()} / a closer look`}
             </span>
-            <span>{opened.name.toLowerCase()} / a closer look</span>
             <button onClick={closeProject} aria-label="Close project">
               <X size={19} />
             </button>
           </div>
-          <article
-            className="project-article"
-            style={{ '--project-color': opened.color } as React.CSSProperties}
-          >
-            <div className="article-meta">
-              <span>{opened.name}</span>
-              <span>{opened.field}</span>
-            </div>
-            <h2 id="project-heading">{opened.title}</h2>
-            <p className="article-intro">{opened.story}</p>
-            <SceneBoundary compact key={opened.id}>
-              <ProjectVignette
-                project={opened}
-                reduced={reduced}
-                onReady={() => setWorldReady(true)}
-              />
-            </SceneBoundary>
-            <div className="article-bottom">
-              <div>
-                <span className="eyebrow">MY PART</span>
-                <h3>{opened.role}</h3>
-                {opened.details.map((detail) => (
-                  <p key={detail}>{detail}</p>
-                ))}
+          {opened.id === 'glite' ? (
+            <GliteStory reduced={reduced} onReady={() => setWorldReady(true)} />
+          ) : opened.id === 'marketdata' ? (
+            <MarketDataStory
+              reduced={reduced}
+              onReady={() => setWorldReady(true)}
+            />
+          ) : opened.id === 'yandex' ? (
+            <YandexStory
+              reduced={reduced}
+              onReady={() => setWorldReady(true)}
+            />
+          ) : (
+            <article
+              className="project-article"
+              style={{ '--project-color': opened.color } as React.CSSProperties}
+            >
+              <div className="article-meta">
+                <span>{opened.name}</span>
+                <span>{opened.field}</span>
               </div>
-              {opened.url && (
-                <a
-                  className="visit-link"
-                  href={opened.url}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {opened.id === 'lumiprobe'
-                    ? 'View the code'
-                    : 'Visit website'}{' '}
-                  <ArrowUpRight size={17} />
-                </a>
-              )}
-            </div>
-          </article>
+              <h2 id="project-heading">{opened.title}</h2>
+              <p className="article-intro">{opened.story}</p>
+              <SceneBoundary compact key={opened.id}>
+                <ProjectVignette
+                  project={opened}
+                  reduced={reduced}
+                  onReady={() => setWorldReady(true)}
+                />
+              </SceneBoundary>
+              <div className="article-bottom">
+                <div>
+                  <span className="eyebrow">MY PART</span>
+                  <h3>{opened.role}</h3>
+                  {opened.details.map((detail) => (
+                    <p key={detail}>{detail}</p>
+                  ))}
+                </div>
+                {opened.url && (
+                  <a
+                    className="visit-link"
+                    href={opened.url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {opened.id === 'lumiprobe'
+                      ? 'View the code'
+                      : 'Visit website'}{' '}
+                    <ArrowUpRight size={17} />
+                  </a>
+                )}
+              </div>
+            </article>
+          )}
         </dialog>
       )}
     </main>
