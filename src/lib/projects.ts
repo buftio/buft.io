@@ -129,13 +129,14 @@ export const projects: Project[] = [
     field: 'Games × creative tools',
     role: 'Software engineer',
     period: '2019–2021',
-    title: 'Give play more room.',
-    summary: 'Behind a good game is an artist waiting for a better tool.',
+    title: 'Gameplay and the tools behind it.',
+    summary:
+      'Gameplay features and editor tools for Halo. Football team management systems for FIFA.',
     story:
-      'I built game interfaces and the tools behind them. From FIFA 2022 menus to Maya and Perforce integrations, the aim was to spend less time fighting the workflow and more time making the game.',
+      'At Sperasoft, I developed gameplay features and editor tools for Halo, and football team management systems for FIFA.',
     details: [
-      'Worked with designers and QA on FIFA 2022 interfaces.',
-      'Built artist integrations and an in-engine testing framework.',
+      'Developed gameplay features and editor tools for Halo, including grenade configuration tools.',
+      'Built football team management systems inside FIFA.',
     ],
     color: '#ea9c79',
     logo: '/logos/sperasoft.png',
