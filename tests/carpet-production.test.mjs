@@ -7,7 +7,20 @@ import {
   spaceRuns,
   STAGGER,
   ARRIVAL_END,
+  ORDER_COOLDOWN_MS,
+  remainingCooldown,
 } from '../src/components/marketdata/workshop-state.ts'
+
+test('restored order cooldown expires normally and never grows after a clock correction', () => {
+  const ordered = 100_000
+  assert.equal(
+    remainingCooldown(ordered, ordered + 500),
+    ORDER_COOLDOWN_MS - 500,
+  )
+  assert.equal(remainingCooldown(ordered, ordered + ORDER_COOLDOWN_MS), 0)
+  assert.equal(remainingCooldown(ordered, ordered + 60_000), 0)
+  assert.equal(remainingCooldown(ordered, ordered - 60_000), ORDER_COOLDOWN_MS)
+})
 
 const rug = (id, progress) => ({
   id,

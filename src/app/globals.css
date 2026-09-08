@@ -189,11 +189,11 @@ button {
   position: absolute;
   inset: 0 auto auto 0;
   width: 100%;
-  animation: caption-in 0.8s 0.15s cubic-bezier(0.2, 0.7, 0.1, 1) both;
+  animation: caption-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
   pointer-events: none;
 }
 .story-caption.is-leaving {
-  animation: caption-out 0.45s ease both;
+  animation: caption-out 0.2s ease-out both;
 }
 .story-caption > * {
   pointer-events: auto;

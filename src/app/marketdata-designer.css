@@ -171,18 +171,3 @@
 .carpet-name input::placeholder {
   color: #92917c;
 }
-.make-carpet {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  background: #793e48;
-  color: #fff0d6;
-  padding: 12px 15px;
-  border-radius: 9px;
-  font-size: 14px;
-  box-shadow: 0 3px 0 #4f3038;
-}
-.make-carpet:hover {
-  background: #904751;
-}

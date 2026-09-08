@@ -28,6 +28,7 @@ const GliteStory = dynamic(() => import('./glite/story'))
 const MarketDataStory = dynamic(() => import('./marketdata/story'))
 const YandexStory = dynamic(() => import('./yandex/story'))
 const SperasoftStory = dynamic(() => import('./sperasoft/story'))
+const LumiprobeStory = dynamic(() => import('./lumiprobe/story'))
 const resumeUrl =
   'https://docs.google.com/document/d/1yVdeR23Y5sJU6MKffIKWd-uo_GBjAuHN/edit'
 const preloadVignette = () => import('./three/project-vignette')
@@ -126,18 +127,15 @@ export function Home({ initial = null }: { initial?: number | null }) {
   }
   if (reduced && leaving !== null) setLeaving(null)
 
-  const navigate = useCallback(
-    (index: number) => {
-      const bounded = Math.max(-1, Math.min(projects.length - 1, index))
-      pending.current = bounded
-      setActive(bounded)
-      window.scrollTo({
-        top: (bounded + 1) * window.innerHeight,
-        behavior: reduced ? 'instant' : 'smooth',
-      })
-    },
-    [reduced],
-  )
+  const navigate = useCallback((index: number) => {
+    const bounded = Math.max(-1, Math.min(projects.length - 1, index))
+    pending.current = bounded
+    setActive(bounded)
+    window.scrollTo({
+      top: (bounded + 1) * window.innerHeight,
+      behavior: 'instant',
+    })
+  }, [])
 
   const openProject = useCallback((index: number) => {
     previousFocus.current = document.activeElement as HTMLElement
@@ -359,7 +357,7 @@ export function Home({ initial = null }: { initial?: number | null }) {
       />
       {opened && (
         <dialog
-          className={`project-dialog ${opened.id === 'glite' ? 'glite-dialog' : opened.id === 'marketdata' ? 'market-dialog' : opened.id === 'yandex' ? 'yandex-dialog' : opened.id === 'sperasoft' ? 'spera-dialog' : ''}`}
+          className={`project-dialog ${opened.id === 'glite' ? 'glite-dialog' : opened.id === 'marketdata' ? 'market-dialog' : opened.id === 'yandex' ? 'yandex-dialog' : opened.id === 'sperasoft' ? 'spera-dialog' : opened.id === 'lumiprobe' ? 'lumiprobe-dialog' : ''}`}
           ref={dialog}
           onCancel={closeProject}
           aria-labelledby="project-heading"
@@ -368,11 +366,13 @@ export function Home({ initial = null }: { initial?: number | null }) {
             <span>
               {opened.id === 'glite'
                 ? 'Glite · 2025'
-                : opened.id === 'marketdata' ||
-                    opened.id === 'yandex' ||
-                    opened.id === 'sperasoft'
-                  ? `${opened.name} · ${opened.period}`
-                  : `${opened.name.toLowerCase()} / a closer look`}
+                : opened.id === 'lumiprobe'
+                  ? 'Lumiprobe'
+                  : opened.id === 'marketdata' ||
+                      opened.id === 'yandex' ||
+                      opened.id === 'sperasoft'
+                    ? `${opened.name} · ${opened.period}`
+                    : `${opened.name.toLowerCase()} / a closer look`}
             </span>
             <button onClick={closeProject} aria-label="Close project">
               <X size={19} />
@@ -392,6 +392,11 @@ export function Home({ initial = null }: { initial?: number | null }) {
             />
           ) : opened.id === 'sperasoft' ? (
             <SperasoftStory
+              reduced={reduced}
+              onReady={() => setWorldReady(true)}
+            />
+          ) : opened.id === 'lumiprobe' ? (
+            <LumiprobeStory
               reduced={reduced}
               onReady={() => setWorldReady(true)}
             />

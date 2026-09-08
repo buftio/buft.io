@@ -8,6 +8,7 @@ import { Flower } from './three/flower'
 import { FireCircle } from './three/fire'
 import { Rock, Samurai } from './three/samurai'
 import { GardenBloom } from './three/garden-bloom'
+import { advanceRail } from './three/rail-motion'
 
 export type SceneProps = {
   progress: React.RefObject<number>
@@ -18,10 +19,19 @@ export type SceneProps = {
 }
 
 function CameraRail({ progress, selected, reduced }: SceneProps) {
-  const current = useRef(-1)
-  const look = useRef(new THREE.Vector3(-1.5, -0.1, 0))
+  const current = useRef({
+    position: selected ?? progress.current,
+    velocity: 0,
+  })
   const desired = useRef(new THREE.Vector3())
-  const destination = useRef(new THREE.Vector3())
+  const framing = useRef({
+    distance: 11.8,
+    shift: -1.8,
+    forward: 1.2,
+    height: 2.5,
+    lookY: -0.2,
+    parallax: 0,
+  })
   const entry = useRef({ project: selected, time: 1 })
   useFrame(({ camera, size, pointer }, delta) => {
     const step = Math.min(delta, 0.05)
@@ -33,10 +43,11 @@ function CameraRail({ progress, selected, reduced }: SceneProps) {
         ? Math.sin(entry.current.time * Math.PI) ** 2
         : 0
     const target = selected ?? progress.current
-    current.current = reduced
-      ? target
-      : THREE.MathUtils.damp(current.current, target, 3.5, step)
-    const a = projectAngle(current.current)
+    if (reduced) {
+      current.current.position = target
+      current.current.velocity = 0
+    } else advanceRail(current.current, target, delta)
+    const a = projectAngle(current.current.position)
     const mobile = size.width < 700
     const distance =
       selected !== null
@@ -53,23 +64,29 @@ function CameraRail({ progress, selected, reduced }: SceneProps) {
           ? 0
           : -1.8
     const forward = 1.2 + dive * 2.6
-    destination.current.set(
-      Math.sin(a) * distance,
-      selected !== null ? 2.0 - dive : 2.5,
-      Math.cos(a) * distance,
+    const frame = framing.current
+    const settle = (from: number, to: number) =>
+      reduced ? to : THREE.MathUtils.damp(from, to, 3.5, step)
+    frame.distance = settle(frame.distance, distance)
+    frame.shift = settle(frame.shift, shift)
+    frame.forward = settle(frame.forward, forward)
+    frame.height = settle(frame.height, selected !== null ? 2 - dive : 2.5)
+    frame.lookY = settle(frame.lookY, -0.2 - dive * 0.5)
+    frame.parallax = settle(
+      frame.parallax,
+      !reduced && selected === null ? pointer.x * 0.1 : 0,
+    )
+    camera.position.set(
+      Math.sin(a) * frame.distance + frame.parallax,
+      frame.height,
+      Math.cos(a) * frame.distance,
     )
     desired.current.set(
-      Math.sin(a) * forward + Math.cos(a) * shift,
-      -0.2 - dive * 0.5,
-      Math.cos(a) * forward - Math.sin(a) * shift,
+      Math.sin(a) * frame.forward + Math.cos(a) * frame.shift,
+      frame.lookY,
+      Math.cos(a) * frame.forward - Math.sin(a) * frame.shift,
     )
-    if (!reduced && selected === null) destination.current.x += pointer.x * 0.1
-    camera.position.lerp(
-      destination.current,
-      reduced ? 1 : 1 - Math.exp(-step * 3.5),
-    )
-    look.current.lerp(desired.current, reduced ? 1 : 1 - Math.exp(-step * 3.5))
-    camera.lookAt(look.current)
+    camera.lookAt(desired.current)
   })
   return null
 }

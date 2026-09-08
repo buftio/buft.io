@@ -170,8 +170,8 @@ export const projects: Project[] = [
     field: 'Open source × chemistry',
     role: 'Open-source contributor',
     period: 'Project work',
-    title: 'Every molecule has a name.',
-    summary: 'A little grammar. A little chemistry. A satisfying puzzle.',
+    title: 'SMILES to IUPAC',
+    summary: 'A Python tool for naming chemical structures.',
     story:
       'Molecules have structure. Names have grammar. I worked on the bridge between machine-readable molecular notation and human-readable chemical names, and won an open-source contest along the way.',
     details: [

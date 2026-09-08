@@ -166,22 +166,22 @@ export function Cart(props: GroupProps) {
     () => [
       {
         position: [0.22, 0.06, 0.16],
-        rotation: [Math.PI / 2, 0, 0],
+        rotation: [0, 0, Math.PI / 2],
         scale: [0.12, 0.05, 0.12],
       },
       {
         position: [-0.22, 0.06, 0.16],
-        rotation: [Math.PI / 2, 0, 0],
+        rotation: [0, 0, Math.PI / 2],
         scale: [0.12, 0.05, 0.12],
       },
       {
         position: [0.22, 0.06, -0.16],
-        rotation: [Math.PI / 2, 0, 0],
+        rotation: [0, 0, Math.PI / 2],
         scale: [0.12, 0.05, 0.12],
       },
       {
         position: [-0.22, 0.06, -0.16],
-        rotation: [Math.PI / 2, 0, 0],
+        rotation: [0, 0, Math.PI / 2],
         scale: [0.12, 0.05, 0.12],
       },
     ],

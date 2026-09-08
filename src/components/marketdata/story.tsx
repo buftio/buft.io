@@ -79,8 +79,8 @@ export default function MarketDataStory({
             design={design}
             onDesign={setDesign}
             onMake={(name) => workshop.make(design, name)}
-            ready={workshop.ready}
-            queued={workshop.queue.length}
+            ready={workshop.ready && !workshop.coolingDown}
+            reduced={reduced}
           />
         </div>
         <div className="market-environment">

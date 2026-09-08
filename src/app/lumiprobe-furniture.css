@@ -1,0 +1,242 @@
+/* Laptop. The screen text sits on the tilted clay panel; keys sit on the base. */
+.lumi-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 7px 9px;
+  border-radius: 4px;
+  overflow: hidden;
+  text-align: left;
+  color: var(--lumi-ink);
+  transition: box-shadow 0.3s;
+}
+.lumi-screen.is-glowing {
+  box-shadow:
+    0 0 0 2px #ffe9a3,
+    0 0 22px 4px #ffd66b88;
+}
+.lumi-name {
+  margin: 0;
+  min-width: 0;
+}
+.lumi-name strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.lumi-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin: 0;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  line-height: 1.3;
+}
+.lumi-facts div {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+.lumi-facts dt {
+  color: var(--lumi-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 9px;
+  padding-top: 1px;
+}
+.lumi-facts dd {
+  margin: 0;
+  color: var(--lumi-plum);
+  overflow-wrap: anywhere;
+}
+.lumi-message {
+  display: block;
+  font-size: 10px;
+  line-height: 1.3;
+  color: #9a4331;
+}
+.lumi-message:empty {
+  display: none;
+}
+.lumi-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--lumi-ink);
+  white-space: nowrap;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+}
+.lumi-key:hover:not(:disabled) {
+  background: #ffffff50;
+  box-shadow: inset 0 0 0 1px #ffffff80;
+}
+.lumi-key:active:not(:disabled) {
+  background: #bcb2c34d;
+  box-shadow: inset 0 2px 3px #51455950;
+}
+.lumi-key:disabled {
+  opacity: 0.4;
+}
+
+/* Clipboard with the current task. Paper is clay; the text is DOM. */
+.lumi-clipboard {
+  display: flex;
+  flex-direction: column;
+  gap: calc(3px + 7px * var(--board-focus, 0));
+  padding: calc(10px + 12px * var(--board-focus, 0))
+    calc(11px + 13px * var(--board-focus, 0));
+  border-radius: 3px;
+  overflow: hidden;
+  text-align: left;
+}
+.lumi-clipboard h3 {
+  margin: 0;
+  font-size: calc(14px + 12px * var(--board-focus, 0));
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+.lumi-clipboard p {
+  display: block;
+  margin: 0;
+  font-size: calc(10.5px + 3.5px * var(--board-focus, 0));
+  line-height: 1.35;
+  color: #4d4656;
+}
+.lumi-clipboard p.is-hint {
+  color: var(--lumi-plum);
+}
+.lumi-clipboard.is-solved p {
+  color: var(--lumi-plum);
+  font-weight: 600;
+}
+.lumi-clipboard p svg {
+  display: inline;
+  vertical-align: -2px;
+  margin-right: 3px;
+}
+.lumi-clipboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: auto;
+}
+.lumi-clipboard-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+  padding: 2px 7px;
+  border: 1px solid #d9cdb6;
+  border-radius: 6px;
+  background: #fffaf2;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--lumi-plum);
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+.lumi-clipboard-actions button:hover:not(:disabled) {
+  background: #fff;
+}
+.lumi-clipboard-actions button:disabled {
+  opacity: 0.45;
+}
+.lumi-clipboard-actions button[aria-pressed='true'] {
+  background: var(--lumi-plum);
+  border-color: var(--lumi-plum);
+  color: #f4eefa;
+}
+.lumi-clipboard-actions button[aria-pressed='true']:hover:not(:disabled) {
+  background: #51406f;
+  border-color: #51406f;
+}
+.lumi-clipboard-actions button.is-primary {
+  background: var(--lumi-terracotta);
+  border-color: var(--lumi-terracotta);
+  color: #fff4ea;
+}
+.lumi-clipboard-actions button.is-primary:hover:not(:disabled) {
+  background: #ae4633;
+  border-color: #ae4633;
+}
+
+.lumi-board-layer {
+  z-index: 4;
+}
+.lumi-clipboard.is-forward .lumi-clipboard-actions {
+  gap: 8px;
+}
+.lumi-clipboard.is-forward .lumi-board-primary {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  justify-content: space-between;
+  white-space: normal;
+  text-align: left;
+  font-size: calc(11px + 3px * var(--board-focus, 0));
+  line-height: 1.3;
+}
+.lumi-board-primary svg {
+  flex: none;
+}
+.has-board-focus
+  .lumi-tools
+  :is(.lumi-screen, .lumi-key, .lumi-dish, .lumi-trash) {
+  visibility: hidden;
+}
+.lumi-label.is-locked {
+  opacity: 0.75;
+  background: #ddd5e3;
+  color: #756a83;
+  cursor: not-allowed;
+  box-shadow: inset 0 0 0 1px #beb0cb;
+}
+
+.lumi-success {
+  position: absolute;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 16px;
+  border: 2px solid #e6bc63;
+  border-radius: 16px;
+  background: #fff0bd;
+  color: #594025;
+  box-shadow:
+    0 4px 0 #b88a4e,
+    0 6px 28px #ffd66b80;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  text-align: left;
+}
+.lumi-success svg {
+  flex: none;
+}
+.lumi-success strong,
+.lumi-success span {
+  display: block;
+}
+.lumi-success strong {
+  font-size: 20px;
+  line-height: 1.2;
+}
+.lumi-success span {
+  margin-top: 2px;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}

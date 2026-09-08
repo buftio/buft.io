@@ -14,6 +14,7 @@ import {
 
 export const shopperPoses = [
   'stand',
+  'push',
   'sit',
   'fly',
   'wave',
@@ -103,6 +104,11 @@ const standing: Layout = {
 
 const layouts: Record<ShopperPose, Layout> = {
   stand: standing,
+  push: {
+    ...standing,
+    armL: [-Math.PI / 2, 0, 0],
+    armR: [-Math.PI / 2, 0, 0],
+  },
   sit: {
     ...standing,
     legs: 'sit',
