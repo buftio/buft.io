@@ -38,19 +38,10 @@ export default function Journey({
   onReady,
 }: Props) {
   const { camera, size } = useThree()
-  const preview = useMemo<Run>(
-    () => ({ id: 'preview', name: '', design, createdAt: 0, progress: 0 }),
-    [design],
-  )
-  const traveling = queue.length
-    ? queue.filter((rug) => rug.progress >= 0)
-    : [preview]
-  const weaver = queue.length
-    ? queue.find((rug) => rug.progress >= 0 && rug.progress < 0.23)
-    : preview
-  const invoice =
-    queue.findLast((rug) => rug.progress >= 0.43) ?? queue[0] ?? preview
-  const focused = queue[0]?.id ?? 'preview'
+  const traveling = queue.filter((rug) => rug.progress >= 0)
+  const weaver = queue.find((rug) => rug.progress >= 0 && rug.progress < 0.23)
+  const invoice = queue.findLast((rug) => rug.progress >= 0.43) ?? queue[0]
+  const focused = queue[0]?.id
   const factory = useRef<Group>(null)
   const weaving = useRef<Group>(null)
   const invoiceClock = useRef({ progress: 0, time: 0 })
@@ -59,14 +50,11 @@ export default function Journey({
   useFrame(() => {
     const t = clock.current.time
     const p =
-      weaver?.id === 'preview'
-        ? clock.current.progress
-        : (clock.current.runs.find((rug) => rug.id === weaver?.id)?.progress ??
-          1)
+      clock.current.runs.find((rug) => rug.id === weaver?.id)?.progress ?? 1
     const shuttle = factory.current?.getObjectByName('loom-shuttle')
     const roller = factory.current?.getObjectByName('loom-roller')
-    if (shuttle && !paused && p < 0.23)
-      shuttle.position.x = Math.sin(t * 12) * 0.65
+    if (shuttle)
+      shuttle.position.x = !paused && p < 0.23 ? Math.sin(t * 12) * 0.65 : 0
     if (roller && !paused && p < 0.23) roller.rotation.x = t * 3
     if (weaving.current) {
       weaving.current.visible = p >= 0 && p < 0.23
@@ -77,10 +65,7 @@ export default function Journey({
       }
     }
     invoiceClock.current.progress =
-      invoice.id === 'preview'
-        ? clock.current.progress
-        : (clock.current.runs.find((rug) => rug.id === invoice.id)?.progress ??
-          1)
+      clock.current.runs.find((rug) => rug.id === invoice?.id)?.progress ?? 0
     invoiceClock.current.time = t
   })
   return (
@@ -140,7 +125,7 @@ export default function Journey({
         scale={narrow ? 0.78 : 1}
       >
         <CostSheet
-          design={invoice.design}
+          design={invoice?.design ?? design}
           clock={invoiceClock}
           reduced={reduced}
         />

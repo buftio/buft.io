@@ -1,0 +1,97 @@
+/* The button itself is a plain, transform-free hit box. The carpet is a decorative canvas that fills it; only the canvas contents wave. */
+.make-carpet-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--carpet-cream, #fff0d6);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+}
+.make-carpet-button:focus-visible {
+  outline: 2px solid #ffad68;
+  outline-offset: 3px;
+}
+.make-carpet-button:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.make-carpet-button__rug {
+  position: absolute;
+  left: 0;
+  top: -4px;
+  width: 100%;
+  height: 64px;
+  pointer-events: none;
+  transition:
+    filter 0.5s ease,
+    opacity 0.5s ease;
+}
+.make-carpet-button:disabled .make-carpet-button__rug {
+  filter: saturate(0.3) brightness(0.97) contrast(0.9);
+  opacity: 0.75;
+}
+
+/* Woven-in label tag: palette ink darkened so cream text reads over any rug. */
+.make-carpet-button__label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px 7px 16px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--carpet-ink, #4f3038) 55%, #190e21);
+  box-shadow:
+    inset 0 0 0 1px
+      color-mix(in srgb, var(--carpet-gold, #e7b969) 55%, transparent),
+    0 2px 6px rgba(25, 14, 33, 0.35);
+  text-shadow: 0 1px 0 rgba(25, 14, 33, 0.5);
+  white-space: nowrap;
+  transition:
+    background 0.35s ease,
+    color 0.35s ease,
+    box-shadow 0.35s ease;
+}
+.make-carpet-button__label > svg {
+  flex: none;
+}
+.make-carpet-button:hover:not(:disabled) .make-carpet-button__label {
+  background: color-mix(in srgb, var(--carpet-ink, #4f3038) 68%, #190e21);
+  box-shadow:
+    inset 0 0 0 1px
+      color-mix(in srgb, var(--carpet-gold, #e7b969) 85%, transparent),
+    0 3px 8px rgba(25, 14, 33, 0.4);
+}
+.make-carpet-button:active:not(:disabled) .make-carpet-button__label {
+  background: color-mix(in srgb, var(--carpet-ink, #4f3038) 42%, #190e21);
+  box-shadow:
+    inset 0 0 0 1px
+      color-mix(in srgb, var(--carpet-gold, #e7b969) 85%, transparent),
+    0 1px 3px rgba(25, 14, 33, 0.4);
+}
+.make-carpet-button:disabled .make-carpet-button__label {
+  background: #7d6f72;
+  color: #e9e1da;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+.make-carpet-button[data-reduced] .make-carpet-button__rug,
+.make-carpet-button[data-reduced] .make-carpet-button__label {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .make-carpet-button__rug,
+  .make-carpet-button__label {
+    transition: none;
+  }
+}

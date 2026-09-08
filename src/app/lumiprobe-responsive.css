@@ -1,0 +1,60 @@
+@media (max-width: 1050px) {
+  .lumiprobe-dialog {
+    width: 88vw;
+  }
+  .lumi-story {
+    padding: 28px;
+  }
+}
+@media (max-width: 800px) {
+  .lumi-intro {
+    display: block;
+  }
+  .lumi-intro p {
+    margin-top: 12px;
+  }
+}
+@media (max-width: 650px) {
+  .lumiprobe-dialog {
+    width: 94vw;
+    inset: 12% 3% 3%;
+    max-height: 85dvh;
+  }
+  .lumi-story {
+    padding: 22px 16px 28px;
+  }
+  .lumi-intro h2 {
+    font-size: 28px;
+  }
+  .lumi-intro p {
+    font-size: 14px;
+  }
+  .lumi-stage {
+    border-radius: 14px;
+  }
+  .lumi-label {
+    font-size: 12px;
+    padding: 4px;
+    min-height: 32px;
+  }
+  .lumi-label b {
+    display: none;
+  }
+  .lumi-label > span {
+    font-size: 12px;
+  }
+  .lumi-notes p {
+    font-size: 14px;
+  }
+}
+@media (max-width: 370px) {
+  .lumi-stage.is-stacked {
+    height: 660px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lumi-story *,
+  .lumi-story *::after {
+    transition: none !important;
+  }
+}

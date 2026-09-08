@@ -1,0 +1,443 @@
+/* Opt-in dialog skin. Add `lumiprobe-dialog` to the project dialog when opened.id === 'lumiprobe'. */
+.lumiprobe-dialog {
+  width: min(1040px, 80vw);
+  background: #eae3f1;
+  border-color: #a99bbd;
+  color-scheme: light;
+}
+.lumiprobe-dialog .project-window-bar {
+  background: #3b3540;
+  color: #ece4f3;
+  border-color: #6b5f7a;
+}
+
+.lumi-story {
+  --lumi-lavender: #e6dff0;
+  --lumi-cream: #f7f0e7;
+  --lumi-ink: #33303a;
+  --lumi-plum: #5f4f86;
+  --lumi-accent: #8f7bb8;
+  --lumi-terracotta: #c8553d;
+  --lumi-rule: #cfc5db;
+  --lumi-muted: #6e6579;
+  --lumi-glow: #ffd66b;
+  position: relative;
+  color: var(--lumi-ink);
+  padding: 34px 40px 38px;
+  overflow: clip;
+  font-family: Manrope, sans-serif;
+  background:
+    radial-gradient(ellipse at 20% 0%, #fbf6ee, transparent 45%),
+    linear-gradient(180deg, #ece5f2, #f3ede9 60%, #eee7ef);
+}
+.lumi-story :is(button, a):focus-visible {
+  outline: 2px solid var(--lumi-plum);
+  outline-offset: 3px;
+}
+.lumi-eyebrow {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lumi-muted);
+}
+
+/* Intro */
+.lumi-intro {
+  display: flex;
+  align-items: baseline;
+  gap: 28px;
+  max-width: 900px;
+}
+.lumi-intro > div {
+  flex: none;
+}
+.lumi-intro h2 {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  margin: 0;
+}
+.lumi-intro p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.75;
+  color: #4b4454;
+}
+
+/* Bench */
+.lumi-bench {
+  margin-top: 18px;
+}
+.lumi-stage {
+  position: relative;
+  height: 450px;
+  border-radius: 18px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 20%, #f4eef7, transparent 55%),
+    linear-gradient(180deg, #ddd2ea, #e9e0f0 45%, #d3c5e3);
+  box-shadow: inset 0 0 0 1px #c9bcdb;
+}
+.lumi-stage.is-stacked {
+  height: clamp(560px, 78dvh, 620px);
+}
+.lumi-scene {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+}
+.lumi-scene canvas {
+  touch-action: pan-y;
+}
+.lumi-scene .vignette-loading {
+  height: 100%;
+  border-radius: 0;
+  background: transparent;
+  color: var(--lumi-plum);
+}
+.lumi-overlay,
+.lumi-props {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.lumi-overlay {
+  z-index: 2;
+}
+.lumi-props {
+  z-index: 1;
+}
+.lumi-dishes,
+.lumi-laptop {
+  display: contents;
+}
+/* Every piece of furniture is centred on its projected clay counterpart. */
+.lumi-props
+  :is(.lumi-dish, .lumi-trash, .lumi-screen, .lumi-key, .lumi-clipboard) {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  box-sizing: border-box;
+}
+
+/* Bottle labels sit over the clay label plates. */
+.lumi-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 4px 5px;
+  border-radius: 5px;
+  background: #fbf6ee;
+  color: var(--lumi-plum);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  line-height: 1.25;
+  letter-spacing: 0;
+  text-align: center;
+  overflow-wrap: anywhere;
+  box-shadow: 0 1px 0 #cbbfa9;
+  pointer-events: auto;
+  transition: background 0.2s;
+}
+.lumi-label span {
+  display: flex;
+  align-items: center;
+  font-size: 9px;
+  color: var(--lumi-accent);
+}
+.lumi-label b {
+  font-weight: 500;
+}
+.lumi-label:hover {
+  background: #fff;
+}
+.lumi-label.is-current {
+  background: var(--lumi-plum);
+  color: #f4eefa;
+  box-shadow: 0 2px 0 #3d3159;
+}
+.lumi-label.is-current span {
+  color: #d9cbef;
+}
+.lumi-label.is-done span {
+  color: var(--lumi-terracotta);
+}
+
+/* DOM atoms are invisible hit targets over the clay beads. */
+.lumi-atom {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  touch-action: none;
+  user-select: none;
+  pointer-events: auto;
+  cursor: grab;
+}
+.lumi-atom.is-dragging {
+  transition: none;
+  cursor: grabbing;
+  /* Let the bin underneath receive the hit test while a bead crosses it. */
+  pointer-events: none;
+}
+.lumi-atom i {
+  visibility: hidden;
+  font-style: normal;
+  font-weight: 800;
+  font-size: 12px;
+  color: var(--lumi-cream);
+}
+.lumi-atom::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px dashed transparent;
+  transition:
+    inset 0.15s,
+    border-color 0.15s,
+    background 0.15s;
+}
+.lumi-atom.is-socket::after {
+  border-color: var(--lumi-accent);
+  background: #8f7bb822;
+}
+.lumi-atom.is-hot::after {
+  inset: -10px;
+  border-style: solid;
+  border-color: var(--lumi-terracotta);
+  background: #c8553d2a;
+}
+.lumi-atom.is-linking::after {
+  border-style: solid;
+  border-color: var(--lumi-plum);
+}
+
+/* Dishes of spare beads. The pile is clay; the DOM adds a caption and the hit target. */
+.lumi-dish {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+  transition: opacity 0.2s;
+}
+.lumi-dish i {
+  visibility: hidden;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-style: normal;
+  font-weight: 800;
+  font-size: 11px;
+  color: var(--lumi-cream);
+  box-shadow: inset -3px -4px 0 #0002;
+}
+.lumi-dish.is-carbon i {
+  background: #3b3540;
+}
+.lumi-dish.is-oxygen i {
+  background: var(--lumi-terracotta);
+}
+.lumi-dish span {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translate(-50%, -2px);
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #fbf6eed9;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: var(--lumi-plum);
+  box-shadow: 0 1px 0 #cbbfa9;
+  transition: background 0.2s;
+}
+/* Stacked benches have a laptop right beside the dishes, so the caption
+ * rides on the dish's front rim instead of hanging below it. */
+.lumi-stage.is-stacked .lumi-dish span {
+  top: auto;
+  bottom: -3px;
+  transform: translate(-50%, 0);
+  padding: 0 5px;
+  font-size: 9px;
+}
+.lumi-dish:hover span {
+  background: #fff;
+}
+.lumi-dish.is-dim {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* The bin. Opens in clay while a bead is carried over it. */
+.lumi-trash {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: transparent;
+  transition: box-shadow 0.15s;
+}
+.lumi-trash svg {
+  visibility: hidden;
+}
+.lumi-trash.is-hot {
+  box-shadow: 0 0 0 2px var(--lumi-terracotta);
+}
+.lumi-trash:hover {
+  box-shadow: 0 0 0 2px var(--lumi-rule);
+}
+
+/* Fallback when WebGL is unavailable: everything becomes flat clay. */
+.lumi-bonds {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+}
+.lumi-bonds line {
+  stroke: #cbbfa9;
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+.lumi-stage.is-flat .lumi-bonds {
+  display: block;
+}
+.lumi-stage.is-flat .lumi-atom {
+  box-shadow:
+    inset -4px -5px 0 #0002,
+    0 3px 6px #3b354033;
+}
+.lumi-stage.is-flat .lumi-atom.is-carbon {
+  background: #3b3540;
+}
+.lumi-stage.is-flat .lumi-atom.is-oxygen {
+  background: var(--lumi-terracotta);
+}
+.lumi-stage.is-flat .lumi-atom i {
+  visibility: visible;
+}
+.lumi-stage.is-flat .lumi-atom.is-selected {
+  box-shadow:
+    inset -4px -5px 0 #0002,
+    0 0 0 3px var(--lumi-cream),
+    0 0 0 5px var(--lumi-accent);
+}
+.lumi-stage.is-flat .lumi-dish {
+  background: #e9e2ef;
+  box-shadow:
+    inset 0 0 0 5px #d9d0e3,
+    0 2px 4px #3b354022;
+}
+.lumi-stage.is-flat .lumi-dish i {
+  visibility: visible;
+}
+.lumi-stage.is-flat .lumi-trash {
+  background: #9aa0ad;
+  color: #3b3540;
+  box-shadow: inset 0 4px 0 #6f7582;
+}
+.lumi-stage.is-flat .lumi-trash svg {
+  visibility: visible;
+}
+.lumi-stage.is-flat .lumi-trash.is-hot {
+  background: var(--lumi-terracotta);
+  color: #fff4ea;
+}
+.lumi-stage.is-flat .lumi-screen {
+  background: #dfe9e6;
+  box-shadow: 0 0 0 5px #4a4450;
+}
+.lumi-stage.is-flat .lumi-screen.is-glowing {
+  background: #fff1bf;
+  box-shadow:
+    0 0 0 5px #4a4450,
+    0 0 22px 4px #ffd66b88;
+}
+.lumi-stage.is-flat .lumi-key {
+  background: #f3ede6;
+  box-shadow: inset 0 -2px 0 #0002;
+}
+.lumi-stage.is-flat .lumi-clipboard {
+  background: #efe6d8;
+  box-shadow: 0 0 0 6px #a5764f;
+}
+
+/* Notes */
+.lumi-notes {
+  margin-top: 30px;
+  padding-top: 24px;
+  border-top: 1px solid var(--lumi-rule);
+}
+.lumi-notes p {
+  margin: 0;
+  max-width: 720px;
+  font-size: 15px;
+  line-height: 1.8;
+  color: #4b4454;
+}
+.lumi-notes a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 18px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--lumi-accent);
+  border-radius: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--lumi-plum);
+}
+.lumi-notes a:hover {
+  color: var(--lumi-terracotta);
+  border-color: var(--lumi-terracotta);
+}
+
+/* Bead following the pointer while dragging from a dish. */
+.lumi-ghost {
+  position: absolute;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  font-style: normal;
+  font-weight: 800;
+  font-size: 12px;
+  color: var(--lumi-cream);
+  box-shadow:
+    inset -4px -5px 0 #0002,
+    0 8px 18px #3b354040;
+  pointer-events: none;
+}
+.lumi-ghost.is-carbon {
+  background: #3b3540;
+}
+.lumi-ghost.is-oxygen {
+  background: var(--lumi-terracotta);
+}
+
+.lumi-story.is-reduced *,
+.lumi-story.is-reduced *::after {
+  transition: none !important;
+}

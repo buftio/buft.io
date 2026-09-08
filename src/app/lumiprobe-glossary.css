@@ -1,0 +1,44 @@
+.lumi-term {
+  display: inline;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px dotted #75618e;
+  border-radius: 3px;
+  background: transparent;
+  font: inherit;
+  color: #5f4f86;
+  cursor: help;
+}
+.lumi-term:hover,
+.lumi-term[aria-expanded='true'] {
+  background: #dfd4eb;
+}
+.lumi-term-tooltip {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+  width: min(280px, calc(100vw - 32px));
+  padding: 16px;
+  border: 1px solid #c4b1d4;
+  border-radius: 14px;
+  background: #fffaf2;
+  color: #3b3540;
+  box-shadow: 0 8px 28px #332b4933;
+  font-family: Manrope, sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.lumi-term-tooltip strong {
+  color: #5f4f86;
+  font-size: 14px;
+}
+.lumi-term-example {
+  padding-top: 8px;
+  border-top: 1px solid #e5d9ec;
+  color: #655675;
+}

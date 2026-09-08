@@ -2,6 +2,7 @@ import type { Carpet } from './design'
 
 export const DURATION = 30
 export const STAGGER = 0.08
+export const ORDER_COOLDOWN_MS = DURATION * STAGGER * 1000
 export const ARRIVAL_END = 1.14
 export type Run = Carpet & { progress: number }
 export type WorkshopClock = { progress: number; time: number; runs: Run[] }

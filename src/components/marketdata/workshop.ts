@@ -5,6 +5,7 @@ import { isCarpet, type Carpet, type RugDesign } from './design'
 import {
   DURATION,
   ARRIVAL_END,
+  ORDER_COOLDOWN_MS,
   moveRuns,
   nextDeparture,
   spaceRuns,
@@ -32,10 +33,12 @@ export function useWorkshop(reduced: boolean) {
   const [ready, setReady] = useState(false)
   const [storageError, setStorageError] = useState(false)
   const [progress, setProgress] = useState(0)
+  const [coolingDown, setCoolingDown] = useState(false)
   const [lastFinished, setLastFinished] = useState('')
   const clock = useRef<WorkshopClock>({ progress: 0, time: 0, runs: [] })
   const savedCarpets = useRef<Carpet[]>([])
   const storageLoaded = useRef(false)
+  const orderReadyAt = useRef(0)
   const persist = useCallback(() => {
     if (!storageLoaded.current) return
     try {
@@ -54,6 +57,7 @@ export function useWorkshop(reduced: boolean) {
   const publish = useCallback(() => {
     setQueue(clock.current.runs)
     setProgress(clock.current.progress)
+    setCoolingDown(Date.now() < orderReadyAt.current)
   }, [])
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -85,6 +89,11 @@ export function useWorkshop(reduced: boolean) {
             }),
           )
           clock.current.progress = clock.current.runs[0]?.progress ?? 0
+          orderReadyAt.current = [...completed, ...clock.current.runs].reduce(
+            (latest, rug) =>
+              Math.max(latest, rug.createdAt + ORDER_COOLDOWN_MS),
+            0,
+          )
           setGuests([...completed, ...clock.current.runs])
           publish()
         }
@@ -110,7 +119,7 @@ export function useWorkshop(reduced: boolean) {
           publish()
           persist()
         }
-      } else state.progress = (state.progress + seconds / DURATION) % 1
+      } else state.progress = 0
     },
     [persist, publish],
   )
@@ -125,14 +134,14 @@ export function useWorkshop(reduced: boolean) {
       previous = now
       if (!reduced && !document.hidden) {
         move(delta)
-        if (now - announced > 180) {
-          publish()
-          announced = now
-        }
         if (clock.current.runs.length && now - savedAt > 1000) {
           persist()
           savedAt = now
         }
+      }
+      if (now - announced > 180) {
+        publish()
+        announced = now
       }
       frame = requestAnimationFrame(tick)
     }
@@ -150,12 +159,15 @@ export function useWorkshop(reduced: boolean) {
     }
   }, [ready, reduced, persist, publish, move])
   const make = (design: RugDesign, name: string) => {
+    const now = Date.now()
+    if (!ready || now < orderReadyAt.current) return
+    orderReadyAt.current = now + ORDER_COOLDOWN_MS
     const total = savedCarpets.current.length + clock.current.runs.length
     const rug: Run = {
       id: crypto.randomUUID(),
       name: name || `Carpet No. ${total + 1}`,
       design: { ...design, pixels: [...design.pixels] },
-      createdAt: Date.now(),
+      createdAt: now,
       progress: nextDeparture(clock.current.runs),
     }
     clock.current.runs = [...clock.current.runs, rug]
@@ -184,6 +196,7 @@ export function useWorkshop(reduced: boolean) {
     guests,
     queue,
     ready,
+    coolingDown,
     storageError,
     progress,
     clock,

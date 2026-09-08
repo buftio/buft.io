@@ -4,6 +4,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useMemo, useRef, type RefObject } from 'react'
 import { Group, MathUtils, Vector3 } from 'three'
 import { DeliveryTruck, Cart, Shopper } from './models'
+import { shopperParts } from './models/people'
 import { Rug } from './rug'
 import { colorsFor } from './design'
 import { type Run, type WorkshopClock } from './workshop-state'
@@ -37,15 +38,11 @@ export function Delivery({
   const shelf = useRef<Group>(null)
   const customer = useRef<Group>(null)
   const purchase = useRef<Group>(null)
-  const happy = useRef<Group>(null)
   const { camera, size } = useThree()
   const v = useMemo(() => new Vector3(), [])
   const tangent = useMemo(() => new Vector3(), [])
   useFrame(() => {
-    const p =
-      rug.id === 'preview'
-        ? clock.current.progress
-        : (clock.current.runs.find((run) => run.id === rug.id)?.progress ?? 1)
+    const p = clock.current.runs.find((run) => run.id === rug.id)?.progress ?? 1
     const t = clock.current.time
     if (truck.current) {
       truck.current.visible = p >= 0.23 && p < 0.43
@@ -75,13 +72,16 @@ export function Delivery({
       layout.roads.home.getPointAt(fraction, v)
       layout.roads.home.getTangentAt(fraction, tangent)
       customer.current.position.copy(v)
-      customer.current.position.y =
-        0.025 + (paused ? 0 : Math.abs(Math.sin(t * 7)) * 0.02)
+      customer.current.position.y = 0.025
       customer.current.rotation.y = Math.atan2(tangent.x, tangent.z)
+      const stride =
+        !paused && p >= 0.76 && p < 0.95 ? Math.sin(t * 7) * 0.25 : 0
+      const leftLeg = customer.current.getObjectByName(shopperParts.legL)
+      const rightLeg = customer.current.getObjectByName(shopperParts.legR)
+      if (leftLeg) leftLeg.rotation.x = stride
+      if (rightLeg) rightLeg.rotation.x = -stride
     }
     if (purchase.current) purchase.current.visible = p >= 0.76
-    if (happy.current)
-      happy.current.visible = rug.id === 'preview' && p >= 0.95 && p < 1
     if (focused && marker.current && p >= 0.23 && p < 0.95) {
       const target =
         p < 0.43
@@ -92,9 +92,7 @@ export function Delivery({
               ? flight
               : p < 0.76
                 ? shelf
-                : p < 0.95
-                  ? customer
-                  : happy
+                : customer
       if (target.current) {
         target.current.getWorldPosition(v).project(camera)
         marker.current.style.transform = `translate(${((v.x + 1) * size.width) / 2}px, ${((1 - v.y) * size.height) / 2}px)`
@@ -131,19 +129,16 @@ export function Delivery({
         </group>
       </group>
       <group ref={customer} visible={false} scale={0.8}>
-        <Shopper color={colorsFor(rug.design)[2]} variant={variant} />
-        <group position={[0.6, 0, 0.55]}>
+        <Shopper
+          pose="push"
+          position={[0, 0, -0.25]}
+          color={colorsFor(rug.design)[2]}
+          variant={variant}
+        />
+        <group position={[0, 0, 0.41]} scale={0.75}>
           <Cart />
           <group ref={purchase} position={[0, 0.4, 0]}>
             <Rug design={rug.design} width={0.6} rolled />
-          </group>
-        </group>
-      </group>
-      <group position={layout.owner} rotation={[0, -0.3, 0]}>
-        <group ref={happy} visible={false} position={[0, 0.045, 0]}>
-          <Rug design={rug.design} width={1.3} length={1.7} />
-          <group position={[0, 0.025, 0]}>
-            <Shopper pose="sit" color="#b45e53" variant={2} />
           </group>
         </group>
       </group>

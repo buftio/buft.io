@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { ArrowRight, Shuffle } from 'lucide-react'
+import { Shuffle } from 'lucide-react'
+import { MakeCarpetButton } from './make-carpet-button'
 import {
   COLS,
   ROWS,
@@ -35,13 +36,13 @@ export function Designer({
   onDesign,
   onMake,
   ready,
-  queued,
+  reduced,
 }: {
   design: RugDesign
   onDesign: (design: RugDesign) => void
   onMake: (name: string) => void
   ready: boolean
-  queued: number
+  reduced: boolean
 }) {
   const [ink, setInk] = useState(1)
   const [mirror, setMirror] = useState(true)
@@ -220,16 +221,15 @@ export function Designer({
           placeholder="Something for the living room"
         />
       </label>
-      <button
-        className="make-carpet"
+      <MakeCarpetButton
+        design={design}
         disabled={!ready}
+        reduced={reduced}
         onClick={() => {
           onMake(name.trim())
           setName('')
         }}
-      >
-        {queued ? 'Weave another' : 'Weave my carpet'} <ArrowRight size={17} />
-      </button>
+      />
     </div>
   )
 }
