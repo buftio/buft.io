@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -106,18 +107,22 @@ export function useDrag(
   const [drag, setDrag] = useState<Drag | null>(null)
   const session = useRef<Session | null>(null)
   const suppress = useRef(false)
+  const cancel = useCallback(() => {
+    const current = session.current
+    if (!current) return
+    session.current = null
+    current.release()
+    setDrag(null)
+  }, [])
   useEffect(
-    () => () => {
-      session.current?.release()
-      session.current = null
-    },
-    [],
+    () => cancel,
+    [cancel, lab.molecule, lab.task, lab.phase, view, fit],
   )
 
   const start = (source: Source, event: ReactPointerEvent<HTMLElement>) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return
     const element = stage.current
-    if (!element || session.current) return
+    if (!element || session.current || lab.phase !== 'building') return
     const handle = event.currentTarget
     handle.setPointerCapture(event.pointerId)
 
@@ -188,6 +193,9 @@ export function useDrag(
     window.addEventListener('pointermove', move)
     window.addEventListener('pointerup', end)
     window.addEventListener('pointercancel', end)
+    window.addEventListener('blur', cancel)
+    window.addEventListener('scroll', cancel, true)
+    handle.addEventListener('lostpointercapture', cancel)
     session.current = {
       source,
       pointerId: event.pointerId,
@@ -205,6 +213,9 @@ export function useDrag(
         window.removeEventListener('pointermove', move)
         window.removeEventListener('pointerup', end)
         window.removeEventListener('pointercancel', end)
+        window.removeEventListener('blur', cancel)
+        window.removeEventListener('scroll', cancel, true)
+        handle.removeEventListener('lostpointercapture', cancel)
         if (handle.hasPointerCapture(event.pointerId))
           handle.releasePointerCapture(event.pointerId)
       },
