@@ -1,0 +1,290 @@
+.flower-label-sperasoft {
+  width: 98px;
+  padding: 9px 11px;
+  border: 1px solid #e4bd8a40;
+  border-radius: 8px;
+  background: #211811f2;
+  box-shadow: 0 3px 12px #0005;
+}
+.flower-label-sperasoft img {
+  width: 76px;
+  max-width: none;
+  height: auto;
+  filter: none;
+}
+.flower-label-sperasoft .flower-name {
+  display: none;
+}
+.flower-label-sperasoft:focus-visible {
+  outline-width: 1px;
+  outline-offset: 3px;
+}
+
+.spera-dialog {
+  width: min(900px, 82vw);
+  background: #eae9dd;
+  border-color: #b3af96;
+}
+.spera-dialog .project-window-bar {
+  background: #3e4d43;
+  color: #f3e9cd;
+  border-color: #738172;
+}
+.spera-story {
+  position: relative;
+  color: #304337;
+  overflow: clip;
+  padding: 0 18px 28px;
+  background:
+    radial-gradient(ellipse at 20% 20%, #faf3df, transparent 45%), #eae9dd;
+}
+.spera-intro {
+  max-width: 640px;
+  padding: 32px 6% 0;
+}
+.spera-intro h2 {
+  margin: 0 0 14px;
+  font-size: clamp(25px, 4vw, 38px);
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+.spera-intro p {
+  margin: 0;
+  font-size: clamp(14px, 1.5vw, 17px);
+  line-height: 1.65;
+}
+.spera-narrative {
+  position: absolute;
+  width: 51%;
+  pointer-events: none;
+}
+.spera-narrative h3 {
+  margin: 0 0 8px;
+  font-size: clamp(10px, 1vw, 12px);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.65;
+}
+.spera-narrative p {
+  margin: 0;
+  font-size: clamp(12px, 1.5vw, 18px);
+  line-height: 1.5;
+}
+.spera-halo {
+  left: 7%;
+  top: 28.15%;
+}
+.spera-fifa {
+  left: 44%;
+  top: 47.8%;
+}
+.spera-world {
+  position: relative;
+  aspect-ratio: 100 / 270;
+}
+.spera-canvas {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  pointer-events: none;
+}
+.spera-canvas canvas {
+  touch-action: pan-y;
+}
+.spera-tools {
+  position: absolute;
+  top: 3%;
+  right: 7%;
+  z-index: 2;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.spera-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 13px;
+  cursor: pointer;
+}
+.spera-icon {
+  background: #f8f4e7;
+  border: 1px solid #b0b4a180;
+  color: #425d48;
+}
+.spera-icon:hover {
+  background: #dce6ce;
+}
+.spera-primary {
+  background: #425d48;
+  color: #fff6df;
+}
+.spera-primary:hover {
+  background: #354b39;
+}
+.spera-story button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.spera-story button:focus-visible {
+  outline: 3px solid #b96941;
+  outline-offset: 3px;
+}
+.spera-grenade {
+  display: block;
+  position: relative;
+  width: 25px;
+  height: 28px;
+  border-radius: 45%;
+  background: #c77750;
+  box-shadow: inset -5px -4px 0 #0002;
+  border: 1px solid #945135;
+  transform: rotate(-18deg);
+}
+.spera-grenade i {
+  position: absolute;
+  width: 10px;
+  height: 4px;
+  top: -4px;
+  left: 7px;
+  background: #677060;
+  border-radius: 2px;
+}
+.spera-grenade::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 1px;
+  right: 1px;
+  height: 5px;
+  border-block: 1px solid #fff5;
+}
+.spera-throw-area {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 25%;
+  cursor: grab;
+  touch-action: none;
+  background: none;
+  border: 0;
+}
+.spera-throw-area:active {
+  cursor: grabbing;
+}
+.spera-ball-hit {
+  position: absolute;
+  z-index: 1;
+  width: max(48px, 8%);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translate(-50%, -55%);
+  touch-action: none;
+  cursor: grab;
+  scroll-margin: 100px 0;
+}
+.spera-ball-hit:active {
+  cursor: grabbing;
+}
+.spera-ball-marker,
+.spera-pitch-marker {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  left: 50%;
+  pointer-events: none;
+}
+.spera-pitch-marker {
+  top: 81%;
+}
+.spera-match {
+  position: absolute;
+  left: 50%;
+  top: 92.6%;
+  z-index: 2;
+  display: flex;
+  gap: 10px;
+  transform: translate(-50%, -50%);
+}
+.spera-match .spera-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px #2f3a2f26;
+}
+@media (max-width: 650px) {
+  .spera-dialog {
+    width: 94vw;
+    inset: 12% 3% 3%;
+    max-height: 85dvh;
+  }
+  .spera-story {
+    padding: 0 6px 20px;
+  }
+  .spera-tools {
+    top: 1.5%;
+    right: 3%;
+    gap: 7px;
+  }
+  .spera-icon {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+.spera-kicks {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  padding: 0 5px;
+}
+.spera-kicks i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid #597050;
+  opacity: 0.3;
+}
+.spera-kicks i.available {
+  background: radial-gradient(circle, #334233 25%, #fff6df 30%);
+  opacity: 1;
+}
+.spera-ball-hit {
+  background: transparent;
+  border: 0;
+}
+
+.spera-loose-ball,
+.spera-fan-hit {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  touch-action: none;
+}
+.spera-loose-ball {
+  width: max(24px, 4%);
+  aspect-ratio: 1;
+  cursor: grab;
+  z-index: 3;
+}
+.spera-loose-ball.is-held {
+  cursor: grabbing;
+  z-index: 4;
+  box-shadow: 0 0 0 1px #fff6df80;
+}
+.spera-fan-hit {
+  width: max(18px, 3.6%);
+  height: max(22px, 1.96%);
+  cursor: pointer;
+  z-index: 2;
+}
+.spera-loose-ball:focus-visible,
+.spera-fan-hit:focus-visible {
+  outline-offset: 1px;
+  outline-width: 1px;
+}

@@ -142,7 +142,7 @@ export function Flower({
       <Billboard position={[0, active ? 0.88 : 1.2, 0]}>
         <Html center distanceFactor={9} zIndexRange={[5, 0]}>
           <button
-            className={`flower-label ${active ? 'is-active' : ''} ${near ? '' : 'is-far'}`}
+            className={`flower-label flower-label-${project.id} ${active ? 'is-active' : ''} ${near ? '' : 'is-far'}`}
             onClick={onOpen}
             aria-label={`Open ${project.name}`}
             style={{ '--project-color': project.color } as React.CSSProperties}
