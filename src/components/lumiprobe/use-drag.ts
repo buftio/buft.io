@@ -123,6 +123,11 @@ export function useDrag(
     if (event.pointerType === 'mouse' && event.button !== 0) return
     const element = stage.current
     if (!element || session.current || lab.phase !== 'building') return
+    const sockets = socketsFor(lab.molecule, source)
+    if (source.kind === 'palette' && !sockets.length) {
+      onMiss(source)
+      return
+    }
     const handle = event.currentTarget
     handle.setPointerCapture(event.pointerId)
 
@@ -202,7 +207,7 @@ export function useDrag(
       start: { x: event.clientX, y: event.clientY },
       rect: element.getBoundingClientRect(),
       moved: false,
-      sockets: socketsFor(lab.molecule, source),
+      sockets,
       view,
       fit,
       lab,

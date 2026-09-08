@@ -8,6 +8,7 @@ import {
   ORDER_COOLDOWN_MS,
   moveRuns,
   nextDeparture,
+  remainingCooldown,
   spaceRuns,
   type Run,
   type WorkshopClock,
@@ -57,7 +58,7 @@ export function useWorkshop(reduced: boolean) {
   const publish = useCallback(() => {
     setQueue(clock.current.runs)
     setProgress(clock.current.progress)
-    setCoolingDown(Date.now() < orderReadyAt.current)
+    setCoolingDown(performance.now() < orderReadyAt.current)
   }, [])
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -89,11 +90,12 @@ export function useWorkshop(reduced: boolean) {
             }),
           )
           clock.current.progress = clock.current.runs[0]?.progress ?? 0
-          orderReadyAt.current = [...completed, ...clock.current.runs].reduce(
-            (latest, rug) =>
-              Math.max(latest, rug.createdAt + ORDER_COOLDOWN_MS),
+          const lastOrderAt = [...completed, ...clock.current.runs].reduce(
+            (latest, rug) => Math.max(latest, rug.createdAt),
             0,
           )
+          orderReadyAt.current =
+            performance.now() + remainingCooldown(lastOrderAt, Date.now())
           setGuests([...completed, ...clock.current.runs])
           publish()
         }
@@ -160,8 +162,9 @@ export function useWorkshop(reduced: boolean) {
   }, [ready, reduced, persist, publish, move])
   const make = (design: RugDesign, name: string) => {
     const now = Date.now()
-    if (!ready || now < orderReadyAt.current) return
-    orderReadyAt.current = now + ORDER_COOLDOWN_MS
+    const elapsed = performance.now()
+    if (!ready || elapsed < orderReadyAt.current) return
+    orderReadyAt.current = elapsed + ORDER_COOLDOWN_MS
     const total = savedCarpets.current.length + clock.current.runs.length
     const rug: Run = {
       id: crypto.randomUUID(),

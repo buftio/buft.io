@@ -163,6 +163,7 @@ export function useLab() {
     )
   const chooseTask = (task: number, begin = false) => {
     setState((s) => {
+      if (task === s.task && s.phase === 'building') return s
       if (task !== -1 && !isUnlocked(task, s.completed)) return s
       return {
         ...s,

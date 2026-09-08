@@ -14,7 +14,7 @@ import {
 import { ArrowUpRight, Check } from 'lucide-react'
 import { SceneBoundary } from '../scene-boundary'
 import { Clipboard, Dish, Laptop, TrashButton } from './controls'
-import { MAX_CARBONS, type Element } from './molecule'
+import { attachmentError, MAX_CARBONS, type Element } from './molecule'
 import { ATOM_HELP_ID, Overlay } from './overlay'
 import {
   atomWorld,
@@ -104,7 +104,12 @@ export default function LumiprobeStory({
     stage,
     view,
     fit,
-    () => say('Drop it on a carbon bead.'),
+    (source) =>
+      say(
+        (source.kind === 'palette' &&
+          attachmentError(lab.molecule, lab.selected, source.element)) ||
+          'Drop it on a carbon bead.',
+      ),
     () => setUsedPile(true),
   )
 
@@ -194,9 +199,10 @@ export default function LumiprobeStory({
     lab.chooseTask(index)
   }
   const blocked = lab.phase !== 'building' || board.moving
+  const hasLayout = view.width > 0
 
   useEffect(() => {
-    if (board.moving || !view.width) return
+    if (board.moving || !hasLayout) return
     const selector =
       lab.phase === 'building'
         ? '.lumi-atom[aria-pressed="true"]'
@@ -204,7 +210,7 @@ export default function LumiprobeStory({
     stage.current
       ?.querySelector<HTMLElement>(selector)
       ?.focus({ preventScroll: true })
-  }, [lab.phase, board.moving, view.width])
+  }, [lab.phase, board.moving, hasLayout])
 
   const stageClass = [
     'lumi-stage',

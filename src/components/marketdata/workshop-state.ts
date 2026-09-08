@@ -7,6 +7,13 @@ export const ARRIVAL_END = 1.14
 export type Run = Carpet & { progress: number }
 export type WorkshopClock = { progress: number; time: number; runs: Run[] }
 
+export function remainingCooldown(createdAt: number, now: number) {
+  return Math.max(
+    0,
+    Math.min(ORDER_COOLDOWN_MS, createdAt + ORDER_COOLDOWN_MS - now),
+  )
+}
+
 export function spaceRuns(runs: Run[]) {
   let previous = Infinity
   return runs.map((rug) => {

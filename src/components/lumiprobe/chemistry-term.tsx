@@ -43,7 +43,7 @@ export function ChemistryTerm({ term }: { term: keyof typeof terms }) {
   )
   useLayoutEffect(() => {
     if (!open) return
-    tooltip.current?.showPopover()
+    tooltip.current?.showPopover?.()
     const measure = () => {
       if (!button.current || !tooltip.current) return
       const at = button.current.getBoundingClientRect()
