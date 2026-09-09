@@ -69,9 +69,6 @@
   .article-bottom {
     display: block;
   }
-  .vertical-note {
-    right: 15px;
-  }
 }
 @media (max-width: 600px) {
   .site-header {
@@ -177,9 +174,6 @@
   .journey-actions button {
     width: 32px;
     height: 32px;
-  }
-  .vertical-note {
-    display: none;
   }
   .project-dialog {
     inset: 18% 4% 3%;

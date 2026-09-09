@@ -52,6 +52,9 @@ html {
 html::-webkit-scrollbar {
   display: none;
 }
+html:has(.scroll-track) {
+  scroll-snap-type: y mandatory;
+}
 body {
   margin: 0;
   color: #ede5df;
@@ -146,7 +149,6 @@ button {
 .header-note,
 .eyebrow,
 .scroll-note,
-.vertical-note,
 .project-nav,
 .project-window-bar,
 .article-meta {
@@ -278,16 +280,6 @@ h1 {
   margin-top: 15px;
   max-width: 410px;
 }
-.vertical-note {
-  position: fixed;
-  right: 30px;
-  top: 40%;
-  writing-mode: vertical-rl;
-  z-index: 7;
-  color: #85675a;
-  font-size: 10px;
-  letter-spacing: 0.21em;
-}
 .journey-footer {
   position: fixed;
   transition: opacity 0.45s ease;
@@ -383,6 +375,10 @@ h1 {
 }
 .scroll-track {
   pointer-events: none;
+}
+.scroll-track > div {
+  height: 100dvh;
+  scroll-snap-align: start;
 }
 .is-hidden {
   opacity: 0 !important;

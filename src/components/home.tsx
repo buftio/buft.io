@@ -25,7 +25,7 @@ const ProjectVignette = dynamic(() => import('./three/project-vignette'), {
   ),
 })
 const GliteStory = dynamic(() => import('./glite/story'))
-const MarketDataStory = dynamic(() => import('./marketdata/story'))
+const CarpetFactoryStory = dynamic(() => import('./marketdata/story'))
 const YandexStory = dynamic(() => import('./yandex/story'))
 const SperasoftStory = dynamic(() => import('./sperasoft/story'))
 const LumiprobeStory = dynamic(() => import('./lumiprobe/story'))
@@ -308,9 +308,6 @@ export function Home({ initial = null }: { initial?: number | null }) {
           onEnter={() => (active < 0 ? navigate(0) : openProject(active))}
         />
       </div>
-      <div className="vertical-note" aria-hidden="true">
-        KEEP THE CURIOSITY. FEED THE FIRE.
-      </div>
       <footer
         className={`journey-footer ${selected !== null ? 'is-hidden' : ''}`}
       >
@@ -350,14 +347,15 @@ export function Home({ initial = null }: { initial?: number | null }) {
           </button>
         </div>
       </footer>
-      <div
-        className="scroll-track"
-        style={{ height: `${(projects.length + 1) * 100}vh` }}
-        aria-hidden="true"
-      />
+      <div className="scroll-track" aria-hidden="true">
+        <div />
+        {projects.map((project) => (
+          <div key={project.id} />
+        ))}
+      </div>
       {opened && (
         <dialog
-          className={`project-dialog ${opened.id === 'glite' ? 'glite-dialog' : opened.id === 'marketdata' ? 'market-dialog' : opened.id === 'yandex' ? 'yandex-dialog' : opened.id === 'sperasoft' ? 'spera-dialog' : opened.id === 'lumiprobe' ? 'lumiprobe-dialog' : ''}`}
+          className={`project-dialog ${opened.id === 'glite' ? 'glite-dialog' : opened.id === 'akts' ? 'market-dialog' : opened.id === 'yandex' ? 'yandex-dialog' : opened.id === 'sperasoft' ? 'spera-dialog' : opened.id === 'lumiprobe' ? 'lumiprobe-dialog' : ''}`}
           ref={dialog}
           onCancel={closeProject}
           aria-labelledby="project-heading"
@@ -368,7 +366,7 @@ export function Home({ initial = null }: { initial?: number | null }) {
                 ? 'Glite · 2025'
                 : opened.id === 'lumiprobe'
                   ? 'Lumiprobe'
-                  : opened.id === 'marketdata' ||
+                  : opened.id === 'akts' ||
                       opened.id === 'yandex' ||
                       opened.id === 'sperasoft'
                     ? `${opened.name} · ${opened.period}`
@@ -380,8 +378,8 @@ export function Home({ initial = null }: { initial?: number | null }) {
           </div>
           {opened.id === 'glite' ? (
             <GliteStory reduced={reduced} onReady={() => setWorldReady(true)} />
-          ) : opened.id === 'marketdata' ? (
-            <MarketDataStory
+          ) : opened.id === 'akts' ? (
+            <CarpetFactoryStory
               reduced={reduced}
               onReady={() => setWorldReady(true)}
             />

@@ -12,7 +12,7 @@ import Collection from './collection'
 
 const WorkshopScene = dynamic(() => import('./scene'), { ssr: false })
 
-export default function MarketDataStory({
+export default function CarpetFactoryStory({
   reduced,
   onReady,
 }: {
@@ -38,7 +38,7 @@ export default function MarketDataStory({
   return (
     <article className="market-story">
       <header className="market-intro">
-        <h2 id="project-heading">MarketData</h2>
+        <h2 id="project-heading">AKTS</h2>
         <p>
           I built the backend and frontend from scratch for a carpet factory,
           turning its everyday paperwork into software.
