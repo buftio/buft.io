@@ -29,6 +29,7 @@ const CarpetFactoryStory = dynamic(() => import('./marketdata/story'))
 const YandexStory = dynamic(() => import('./yandex/story'))
 const SperasoftStory = dynamic(() => import('./sperasoft/story'))
 const LumiprobeStory = dynamic(() => import('./lumiprobe/story'))
+const QuantoriStory = dynamic(() => import('./quantori/story'))
 const resumeUrl =
   'https://docs.google.com/document/d/1yVdeR23Y5sJU6MKffIKWd-uo_GBjAuHN/edit'
 const preloadVignette = () => import('./three/project-vignette')
@@ -355,7 +356,7 @@ export function Home({ initial = null }: { initial?: number | null }) {
       </div>
       {opened && (
         <dialog
-          className={`project-dialog ${opened.id === 'glite' ? 'glite-dialog' : opened.id === 'akts' ? 'market-dialog' : opened.id === 'yandex' ? 'yandex-dialog' : opened.id === 'sperasoft' ? 'spera-dialog' : opened.id === 'lumiprobe' ? 'lumiprobe-dialog' : ''}`}
+          className={`project-dialog ${opened.id === 'glite' ? 'glite-dialog' : opened.id === 'akts' ? 'market-dialog' : opened.id === 'yandex' ? 'yandex-dialog' : opened.id === 'sperasoft' ? 'spera-dialog' : opened.id === 'lumiprobe' ? 'lumiprobe-dialog' : opened.id === 'quantori' ? 'quantori-dialog' : ''}`}
           ref={dialog}
           onCancel={closeProject}
           aria-labelledby="project-heading"
@@ -368,7 +369,8 @@ export function Home({ initial = null }: { initial?: number | null }) {
                   ? 'Lumiprobe'
                   : opened.id === 'akts' ||
                       opened.id === 'yandex' ||
-                      opened.id === 'sperasoft'
+                      opened.id === 'sperasoft' ||
+                      opened.id === 'quantori'
                     ? `${opened.name} · ${opened.period}`
                     : `${opened.name.toLowerCase()} / a closer look`}
             </span>
@@ -395,6 +397,11 @@ export function Home({ initial = null }: { initial?: number | null }) {
             />
           ) : opened.id === 'lumiprobe' ? (
             <LumiprobeStory
+              reduced={reduced}
+              onReady={() => setWorldReady(true)}
+            />
+          ) : opened.id === 'quantori' ? (
+            <QuantoriStory
               reduced={reduced}
               onReady={() => setWorldReady(true)}
             />
