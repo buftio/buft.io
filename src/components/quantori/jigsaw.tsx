@@ -181,8 +181,15 @@ export function Jigsaw({ onSolved }: { onSolved: () => void }) {
   const move = (event: PointerEvent<HTMLButtonElement>) => {
     if (!drag) return
     const rect = stage.current!.getBoundingClientRect()
-    const fx = (event.clientX - rect.left - drag.dx) / width
-    const fy = (event.clientY - rect.top - drag.dy) / height
+    const clamp = (v: number, max: number) => Math.min(max, Math.max(0, v))
+    const fx = clamp(
+      (event.clientX - rect.left - drag.dx) / width,
+      1 - (w + tab * 2) / width,
+    )
+    const fy = clamp(
+      (event.clientY - rect.top - drag.dy) / height,
+      1 - (h + tab * 2) / height,
+    )
     setPieces((list) =>
       list.map((piece, i) => (i === drag.index ? { ...piece, fx, fy } : piece)),
     )

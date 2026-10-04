@@ -21,6 +21,14 @@ export const PROTEIN: V3 = [0, 1.6, -4]
 export const POCKET: V3 = [0, 1.6, -2.68]
 export const GRAIL: V3 = [0, 3.7, -3.4]
 const UP = new Vector3(0, 1, 0)
+const scratch = new Vector3()
+const beam = new MeshBasicMaterial({
+  color: '#ffd36b',
+  transparent: true,
+  opacity: 0.09,
+  blending: AdditiveBlending,
+  depthWrite: false,
+})
 const hidden = new MeshBasicMaterial({
   transparent: true,
   opacity: 0,
@@ -177,7 +185,7 @@ function Piece({
     if (!group) return
     const k = 1 - Math.exp(-dt * 9)
     const missing = miss ? (performance.now() - miss.at) / 1000 : MISS
-    const goal = new Vector3(...tray(index))
+    const goal = scratch.set(...tray(index))
     if (slot !== null) goal.set(...slots[slot].socket, locked ? 0.02 : 0.4)
     else if (miss && missing < MISS) goal.set(...slots[miss.slot].socket, 0.5)
     else if (selected) goal.z += 0.35 + Math.sin(clock.elapsedTime * 5) * 0.05
@@ -267,17 +275,6 @@ function Halo() {
   useFrame(({ clock }) => {
     if (ring.current) ring.current.rotation.z = clock.elapsedTime * 0.4
   })
-  const beam = useMemo(
-    () =>
-      new MeshBasicMaterial({
-        color: '#ffd36b',
-        transparent: true,
-        opacity: 0.09,
-        blending: AdditiveBlending,
-        depthWrite: false,
-      }),
-    [],
-  )
   return (
     <group>
       <mesh
@@ -343,7 +340,9 @@ export function Docking({
     const k = 1 - Math.exp(-dt * 2.2)
     const t = clock.elapsedTime
     group.position.lerp(
-      raised ? grail.clone().setY(grail.y + Math.sin(t * 1.4) * 0.08) : pocket,
+      raised
+        ? scratch.copy(grail).setY(grail.y + Math.sin(t * 1.4) * 0.08)
+        : pocket,
       k,
     )
     group.rotation.y = raised

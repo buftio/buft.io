@@ -2,7 +2,7 @@
 
 import { Sparkles } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import { useMemo, useRef, type RefObject } from 'react'
+import { useEffect, useMemo, useRef, type RefObject } from 'react'
 import {
   CanvasTexture,
   DoubleSide,
@@ -204,6 +204,8 @@ export function RollSequence({ since }: { since: RefObject<number> }) {
   const page = useRef<Mesh>(null)
   const base = useRef<Float32Array | null>(null)
   const texture = useMemo(() => pageTexture(), [])
+  useEffect(() => () => texture?.dispose(), [texture])
+  const curled = useRef(-1)
   const trail = useTrail(12)
   const tip = useMemo(() => new Vector3(), [])
   const next = useMemo(() => new Vector3(), [])
@@ -217,7 +219,8 @@ export function RollSequence({ since }: { since: RefObject<number> }) {
       base.current ??= Float32Array.from(
         mesh.geometry.attributes.position.array,
       )
-      curl(mesh.geometry, base.current, p)
+      if (p !== curled.current) curl(mesh.geometry, base.current, p)
+      curled.current = p
       const material = mesh.material as MeshStandardMaterial
       material.opacity = appear
       material.emissiveIntensity = ease((s - rolled + 0.5) / 0.6) * 0.9
@@ -259,13 +262,14 @@ export function RollSequence({ since }: { since: RefObject<number> }) {
     }
     const flight = (s - aim) / (hit - aim)
     const flying = flight > 0 && flight < 1
-    tip.copy(origin).add(X.clone().applyQuaternion(aimed).multiplyScalar(TIP))
+    tip.copy(X).applyQuaternion(aimed).multiplyScalar(TIP).add(origin)
     const at = (f: number, out: Vector3) =>
       out.lerpVectors(tip, butt, f).setY(out.y + Math.sin(f * Math.PI) * 0.35)
     if (dart.current) {
       dart.current.visible = flying
       at(Math.min(1, Math.max(0, flight)), dart.current.position)
-      dart.current.lookAt(at(Math.min(1, Math.max(0, flight) + 0.05), next))
+      const ahead = at(Math.min(1, Math.max(0, flight) + 0.05), next)
+      dart.current.lookAt(dart.current.parent?.localToWorld(ahead) ?? ahead)
       dart.current.rotateY(-Math.PI / 2)
     }
     const point = dart.current?.position

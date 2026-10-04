@@ -133,6 +133,7 @@ export function Flasks({ bubbling = true, ...props }: FlasksProps) {
             ref={(node) => {
               bubbles.current[i] = node
             }}
+            userData={{ live: true }}
             position={[0.02, 0.15, 0.105]}
           >
             <Clay shape="sphere" color="#f5fbf6" size={0.026} />

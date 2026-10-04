@@ -179,6 +179,7 @@ export function ServerRack(props: GroupProps) {
             ref={(node) => {
               leds.current[i] = node
             }}
+            userData={{ live: true }}
             position={[0.195, -0.025, 0.035]}
           >
             <Clay

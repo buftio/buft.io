@@ -50,6 +50,7 @@ function Arm({
   return (
     <group
       ref={shoulder}
+      userData={{ live: true }}
       name={`scientist-arm-${label}`}
       position={[side * 0.225, 0.7, 0]}
     >
@@ -61,6 +62,7 @@ function Arm({
       />
       <group
         ref={elbow}
+        userData={{ live: true }}
         name={`scientist-forearm-${label}`}
         position={[0, -0.17, 0]}
       >
@@ -80,6 +82,7 @@ function Arm({
           <Clay shape="sphere" color={skin} size={0.11} />
           <group
             ref={tool}
+            userData={{ live: true }}
             name={side === -1 ? 'scientist-clipboard' : 'scientist-pencil'}
             scale={0}
           >
@@ -316,7 +319,7 @@ export function Scientist({
   })
   return (
     <group {...props}>
-      <group ref={root} name="scientist">
+      <group ref={root} userData={{ live: true }} name="scientist">
         {[-1, 1].map((side) => (
           <group
             key={side}
@@ -337,7 +340,12 @@ export function Scientist({
             />
           </group>
         ))}
-        <group ref={torso} name="scientist-torso" position={[0, 0.27, 0]}>
+        <group
+          ref={torso}
+          userData={{ live: true }}
+          name="scientist-torso"
+          position={[0, 0.27, 0]}
+        >
           <Clay
             shape="sphere"
             color={coat}
@@ -375,7 +383,12 @@ export function Scientist({
             size={[0.14, 0.15, 0.14]}
             position={[0, 0.47, 0]}
           />
-          <group ref={head} name="scientist-head" position={[0, 0.65, 0]}>
+          <group
+            ref={head}
+            userData={{ live: true }}
+            name="scientist-head"
+            position={[0, 0.65, 0]}
+          >
             <Clay shape="sphere" color={look.skin} size={[0.38, 0.39, 0.36]} />
             <Hair style={index} color={look.hair} />
             {[-1, 1].map((s) => (

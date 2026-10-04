@@ -153,17 +153,18 @@ export function Thought({
     })
   })
   return (
-    <group ref={root} position={position}>
+    <group ref={root} position={position} userData={{ live: true }}>
       {[0, 1, 2].map((i) => (
         <group
           key={i}
           ref={(puff) => void (puffs.current[i] = puff)}
+          userData={{ live: true }}
           position={[0.04 * i, 0, 0]}
         >
           <mesh geometry={geo.sphere} material={cloud} />
         </group>
       ))}
-      <group ref={bubble} position={[0.18, 0.55, 0]}>
+      <group ref={bubble} position={[0.18, 0.55, 0]} userData={{ live: true }}>
         <mesh
           geometry={geo.sphere}
           material={cloud}
@@ -191,6 +192,7 @@ export function Thought({
           <group
             key={i}
             ref={(icon) => void (icons.current[i] = icon)}
+            userData={{ live: true }}
             visible={i === 0}
           >
             <Icon idea={idea} />

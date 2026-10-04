@@ -1,6 +1,7 @@
 'use client'
 
 import { Sparkles } from '@react-three/drei'
+import { Bake } from './bake'
 import { PROTEIN } from './docking'
 import type { Phase, V3 } from './layout'
 import {
@@ -32,7 +33,7 @@ const crew: {
 export function Researchers({ phase }: { phase: Phase }) {
   const cheering = phase === 'grail'
   return (
-    <>
+    <Bake>
       {crew.map(({ angle, action, ideas }, i) => {
         const x = PROTEIN[0] + Math.sin(angle) * 2.6
         const z = PROTEIN[2] + Math.cos(angle) * 2.6
@@ -53,7 +54,7 @@ export function Researchers({ phase }: { phase: Phase }) {
           </group>
         )
       })}
-    </>
+    </Bake>
   )
 }
 
@@ -70,7 +71,7 @@ function Rack({ position, rotation = 0 }: { position: V3; rotation?: number }) {
 /** The lab around the protein: the supercomputer, benches, a whiteboard, plants. */
 export function Lab() {
   return (
-    <>
+    <Bake>
       <Rack position={[-5, 0, -7.2]} rotation={0.35} />
       <group position={[-4.9, 0, -3.6]} rotation={[0, 1.05, 0]}>
         <Bench />
@@ -88,7 +89,7 @@ export function Lab() {
       <Plant position={[-6.4, 0, -1.4]} scale={1.2} />
       <Plant position={[6.6, 0, -6.6]} scale={1.4} />
       <Plant position={[-2.6, 0, -8]} />
-    </>
+    </Bake>
   )
 }
 

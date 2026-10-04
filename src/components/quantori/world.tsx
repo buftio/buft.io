@@ -11,6 +11,7 @@ import { Docking } from './docking'
 import { Confetti, Flash } from './fx'
 import { Air, Lab, Researchers, Rug } from './environment'
 import { ARENA, PIG, stations, timeline, type Phase } from './layout'
+import { Slim } from './bake'
 import { Patient, Pig } from './models'
 import { RollSequence } from './syringe'
 
@@ -126,15 +127,23 @@ function Scene({
       )}
       <group position={ARENA}>
         {arena && <Rug />}
-        <Patient
-          pose={
-            phase === 'won' ? 'dance' : phase === 'lost' ? 'recline' : 'stand'
-          }
-          hurt={hurt}
-        />
-        {pigHome && <Pig position={PIG} />}
+        <Slim>
+          <Patient
+            pose={
+              phase === 'won' ? 'dance' : phase === 'lost' ? 'recline' : 'stand'
+            }
+            hurt={hurt}
+          />
+        </Slim>
+        {pigHome && (
+          <Slim>
+            <Pig position={PIG} />
+          </Slim>
+        )}
         {phase === 'roll' && (
-          <Pig position={PIG} since={since} delay={timeline.roll.hit} />
+          <Slim>
+            <Pig position={PIG} since={since} delay={timeline.roll.hit} />
+          </Slim>
         )}
         {phase === 'roll' && <RollSequence since={since} />}
         {arena && (

@@ -25,6 +25,18 @@ export const party = [
   '#ffffff',
 ]
 const dummy = new Object3D()
+const paper = new MeshStandardMaterial({
+  roughness: 0.6,
+  emissive: '#ffffff',
+  emissiveIntensity: 0.15,
+})
+const spark = new MeshBasicMaterial({
+  color: '#ffe08a',
+  transparent: true,
+  opacity: 0.8,
+  blending: AdditiveBlending,
+  depthWrite: false,
+})
 export const seeded = (i: number, k = 0) => {
   const x = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453
   return x - Math.floor(x)
@@ -89,15 +101,6 @@ export function Confetti({
       }),
     [count, speed, up, colors, repeat],
   )
-  const material = useMemo(
-    () =>
-      new MeshStandardMaterial({
-        roughness: 0.6,
-        emissive: '#ffffff',
-        emissiveIntensity: 0.15,
-      }),
-    [],
-  )
   useLayoutEffect(() => {
     const instanced = mesh.current
     if (!instanced) return
@@ -109,6 +112,9 @@ export function Confetti({
     const instanced = mesh.current
     if (!instanced) return
     const t0 = start(clock.elapsedTime)
+    const over = !repeat && t0 > life + 0.1
+    instanced.visible = !over
+    if (over) return
     bits.forEach((bit, i) => {
       let t = t0 - bit.delay
       if (repeat && t > 0) t %= repeat
@@ -133,7 +139,7 @@ export function Confetti({
   return (
     <instancedMesh
       ref={mesh}
-      args={[geo.slab, material, count]}
+      args={[geo.slab, paper, count]}
       position={position}
       frustumCulled={false}
     />
@@ -192,21 +198,13 @@ export function Flash({
 export function useTrail(length = 10) {
   const points = useRef(Array.from({ length }, () => ({ x: 0, y: -100, z: 0 })))
   const meshes = useRef<(Mesh | null)[]>([])
-  const material = useMemo(
-    () =>
-      new MeshBasicMaterial({
-        color: '#ffe08a',
-        transparent: true,
-        opacity: 0.8,
-        blending: AdditiveBlending,
-        depthWrite: false,
-      }),
-    [],
-  )
   const push = (x: number, y: number, z: number, on: boolean) => {
     const list = points.current
-    list.pop()
-    list.unshift({ x, y: on ? y : -100, z })
+    const point = list.pop() ?? { x: 0, y: 0, z: 0 }
+    point.x = x
+    point.y = on ? y : -100
+    point.z = z
+    list.unshift(point)
     list.forEach((point, i) => {
       const mesh = meshes.current[i]
       if (!mesh) return
@@ -219,7 +217,7 @@ export function useTrail(length = 10) {
       key={i}
       ref={(mesh) => void (meshes.current[i] = mesh)}
       geometry={geo.sphere}
-      material={material}
+      material={spark}
       position={[0, -100, 0]}
     />
   ))

@@ -128,7 +128,10 @@ export default function QuantoriStory({
     popped.current = state.popped
     setHud({
       lives: state.lives,
-      left: Math.max(0, Math.ceil(DURATION - state.time)),
+      left: Math.max(
+        0,
+        Math.ceil(DURATION - (state.end < 0 ? state.time : state.end)),
+      ),
       popped: state.popped,
     })
     if (state.status !== 'play')

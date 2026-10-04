@@ -4,12 +4,14 @@ import { useFrame, type ThreeEvent } from '@react-three/fiber'
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { MeshBasicMaterial, type Group, type Mesh } from 'three'
 import { geo } from '../marketdata/models/clay'
+import { Bake } from './bake'
 import { Boom } from './boom'
 import {
   aimAt,
   fire,
   gait,
   RISE,
+  settle,
   step,
   TOUGH,
   type Dart,
@@ -76,7 +78,9 @@ function Walker({ virus, game }: { virus: VirusState; game: RefObject<Game> }) {
     <>
       <group ref={root} position={[virus.x, -1, virus.z]}>
         <group ref={body} scale={0.0001}>
-          <Virus kind={virus.kind} />
+          <Bake>
+            <Virus kind={virus.kind} />
+          </Bake>
           <mesh ref={flash} geometry={geo.sphere} scale={0.95} visible={false}>
             <meshBasicMaterial color="#ffffff" transparent depthWrite={false} />
           </mesh>
@@ -126,7 +130,9 @@ function Flying({ dart }: { dart: Dart }) {
   })
   return (
     <group ref={ref} scale={SIZE}>
-      <Model />
+      <Bake>
+        <Model />
+      </Bake>
     </group>
   )
 }
@@ -163,8 +169,9 @@ export function Arena({
   useFrame((_, dt) => {
     const state = game.current
     if (playing) step(state, Math.min(dt, 0.05))
+    else settle(state, Math.min(dt, 0.05))
     if (playing && trigger.current) fire(state, trigger.current, gunAt)
-    const signature = `${state.viruses.length}:${state.darts.length}:${state.pops.length}:${state.lives}:${state.popped}:${Math.floor(state.time)}:${state.status}`
+    const signature = `${state.ids}:${state.viruses.length}:${state.darts.length}:${state.pops.length}:${state.lives}:${state.popped}:${Math.floor(state.time)}:${state.status}`
     if (signature !== seen.current) {
       seen.current = signature
       setShown(snapshot(state))

@@ -54,6 +54,7 @@ export type Game = {
   ids: number
   aim: number
   hurt: number
+  end: number
   status: 'play' | 'won' | 'lost'
 }
 
@@ -69,6 +70,7 @@ export const newGame = (): Game => ({
   ids: 1,
   aim: 0,
   hurt: -10,
+  end: -1,
   status: 'play',
 })
 
@@ -127,9 +129,35 @@ function pop(game: Game, virus: Virus, sick: boolean) {
   })
 }
 
+const gap = (virus: Virus, x0: number, z0: number, x1: number, z1: number) => {
+  const dx = x1 - x0
+  const dz = z1 - z0
+  const t = Math.min(
+    1,
+    Math.max(
+      0,
+      ((virus.x - x0) * dx + (virus.z - z0) * dz) / (dx * dx + dz * dz || 1),
+    ),
+  )
+  return Math.hypot(virus.x - x0 - dx * t, virus.z - z0 - dz * t)
+}
+
+function expire(game: Game) {
+  if (!game.pops.some((item) => game.time - item.at > POP)) return false
+  game.pops = game.pops.filter((item) => game.time - item.at <= POP)
+  return true
+}
+
+/** Keeps the last explosions playing out after the game has ended. */
+export function settle(game: Game, dt: number) {
+  if (game.status === 'play' || !game.pops.length) return false
+  game.time += dt
+  return expire(game)
+}
+
 /** Advances the game. Returns true when the set of things on screen changed. */
 export function step(game: Game, dt: number) {
-  if (game.status !== 'play') return false
+  if (game.status !== 'play') return settle(game, dt)
   let changed = false
   game.time += dt
   if (game.time >= game.next) {
@@ -150,13 +178,15 @@ export function step(game: Game, dt: number) {
     }
   }
   for (const dart of [...game.darts]) {
+    const x0 = dart.x
+    const z0 = dart.z
     dart.x += dart.vx * dt
     dart.z += dart.vz * dt
     dart.y += (FLIGHT - dart.y) * Math.min(1, dt * 14)
     const target = game.viruses.find(
       (virus) =>
         game.time - virus.born > RISE * 0.5 &&
-        Math.hypot(virus.x - dart.x, virus.z - dart.z) <
+        gap(virus, x0, z0, dart.x, dart.z) <
           HIT * (virus.kind === TOUGH ? 1.25 : 1),
     )
     if (target) {
@@ -170,15 +200,16 @@ export function step(game: Game, dt: number) {
     game.darts = game.darts.filter((item) => item !== dart)
     changed = true
   }
-  if (game.pops.some((item) => game.time - item.at > POP)) {
-    game.pops = game.pops.filter((item) => game.time - item.at <= POP)
-    changed = true
-  }
+  if (expire(game)) changed = true
   if (game.lives <= 0) {
     game.status = 'lost'
+    game.end = game.time
+    game.darts = []
     changed = true
   } else if (game.time >= DURATION) {
     game.status = 'won'
+    game.end = game.time
+    game.darts = []
     for (const virus of [...game.viruses]) pop(game, virus, false)
     changed = true
   }
