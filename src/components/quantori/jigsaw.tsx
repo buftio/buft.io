@@ -1,6 +1,13 @@
 'use client'
 
-import { useEffect, useRef, useState, type CSSProperties, type PointerEvent, type RefObject } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent,
+  type RefObject,
+} from 'react'
 
 const COLS = 3
 const ROWS = 2
@@ -19,14 +26,22 @@ const scatter: [number, number, number][] = [
   [0.4, 0.04, -5],
 ]
 
-function edge(x0: number, y0: number, x1: number, y1: number, sign: number, tab: number) {
+function edge(
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  sign: number,
+  tab: number,
+) {
   if (!sign) return `L ${x1} ${y1}`
   const ux = x1 - x0
   const uy = y1 - y0
   const length = Math.hypot(ux, uy)
   const nx = (uy / length) * tab * sign
   const ny = (-ux / length) * tab * sign
-  const p = (a: number, b: number) => `${x0 + ux * a + nx * b} ${y0 + uy * a + ny * b}`
+  const p = (a: number, b: number) =>
+    `${x0 + ux * a + nx * b} ${y0 + uy * a + ny * b}`
   return [
     `L ${p(0.36, 0)}`,
     `C ${p(0.44, 0)} ${p(0.3, 1)} ${p(0.5, 1)}`,
@@ -56,7 +71,8 @@ function useSize(ref: RefObject<HTMLElement | null>) {
   useEffect(() => {
     const element = ref.current
     if (!element) return
-    const measure = () => setSize({ width: element.offsetWidth, height: element.offsetHeight })
+    const measure = () =>
+      setSize({ width: element.offsetWidth, height: element.offsetHeight })
     measure()
     const observer = new ResizeObserver(measure)
     observer.observe(element)
@@ -65,7 +81,13 @@ function useSize(ref: RefObject<HTMLElement | null>) {
   return size
 }
 
-export function Sparks({ count = 24, reach = 160 }: { count?: number; reach?: number }) {
+export function Sparks({
+  count = 24,
+  reach = 160,
+}: {
+  count?: number
+  reach?: number
+}) {
   return (
     <span className="q-sparks" aria-hidden="true">
       {Array.from({ length: count }, (_, i) => (
@@ -109,7 +131,11 @@ export function Jigsaw({ onSolved }: { onSolved: () => void }) {
   const [pieces, setPieces] = useState(() =>
     scatter.map(([fx, fy, tilt]) => ({ fx, fy, tilt, z: 0, locked: false })),
   )
-  const [drag, setDrag] = useState<{ index: number; dx: number; dy: number } | null>(null)
+  const [drag, setDrag] = useState<{
+    index: number
+    dx: number
+    dy: number
+  } | null>(null)
   const solved = pieces.every((piece) => piece.locked)
   useEffect(() => {
     if (!solved) return
@@ -128,7 +154,11 @@ export function Jigsaw({ onSolved }: { onSolved: () => void }) {
     y: boardY + Math.floor(index / COLS) * h - tab,
   })
   const lock = (index: number) =>
-    setPieces((list) => list.map((piece, i) => (i === index ? { ...piece, locked: true } : piece)))
+    setPieces((list) =>
+      list.map((piece, i) =>
+        i === index ? { ...piece, locked: true } : piece,
+      ),
+    )
   const grab = (index: number, event: PointerEvent<HTMLButtonElement>) => {
     if (pieces[index].locked) return
     if (event.currentTarget.hasPointerCapture?.(event.pointerId) === false)
@@ -144,33 +174,46 @@ export function Jigsaw({ onSolved }: { onSolved: () => void }) {
       dy: event.clientY - rect.top - pieces[index].fy * height,
     })
     const z = Math.max(...pieces.map((piece) => piece.z)) + 1
-    setPieces((list) => list.map((piece, i) => (i === index ? { ...piece, z } : piece)))
+    setPieces((list) =>
+      list.map((piece, i) => (i === index ? { ...piece, z } : piece)),
+    )
   }
   const move = (event: PointerEvent<HTMLButtonElement>) => {
     if (!drag) return
     const rect = stage.current!.getBoundingClientRect()
     const fx = (event.clientX - rect.left - drag.dx) / width
     const fy = (event.clientY - rect.top - drag.dy) / height
-    setPieces((list) => list.map((piece, i) => (i === drag.index ? { ...piece, fx, fy } : piece)))
+    setPieces((list) =>
+      list.map((piece, i) => (i === drag.index ? { ...piece, fx, fy } : piece)),
+    )
   }
   const up = () => {
     if (!drag) return
     const piece = pieces[drag.index]
     const target = home(drag.index)
-    if (Math.hypot(piece.fx * width - target.x, piece.fy * height - target.y) < SNAP) lock(drag.index)
+    if (
+      Math.hypot(piece.fx * width - target.x, piece.fy * height - target.y) <
+      SNAP
+    )
+      lock(drag.index)
     setDrag(null)
   }
   return (
     <div ref={stage} className={`q-jigsaw${solved ? ' is-solved' : ''}`}>
       {width > 0 && (
         <>
-          <div className="q-board" style={{ left: boardX, top: boardY, width: boardW, height: boardH }}>
+          <div
+            className="q-board"
+            style={{ left: boardX, top: boardY, width: boardW, height: boardH }}
+          >
             {solved && <Sparks count={28} reach={boardW * 0.55} />}
           </div>
           {pieces.map((piece, index) => {
             const col = index % COLS
             const row = Math.floor(index / COLS)
-            const at = piece.locked ? home(index) : { x: piece.fx * width, y: piece.fy * height }
+            const at = piece.locked
+              ? home(index)
+              : { x: piece.fx * width, y: piece.fy * height }
             return (
               <button
                 key={index}
@@ -181,7 +224,10 @@ export function Jigsaw({ onSolved }: { onSolved: () => void }) {
                   width: w + tab * 2,
                   height: h + tab * 2,
                   zIndex: piece.locked ? 0 : piece.z + 1,
-                  rotate: piece.locked || drag?.index === index ? '0deg' : `${piece.tilt}deg`,
+                  rotate:
+                    piece.locked || drag?.index === index
+                      ? '0deg'
+                      : `${piece.tilt}deg`,
                 }}
                 aria-label={`Paper piece ${index + 1} of 6${piece.locked ? ', placed' : '. Drag it into place, or press Enter.'}`}
                 onPointerDown={(event) => grab(index, event)}
@@ -195,10 +241,21 @@ export function Jigsaw({ onSolved }: { onSolved: () => void }) {
                   }
                 }}
               >
-                <span aria-hidden="true" style={{ clipPath: `path('${outline(col, row, w, h, tab)}')` }}>
+                <span
+                  aria-hidden="true"
+                  style={{
+                    clipPath: `path('${outline(col, row, w, h, tab)}')`,
+                  }}
+                >
                   <span
                     className="q-page-frame"
-                    style={{ left: tab - col * w, top: tab - row * h, width: boardW, height: boardH, fontSize: boardW / 22 }}
+                    style={{
+                      left: tab - col * w,
+                      top: tab - row * h,
+                      width: boardW,
+                      height: boardH,
+                      fontSize: boardW / 22,
+                    }}
                   >
                     <Page />
                   </span>
@@ -207,7 +264,14 @@ export function Jigsaw({ onSolved }: { onSolved: () => void }) {
             )
           })}
           {!solved && (
-            <button className="q-assemble" onClick={() => setPieces((list) => list.map((piece) => ({ ...piece, locked: true })))}>
+            <button
+              className="q-assemble"
+              onClick={() =>
+                setPieces((list) =>
+                  list.map((piece) => ({ ...piece, locked: true })),
+                )
+              }
+            >
               Put it together for me
             </button>
           )}

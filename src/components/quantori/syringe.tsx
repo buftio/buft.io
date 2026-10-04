@@ -31,14 +31,60 @@ export const TIP = 0.82
 export function Syringe() {
   return (
     <group>
-      <mesh geometry={geo.cylinder} material={glass} scale={[0.24, 0.72, 0.24]} rotation={[0, 0, Math.PI / 2]} />
-      <mesh geometry={geo.cylinder} material={gold} scale={[0.17, 0.5, 0.17]} position={[0.08, 0, 0]} rotation={[0, 0, Math.PI / 2]} />
-      <Clay shape="cylinder" color="#d9dde2" size={[0.07, 0.42, 0.07]} position={[-0.52, 0, 0]} rotation={[0, 0, Math.PI / 2]} />
-      <Clay shape="cylinder" color="#d9dde2" size={[0.24, 0.05, 0.24]} position={[-0.74, 0, 0]} rotation={[0, 0, Math.PI / 2]} />
-      <Clay shape="box" color="#d9dde2" size={[0.05, 0.44, 0.14]} position={[-0.36, 0, 0]} />
-      <Clay shape="cone" color="#d9dde2" size={[0.13, 0.12, 0.13]} position={[0.42, 0, 0]} rotation={[0, 0, -Math.PI / 2]} />
-      <Clay shape="cylinder" color={palette.steel} size={[0.025, 0.36, 0.025]} position={[0.62, 0, 0]} rotation={[0, 0, Math.PI / 2]} />
-      <Clay shape="box" color={palette.terracotta} size={[0.12, 0.32, 0.12]} position={[-0.22, -0.24, 0]} rotation={[0, 0, 0.25]} />
+      <mesh
+        geometry={geo.cylinder}
+        material={glass}
+        scale={[0.24, 0.72, 0.24]}
+        rotation={[0, 0, Math.PI / 2]}
+      />
+      <mesh
+        geometry={geo.cylinder}
+        material={gold}
+        scale={[0.17, 0.5, 0.17]}
+        position={[0.08, 0, 0]}
+        rotation={[0, 0, Math.PI / 2]}
+      />
+      <Clay
+        shape="cylinder"
+        color="#d9dde2"
+        size={[0.07, 0.42, 0.07]}
+        position={[-0.52, 0, 0]}
+        rotation={[0, 0, Math.PI / 2]}
+      />
+      <Clay
+        shape="cylinder"
+        color="#d9dde2"
+        size={[0.24, 0.05, 0.24]}
+        position={[-0.74, 0, 0]}
+        rotation={[0, 0, Math.PI / 2]}
+      />
+      <Clay
+        shape="box"
+        color="#d9dde2"
+        size={[0.05, 0.44, 0.14]}
+        position={[-0.36, 0, 0]}
+      />
+      <Clay
+        shape="cone"
+        color="#d9dde2"
+        size={[0.13, 0.12, 0.13]}
+        position={[0.42, 0, 0]}
+        rotation={[0, 0, -Math.PI / 2]}
+      />
+      <Clay
+        shape="cylinder"
+        color={palette.steel}
+        size={[0.025, 0.36, 0.025]}
+        position={[0.62, 0, 0]}
+        rotation={[0, 0, Math.PI / 2]}
+      />
+      <Clay
+        shape="box"
+        color={palette.terracotta}
+        size={[0.12, 0.32, 0.12]}
+        position={[-0.22, -0.24, 0]}
+        rotation={[0, 0, 0.25]}
+      />
     </group>
   )
 }
@@ -46,9 +92,25 @@ export function Syringe() {
 export function Dart() {
   return (
     <group>
-      <Clay shape="cylinder" color="#d9dde2" size={[0.06, 0.22, 0.06]} rotation={[0, 0, Math.PI / 2]} />
-      <mesh geometry={geo.sphere} material={gold} scale={[0.18, 0.08, 0.08]} position={[-0.05, 0, 0]} />
-      <Clay shape="cylinder" color={palette.steel} size={[0.02, 0.16, 0.02]} position={[0.18, 0, 0]} rotation={[0, 0, Math.PI / 2]} />
+      <Clay
+        shape="cylinder"
+        color="#d9dde2"
+        size={[0.06, 0.22, 0.06]}
+        rotation={[0, 0, Math.PI / 2]}
+      />
+      <mesh
+        geometry={geo.sphere}
+        material={gold}
+        scale={[0.18, 0.08, 0.08]}
+        position={[-0.05, 0, 0]}
+      />
+      <Clay
+        shape="cylinder"
+        color={palette.steel}
+        size={[0.02, 0.16, 0.02]}
+        position={[0.18, 0, 0]}
+        rotation={[0, 0, Math.PI / 2]}
+      />
     </group>
   )
 }
@@ -109,8 +171,13 @@ function curl(geometry: BufferGeometry, base: Float32Array, p: number) {
       continue
     }
     const angle = (x - front) / R
-    const radius = R * (1 - 0.05 * angle / Math.PI)
-    position.setXYZ(i, front + Math.sin(angle) * radius, y, (1 - Math.cos(angle)) * radius)
+    const radius = R * (1 - (0.05 * angle) / Math.PI)
+    position.setXYZ(
+      i,
+      front + Math.sin(angle) * radius,
+      y,
+      (1 - Math.cos(angle)) * radius,
+    )
   }
   position.needsUpdate = true
   geometry.computeVertexNormals()
@@ -126,7 +193,11 @@ export function RollSequence({ since }: { since: RefObject<number> }) {
   const origin = useMemo(() => new Vector3(-1.2, 1.1, 0.6), [])
   const butt = useMemo(() => new Vector3(PIG[0] - 0.42, 0.5, PIG[2]), [])
   const aimed = useMemo(
-    () => new Quaternion().setFromUnitVectors(X, butt.clone().sub(origin).normalize()),
+    () =>
+      new Quaternion().setFromUnitVectors(
+        X,
+        butt.clone().sub(origin).normalize(),
+      ),
     [butt, origin],
   )
   const level = useMemo(() => new Quaternion(), [])
@@ -143,7 +214,9 @@ export function RollSequence({ since }: { since: RefObject<number> }) {
     const morph = ease((s - rolled) / (formed - rolled))
     const mesh = page.current
     if (mesh) {
-      base.current ??= Float32Array.from(mesh.geometry.attributes.position.array)
+      base.current ??= Float32Array.from(
+        mesh.geometry.attributes.position.array,
+      )
       curl(mesh.geometry, base.current, p)
       const material = mesh.material as MeshStandardMaterial
       material.opacity = appear
@@ -152,16 +225,31 @@ export function RollSequence({ since }: { since: RefObject<number> }) {
     const box = carrier.current
     if (box) {
       box.position.lerpVectors(SHEET, origin, morph)
-      box.position.y += Math.sin(ease((s - enter) / 0.6) * Math.PI) * 0.12 + Math.sin(morph * Math.PI) * 0.35
-      box.quaternion.slerpQuaternions(level, aimed, ease((s - formed) / (aim - formed)))
+      box.position.y +=
+        Math.sin(ease((s - enter) / 0.6) * Math.PI) * 0.12 +
+        Math.sin(morph * Math.PI) * 0.35
+      box.quaternion.slerpQuaternions(
+        level,
+        aimed,
+        ease((s - formed) / (aim - formed)),
+      )
       const windup = ease((s - (aim - 0.35)) / 0.3)
       const recoil = s > aim ? Math.exp(-(s - aim) * 10) : 0
-      box.translateX(-0.22 * windup * (1 - Math.min(1, recoil + (s > aim ? 1 : 0))) - 0.25 * recoil)
+      box.translateX(
+        -0.22 * windup * (1 - Math.min(1, recoil + (s > aim ? 1 : 0))) -
+          0.25 * recoil,
+      )
     }
     if (scroll.current) {
       scroll.current.visible = morph < 0.65
-      scroll.current.rotation.set(0, morph * Math.PI * 3, (-Math.PI / 2) * morph)
-      scroll.current.scale.setScalar((0.7 + 0.3 * appear) * (1 - ease((morph - 0.35) / 0.3)))
+      scroll.current.rotation.set(
+        0,
+        morph * Math.PI * 3,
+        (-Math.PI / 2) * morph,
+      )
+      scroll.current.scale.setScalar(
+        (0.7 + 0.3 * appear) * (1 - ease((morph - 0.35) / 0.3)),
+      )
     }
     if (gun.current) {
       const grow = ease((morph - 0.4) / 0.6)
@@ -172,7 +260,8 @@ export function RollSequence({ since }: { since: RefObject<number> }) {
     const flight = (s - aim) / (hit - aim)
     const flying = flight > 0 && flight < 1
     tip.copy(origin).add(X.clone().applyQuaternion(aimed).multiplyScalar(TIP))
-    const at = (f: number, out: Vector3) => out.lerpVectors(tip, butt, f).setY(out.y + Math.sin(f * Math.PI) * 0.35)
+    const at = (f: number, out: Vector3) =>
+      out.lerpVectors(tip, butt, f).setY(out.y + Math.sin(f * Math.PI) * 0.35)
     if (dart.current) {
       dart.current.visible = flying
       at(Math.min(1, Math.max(0, flight)), dart.current.position)
@@ -188,23 +277,71 @@ export function RollSequence({ since }: { since: RefObject<number> }) {
         <group ref={scroll}>
           <mesh ref={page} castShadow>
             <planeGeometry args={[W, H, 60, 1]} />
-            <meshStandardMaterial map={texture} side={DoubleSide} roughness={0.85} transparent emissive="#ffb800" emissiveIntensity={0} />
+            <meshStandardMaterial
+              map={texture}
+              side={DoubleSide}
+              roughness={0.85}
+              transparent
+              emissive="#ffb800"
+              emissiveIntensity={0}
+            />
           </mesh>
         </group>
         <group ref={gun} visible={false}>
           <Syringe />
         </group>
       </group>
-      <Sparkles count={30} scale={[1.6, 1, 1]} position={[SHEET.x + W / 2, SHEET.y, SHEET.z]} size={3} speed={0.5} color="#ffd36b" />
-      <Flash since={since} at={enter} position={[SHEET.x + W / 2, SHEET.y, SHEET.z]} size={0.9} />
-      <Flash since={since} at={rolled + (formed - rolled) * 0.5} position={[(SHEET.x + origin.x) / 2, 1.5, (SHEET.z + origin.z) / 2]} size={0.65} />
-      <Confetti since={since} at={rolled + (formed - rolled) * 0.5} position={[(SHEET.x + origin.x) / 2, 1.5, (SHEET.z + origin.z) / 2]} count={40} speed={1.6} up={1.6} gravity={2.5} size={0.06} colors={['#ffd36b', '#fff3c4', '#ffffff']} />
+      <Sparkles
+        count={30}
+        scale={[1.6, 1, 1]}
+        position={[SHEET.x + W / 2, SHEET.y, SHEET.z]}
+        size={3}
+        speed={0.5}
+        color="#ffd36b"
+      />
+      <Flash
+        since={since}
+        at={enter}
+        position={[SHEET.x + W / 2, SHEET.y, SHEET.z]}
+        size={0.9}
+      />
+      <Flash
+        since={since}
+        at={rolled + (formed - rolled) * 0.5}
+        position={[(SHEET.x + origin.x) / 2, 1.5, (SHEET.z + origin.z) / 2]}
+        size={0.65}
+      />
+      <Confetti
+        since={since}
+        at={rolled + (formed - rolled) * 0.5}
+        position={[(SHEET.x + origin.x) / 2, 1.5, (SHEET.z + origin.z) / 2]}
+        count={40}
+        speed={1.6}
+        up={1.6}
+        gravity={2.5}
+        size={0.06}
+        colors={['#ffd36b', '#fff3c4', '#ffffff']}
+      />
       <group ref={dart} visible={false}>
         <Dart />
       </group>
       {trail.dots}
-      <Flash since={since} at={hit} position={[butt.x, butt.y, butt.z]} size={0.4} color="#ffb800" />
-      <Confetti since={since} at={hit} position={[butt.x, butt.y + 0.2, butt.z]} count={36} speed={2} up={2.4} size={0.07} />
+      <Flash
+        since={since}
+        at={hit}
+        position={[butt.x, butt.y, butt.z]}
+        size={0.4}
+        color="#ffb800"
+      />
+      <Confetti
+        since={since}
+        at={hit}
+        position={[butt.x, butt.y + 0.2, butt.z]}
+        count={36}
+        speed={2}
+        up={2.4}
+        size={0.07}
+      />
     </>
   )
 }

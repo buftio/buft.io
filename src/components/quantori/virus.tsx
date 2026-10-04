@@ -29,13 +29,23 @@ export function Virus({ kind }: { kind: number }) {
       {knobs.map(({ at, tip }, i) => (
         <group key={i}>
           <Clay shape="sphere" color={color} size={0.08} position={at} />
-          <Clay shape="sphere" color={kind === 1 ? '#f2b84b' : '#f6e7c8'} size={0.11} position={tip} />
+          <Clay
+            shape="sphere"
+            color={kind === 1 ? '#f2b84b' : '#f6e7c8'}
+            size={0.11}
+            position={tip}
+          />
         </group>
       ))}
       {(oneEye ? [0] : [-0.11, 0.11]).map((x) => (
         <group key={x} position={[x, 0.06, 0.27]}>
           <Clay shape="sphere" color="#ffffff" size={oneEye ? 0.24 : 0.16} />
-          <Clay shape="sphere" color={palette.ink} size={oneEye ? 0.11 : 0.08} position={[0, -0.01, oneEye ? 0.1 : 0.07]} />
+          <Clay
+            shape="sphere"
+            color={palette.ink}
+            size={oneEye ? 0.11 : 0.08}
+            position={[0, -0.01, oneEye ? 0.1 : 0.07]}
+          />
           {!oneEye && (
             <Clay
               shape="slab"

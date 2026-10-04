@@ -15,7 +15,15 @@ import {
 import { geo } from '../marketdata/models/clay'
 import type { V3 } from './layout'
 
-export const party = ['#ffd36b', '#f2766b', '#3fb8af', '#6fa8dc', '#b48ad8', '#e88fb4', '#ffffff']
+export const party = [
+  '#ffd36b',
+  '#f2766b',
+  '#3fb8af',
+  '#6fa8dc',
+  '#b48ad8',
+  '#e88fb4',
+  '#ffffff',
+]
 const dummy = new Object3D()
 export const seeded = (i: number, k = 0) => {
   const x = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453
@@ -70,14 +78,26 @@ export function Confetti({
           vx: Math.cos(angle) * out,
           vz: Math.sin(angle) * out,
           vy: up * (0.5 + seeded(i, 3) * 0.7),
-          spin: [seeded(i, 4) * 12 - 6, seeded(i, 5) * 12 - 6, seeded(i, 6) * 12 - 6],
+          spin: [
+            seeded(i, 4) * 12 - 6,
+            seeded(i, 5) * 12 - 6,
+            seeded(i, 6) * 12 - 6,
+          ],
           delay: repeat ? (i / count) * repeat : seeded(i, 7) * 0.08,
           color: colors[i % colors.length],
         }
       }),
     [count, speed, up, colors, repeat],
   )
-  const material = useMemo(() => new MeshStandardMaterial({ roughness: 0.6, emissive: '#ffffff', emissiveIntensity: 0.15 }), [])
+  const material = useMemo(
+    () =>
+      new MeshStandardMaterial({
+        roughness: 0.6,
+        emissive: '#ffffff',
+        emissiveIntensity: 0.15,
+      }),
+    [],
+  )
   useLayoutEffect(() => {
     const instanced = mesh.current
     if (!instanced) return
@@ -94,15 +114,30 @@ export function Confetti({
       if (repeat && t > 0) t %= repeat
       const alive = t > 0 && t < life
       const fade = alive ? Math.min(1, (life - t) * 3) * Math.min(1, t * 12) : 0
-      dummy.position.set(bit.vx * t, bit.vy * t - 0.5 * gravity * t * t, bit.vz * t)
+      dummy.position.set(
+        bit.vx * t,
+        bit.vy * t - 0.5 * gravity * t * t,
+        bit.vz * t,
+      )
       dummy.rotation.set(bit.spin[0] * t, bit.spin[1] * t, bit.spin[2] * t)
-      dummy.scale.set(size * fade, size * 0.6 * fade, size * 0.12 * fade + 0.0001)
+      dummy.scale.set(
+        size * fade,
+        size * 0.6 * fade,
+        size * 0.12 * fade + 0.0001,
+      )
       dummy.updateMatrix()
       instanced.setMatrixAt(i, dummy.matrix)
     })
     instanced.instanceMatrix.needsUpdate = true
   })
-  return <instancedMesh ref={mesh} args={[geo.slab, material, count]} position={position} frustumCulled={false} />
+  return (
+    <instancedMesh
+      ref={mesh}
+      args={[geo.slab, material, count]}
+      position={position}
+      frustumCulled={false}
+    />
+  )
 }
 
 /** A bright ring and glow that pops and fades. */
@@ -136,8 +171,10 @@ export function Flash({
     const out = 1 - (1 - t) ** 3
     ring.current?.scale.setScalar(size * (0.3 + out * 1.4))
     glow.current?.scale.setScalar(size * 0.5 * (1 - t))
-    if (ring.current) (ring.current.material as MeshBasicMaterial).opacity = 1 - t
-    if (glow.current) (glow.current.material as MeshBasicMaterial).opacity = 0.9 * (1 - t)
+    if (ring.current)
+      (ring.current.material as MeshBasicMaterial).opacity = 1 - t
+    if (glow.current)
+      (glow.current.material as MeshBasicMaterial).opacity = 0.9 * (1 - t)
   })
   return (
     <group ref={group} position={position} visible={false}>
@@ -156,7 +193,14 @@ export function useTrail(length = 10) {
   const points = useRef(Array.from({ length }, () => ({ x: 0, y: -100, z: 0 })))
   const meshes = useRef<(Mesh | null)[]>([])
   const material = useMemo(
-    () => new MeshBasicMaterial({ color: '#ffe08a', transparent: true, opacity: 0.8, blending: AdditiveBlending, depthWrite: false }),
+    () =>
+      new MeshBasicMaterial({
+        color: '#ffe08a',
+        transparent: true,
+        opacity: 0.8,
+        blending: AdditiveBlending,
+        depthWrite: false,
+      }),
     [],
   )
   const push = (x: number, y: number, z: number, on: boolean) => {
@@ -171,7 +215,13 @@ export function useTrail(length = 10) {
     })
   }
   const dots = Array.from({ length }, (_, i) => (
-    <mesh key={i} ref={(mesh) => void (meshes.current[i] = mesh)} geometry={geo.sphere} material={material} position={[0, -100, 0]} />
+    <mesh
+      key={i}
+      ref={(mesh) => void (meshes.current[i] = mesh)}
+      geometry={geo.sphere}
+      material={material}
+      position={[0, -100, 0]}
+    />
   ))
   return { push, dots }
 }

@@ -3,10 +3,24 @@
 import { Sparkles } from '@react-three/drei'
 import { PROTEIN } from './docking'
 import type { Phase, V3 } from './layout'
-import { Bench, Flasks, Microscope, Monitor, Plant, Scientist, ServerRack, Stool, Whiteboard } from './models'
+import {
+  Bench,
+  Flasks,
+  Microscope,
+  Monitor,
+  Plant,
+  Scientist,
+  ServerRack,
+  Stool,
+  Whiteboard,
+} from './models'
 import { Thought, type Idea } from './thoughts'
 
-const crew: { angle: number; action: 'think' | 'write' | 'peer'; ideas: Idea[] }[] = [
+const crew: {
+  angle: number
+  action: 'think' | 'write' | 'peer'
+  ideas: Idea[]
+}[] = [
   { angle: -1.7, action: 'write', ideas: ['chart', 'molecule'] },
   { angle: -1.15, action: 'think', ideas: ['question', 'eureka'] },
   { angle: -0.6, action: 'peer', ideas: ['molecule', 'question'] },
@@ -24,8 +38,18 @@ export function Researchers({ phase }: { phase: Phase }) {
         const z = PROTEIN[2] + Math.cos(angle) * 2.6
         return (
           <group key={i} position={[x, 0, z]}>
-            <Scientist variant={i} action={cheering ? 'cheer' : action} rotation={[0, angle + Math.PI, 0]} />
-            {!cheering && <Thought position={[0.25, 1.55, 0]} ideas={ideas} offset={i * 1.7} />}
+            <Scientist
+              variant={i}
+              action={cheering ? 'cheer' : action}
+              rotation={[0, angle + Math.PI, 0]}
+            />
+            {!cheering && (
+              <Thought
+                position={[0.25, 1.55, 0]}
+                ideas={ideas}
+                offset={i * 1.7}
+              />
+            )}
           </group>
         )
       })}
@@ -70,14 +94,28 @@ export function Lab() {
 
 /** Soft dust motes floating through the whole scene. */
 export function Air() {
-  return <Sparkles count={70} scale={[22, 6, 16]} position={[1.5, 3, -2]} size={2.5} speed={0.15} opacity={0.5} color="#ffffff" />
+  return (
+    <Sparkles
+      count={70}
+      scale={[22, 6, 16]}
+      position={[1.5, 3, -2]}
+      size={2.5}
+      speed={0.15}
+      opacity={0.5}
+      color="#ffffff"
+    />
+  )
 }
 
 /** A soft rug under the patient that marks how close the viruses may come. */
 export function Rug() {
   return (
     <group>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
+      <mesh
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[0, 0.01, 0]}
+        receiveShadow
+      >
         <circleGeometry args={[1.25, 48]} />
         <meshStandardMaterial color="#cfe0f7" roughness={1} />
       </mesh>

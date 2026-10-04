@@ -6,7 +6,16 @@ import { Heart, RotateCcw, Terminal } from 'lucide-react'
 import { SceneBoundary } from '../scene-boundary'
 import { DURATION, LIVES, fireAhead, newGame } from './defense'
 import { Jigsaw, Page, Sparks } from './jigsaw'
-import { candidates, drop, hint, isLocked, isSolved, newDock, pick, slots } from './dock'
+import {
+  candidates,
+  drop,
+  hint,
+  isLocked,
+  isSolved,
+  newDock,
+  pick,
+  slots,
+} from './dock'
 import { gunAt, timeline, type Phase } from './layout'
 import { pop, squeak } from './sound'
 
@@ -26,16 +35,27 @@ const steps: Record<Phase, [string, string]> = {
     '03 · Preclinical',
     'Before people, a medicine is tested in preclinical studies. I built software for those too.',
   ],
-  ready: ['04 · Patients', 'Viruses are coming. Keep them away from the patient.'],
+  ready: [
+    '04 · Patients',
+    'Viruses are coming. Keep them away from the patient.',
+  ],
   play: ['04 · Patients', 'Click anywhere to fire a syringe. Hold to spray.'],
   won: ['04 · Patients', 'The patient stayed healthy.'],
   lost: ['04 · Patients', 'The patient caught it.'],
 }
 
-export default function QuantoriStory({ reduced, onReady }: { reduced: boolean; onReady: () => void }) {
+export default function QuantoriStory({
+  reduced,
+  onReady,
+}: {
+  reduced: boolean
+  onReady: () => void
+}) {
   const [phase, setPhase] = useState<Phase>('dock')
   const [dock, setDock] = useState(newDock)
-  const [log, setLog] = useState<{ command: string; reply: string } | null>(null)
+  const [log, setLog] = useState<{ command: string; reply: string } | null>(
+    null,
+  )
   const [rolling, setRolling] = useState(false)
   const [failed, setFailed] = useState(false)
   const [hud, setHud] = useState({ lives: LIVES, left: DURATION, popped: 0 })
@@ -50,7 +70,10 @@ export default function QuantoriStory({ reduced, onReady }: { reduced: boolean; 
   }, [phase, docked])
   useEffect(() => {
     if (phase !== 'grail') return
-    const timer = setTimeout(() => setPhase('papers'), (reduced ? 0.8 : timeline.grail) * 1000)
+    const timer = setTimeout(
+      () => setPhase('papers'),
+      (reduced ? 0.8 : timeline.grail) * 1000,
+    )
     return () => clearTimeout(timer)
   }, [phase, reduced])
   useEffect(() => {
@@ -75,12 +98,18 @@ export default function QuantoriStory({ reduced, onReady }: { reduced: boolean; 
     return () => window.removeEventListener('keydown', key)
   }, [phase])
 
-  const onPick = useCallback((index: number) => setDock((current) => pick(current, index)), [])
+  const onPick = useCallback(
+    (index: number) => setDock((current) => pick(current, index)),
+    [],
+  )
   const onDrop = useCallback(
     (slot: number) => {
       const next = drop(dock, slot, performance.now())
       if (next.miss && next.miss !== dock.miss)
-        setLog({ command: `dock ${candidates[next.miss.index].name} --pocket ${slots[slot].name}`, reply: "doesn't bind" })
+        setLog({
+          command: `dock ${candidates[next.miss.index].name} --pocket ${slots[slot].name}`,
+          reply: "doesn't bind",
+        })
       else setLog(null)
       setDock(next)
     },
@@ -97,8 +126,13 @@ export default function QuantoriStory({ reduced, onReady }: { reduced: boolean; 
     const state = game.current
     if (state.popped > popped.current) pop()
     popped.current = state.popped
-    setHud({ lives: state.lives, left: Math.max(0, Math.ceil(DURATION - state.time)), popped: state.popped })
-    if (state.status !== 'play') setPhase((current) => (current === 'play' ? state.status : current))
+    setHud({
+      lives: state.lives,
+      left: Math.max(0, Math.ceil(DURATION - state.time)),
+      popped: state.popped,
+    })
+    if (state.status !== 'play')
+      setPhase((current) => (current === 'play' ? state.status : current))
   }, [])
   const start = () => {
     game.current = newGame()
@@ -119,8 +153,10 @@ export default function QuantoriStory({ reduced, onReady }: { reduced: boolean; 
       <header className="q-intro">
         <h2 id="project-heading">Quantori</h2>
         <p>
-          At Quantori I worked along the path a medicine takes: an agent that ran supercomputers for scientists doing docking, a shared
-          workspace for research labs, software for preclinical studies, and a data platform for AstraZeneca.
+          At Quantori I worked along the path a medicine takes: an agent that
+          ran supercomputers for scientists doing docking, a shared workspace
+          for research labs, software for preclinical studies, and a data
+          platform for AstraZeneca.
         </p>
       </header>
       {failed ? (
@@ -165,7 +201,9 @@ export default function QuantoriStory({ reduced, onReady }: { reduced: boolean; 
                   {log.reply}
                 </p>
               )}
-              <button onClick={() => setLog({ command: 'hint', reply: hint(dock) })}>
+              <button
+                onClick={() => setLog({ command: 'hint', reply: hint(dock) })}
+              >
                 <Terminal size={14} /> Ask the agent
               </button>
             </div>
@@ -181,7 +219,11 @@ export default function QuantoriStory({ reduced, onReady }: { reduced: boolean; 
             <div className="q-hud">
               <span aria-label={`${hud.lives} of ${LIVES} hearts left`}>
                 {Array.from({ length: LIVES }, (_, i) => (
-                  <Heart key={i} size={16} fill={i < hud.lives ? 'currentColor' : 'none'} />
+                  <Heart
+                    key={i}
+                    size={16}
+                    fill={i < hud.lives ? 'currentColor' : 'none'}
+                  />
                 ))}
               </span>
               <span>{hud.left}s</span>
@@ -190,7 +232,9 @@ export default function QuantoriStory({ reduced, onReady }: { reduced: boolean; 
           )}
           {phase === 'ready' && (
             <div className="q-card">
-              <p>A syringe full of the new medicine. Viruses are on their way.</p>
+              <p>
+                A syringe full of the new medicine. Viruses are on their way.
+              </p>
               <button onClick={start}>Start</button>
             </div>
           )}
@@ -201,7 +245,9 @@ export default function QuantoriStory({ reduced, onReady }: { reduced: boolean; 
                   ? `The patient stayed healthy. You popped ${hud.popped} viruses.`
                   : `The patient caught it after ${hud.popped} pops.`}
               </p>
-              <button onClick={start}>{phase === 'won' ? 'Play again' : 'Try again'}</button>
+              <button onClick={start}>
+                {phase === 'won' ? 'Play again' : 'Try again'}
+              </button>
               <button className="is-quiet" onClick={restart}>
                 <RotateCcw size={14} /> From the docking
               </button>
@@ -212,8 +258,17 @@ export default function QuantoriStory({ reduced, onReady }: { reduced: boolean; 
       {!failed && phase === 'dock' && (
         <div className="q-controls sr-only focus-within:not-sr-only">
           {candidates.map(({ name }, i) => (
-            <button key={name} onClick={() => onPick(i)} disabled={isLocked(dock, i)} aria-pressed={dock.selected === i}>
-              {isLocked(dock, i) ? `${name} fits` : dock.placed[i] !== null ? `Turn ${name}` : `Pick ${name}`}
+            <button
+              key={name}
+              onClick={() => onPick(i)}
+              disabled={isLocked(dock, i)}
+              aria-pressed={dock.selected === i}
+            >
+              {isLocked(dock, i)
+                ? `${name} fits`
+                : dock.placed[i] !== null
+                  ? `Turn ${name}`
+                  : `Pick ${name}`}
             </button>
           ))}
           {dock.selected !== null &&
@@ -225,7 +280,10 @@ export default function QuantoriStory({ reduced, onReady }: { reduced: boolean; 
         </div>
       )}
       <footer className="q-outro">
-        <p>The molecule, papers, pig, and viruses are made up. The work behind each step was real.</p>
+        <p>
+          The molecule, papers, pig, and viruses are made up. The work behind
+          each step was real.
+        </p>
       </footer>
     </article>
   )

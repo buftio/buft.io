@@ -1,6 +1,10 @@
 let context: AudioContext | undefined
 
-function tone(points: [number, number][], type: OscillatorType, volume: number) {
+function tone(
+  points: [number, number][],
+  type: OscillatorType,
+  volume: number,
+) {
   try {
     context ??= new AudioContext()
     const now = context.currentTime
@@ -10,7 +14,10 @@ function tone(points: [number, number][], type: OscillatorType, volume: number) 
     points.forEach(([at, frequency], i) =>
       i === 0
         ? oscillator.frequency.setValueAtTime(frequency, now + at)
-        : oscillator.frequency.exponentialRampToValueAtTime(frequency, now + at),
+        : oscillator.frequency.exponentialRampToValueAtTime(
+            frequency,
+            now + at,
+          ),
     )
     const end = points[points.length - 1][0]
     gain.gain.setValueAtTime(0.0001, now)
@@ -25,9 +32,25 @@ function tone(points: [number, number][], type: OscillatorType, volume: number) 
 }
 
 export const squeak = () => {
-  tone([[0, 700], [0.08, 1700], [0.2, 1100], [0.32, 1900]], 'triangle', 0.18)
+  tone(
+    [
+      [0, 700],
+      [0.08, 1700],
+      [0.2, 1100],
+      [0.32, 1900],
+    ],
+    'triangle',
+    0.18,
+  )
 }
 
 export const pop = () => {
-  tone([[0, 520 + Math.random() * 200], [0.09, 120]], 'sine', 0.12)
+  tone(
+    [
+      [0, 520 + Math.random() * 200],
+      [0.09, 120],
+    ],
+    'sine',
+    0.12,
+  )
 }

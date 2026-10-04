@@ -17,7 +17,11 @@ export const PIG: V3 = [1.2, 0, 0.4]
 export const GUN: V3 = [0, 2.0, 0]
 export const gunAt = { x: GUN[0], y: GUN[1], z: GUN[2] }
 
-const at = (offset: V3): V3 => [ARENA[0] + offset[0], ARENA[1] + offset[1], ARENA[2] + offset[2]]
+const at = (offset: V3): V3 => [
+  ARENA[0] + offset[0],
+  ARENA[1] + offset[1],
+  ARENA[2] + offset[2],
+]
 
 export const stations: Record<Phase, { position: V3; target: V3 }> = {
   dock: { position: [0, 1.75, 2.8], target: [0, 1.5, -2.7] },
