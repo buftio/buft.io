@@ -5,6 +5,9 @@
   .lumi-story {
     padding: 28px;
   }
+  .lumi-stage {
+    margin-inline: -28px;
+  }
 }
 @media (max-width: 800px) {
   .lumi-intro {
@@ -30,7 +33,7 @@
     font-size: 14px;
   }
   .lumi-stage {
-    border-radius: 14px;
+    margin-inline: -16px;
   }
   .lumi-label {
     font-size: 12px;

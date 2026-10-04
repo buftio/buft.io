@@ -73,12 +73,8 @@
 .lumi-stage {
   position: relative;
   height: 450px;
-  border-radius: 18px;
+  margin-inline: -40px;
   overflow: hidden;
-  background:
-    radial-gradient(ellipse at 50% 20%, #f4eef7, transparent 55%),
-    linear-gradient(180deg, #ddd2ea, #e9e0f0 45%, #d3c5e3);
-  box-shadow: inset 0 0 0 1px #c9bcdb;
 }
 .lumi-stage.is-stacked {
   height: clamp(560px, 78dvh, 620px);
@@ -87,6 +83,7 @@
   position: absolute;
   inset: 0;
   margin: 0;
+  mask-image: linear-gradient(transparent, #000 8%, #000 84%, transparent);
 }
 .lumi-scene canvas {
   touch-action: pan-y;
