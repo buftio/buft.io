@@ -32,11 +32,15 @@ function CameraRail({ progress, selected, reduced }: SceneProps) {
     lookY: -0.2,
     parallax: 0,
   })
-  const entry = useRef({ project: selected, time: 1 })
+  const entry = useRef({ project: selected, time: 1, from: 0 })
   useFrame(({ camera, size, pointer }, delta) => {
     const step = Math.min(delta, 0.05)
     if (entry.current.project !== selected)
-      entry.current = { project: selected, time: 0 }
+      entry.current = {
+        project: selected,
+        time: 0,
+        from: current.current.position,
+      }
     entry.current.time = Math.min(1, entry.current.time + step / 1.1)
     const dive =
       selected !== null && !reduced
@@ -45,6 +49,14 @@ function CameraRail({ progress, selected, reduced }: SceneProps) {
     const target = selected ?? progress.current
     if (reduced) {
       current.current.position = target
+      current.current.velocity = 0
+    } else if (selected !== null) {
+      const { from, time } = entry.current
+      current.current.position = THREE.MathUtils.lerp(
+        from,
+        selected,
+        THREE.MathUtils.smootherstep(time, 0, 1),
+      )
       current.current.velocity = 0
     } else advanceRail(current.current, target, delta)
     const a = projectAngle(current.current.position)
