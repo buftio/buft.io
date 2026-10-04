@@ -67,3 +67,16 @@ export const pickup = () => {
     0.06,
   )
 }
+
+export const oink = (streak: number) => {
+  const pitch = 1 + streak * 0.06
+  tone(
+    [
+      [0, 260 * pitch],
+      [0.07, 340 * pitch],
+      [0.16, 180 * pitch],
+    ],
+    'sawtooth',
+    0.05,
+  )
+}

@@ -270,18 +270,6 @@ export function Jigsaw({ onSolved }: { onSolved: () => void }) {
               </button>
             )
           })}
-          {!solved && (
-            <button
-              className="q-assemble"
-              onClick={() =>
-                setPieces((list) =>
-                  list.map((piece) => ({ ...piece, locked: true })),
-                )
-              }
-            >
-              Put it together for me
-            </button>
-          )}
         </>
       )}
     </div>

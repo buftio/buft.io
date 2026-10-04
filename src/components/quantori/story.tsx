@@ -17,7 +17,7 @@ import {
   slots,
 } from './dock'
 import { gunAt, timeline, type Phase } from './layout'
-import { pickup, pop, squeak } from './sound'
+import { oink, pickup, pop, squeak } from './sound'
 
 const World = dynamic(() => import('./world'), { ssr: false })
 
@@ -61,6 +61,7 @@ export default function QuantoriStory({
   )
   const [rolling, setRolling] = useState(false)
   const [failed, setFailed] = useState(false)
+  const [brute, setBrute] = useState(false)
   const [hud, setHud] = useState({
     lives: LIVES,
     left: DURATION,
@@ -131,6 +132,23 @@ export default function QuantoriStory({
       setPhase('roll')
     }, 900)
   }, [])
+  const onPig = useCallback(
+    (streak: number) => {
+      if (phase !== 'papers' || rolling || brute) return
+      oink(streak)
+      if (streak >= 10) setBrute(true)
+    },
+    [phase, rolling, brute],
+  )
+  useEffect(() => {
+    if (!brute) return
+    const roll = setTimeout(solved, 1500)
+    const hide = setTimeout(() => setBrute(false), 3200)
+    return () => {
+      clearTimeout(roll)
+      clearTimeout(hide)
+    }
+  }, [brute, solved])
   const onGameChange = useCallback(() => {
     const state = game.current
     if (state.popped > popped.current) pop()
@@ -204,6 +222,7 @@ export default function QuantoriStory({
                 onDrop={onDrop}
                 onGameChange={onGameChange}
                 onReady={onReady}
+                onPig={onPig}
               />
             </SceneBoundary>
           </figure>
@@ -227,6 +246,11 @@ export default function QuantoriStory({
             </div>
           )}
           {phase === 'papers' && !rolling && <Jigsaw onSolved={solved} />}
+          {brute && (
+            <output className="q-egg">
+              Sometimes brute force works as well.
+            </output>
+          )}
           {rolling && (
             <div className="q-rolling" aria-hidden="true">
               <Page />
@@ -260,18 +284,39 @@ export default function QuantoriStory({
             </div>
           )}
           {(phase === 'won' || phase === 'lost') && (
-            <div className="q-card">
-              <p>
-                {phase === 'won'
-                  ? `The patient stayed healthy. You popped ${hud.popped} viruses.`
-                  : `The patient caught it after ${hud.popped} pops.`}
-              </p>
-              <button onClick={start}>
-                {phase === 'won' ? 'Play again' : 'Try again'}
-              </button>
-              <button className="is-quiet" onClick={restart}>
-                <RotateCcw size={14} /> From the docking
-              </button>
+            <div className={`q-card q-result is-${phase}`}>
+              <div>
+                <span className="q-verdict">
+                  {phase === 'won' ? 'Patient saved' : 'Patient caught it'}
+                </span>
+                <strong>
+                  {phase === 'won'
+                    ? `${hud.popped} viruses popped`
+                    : `Held out ${DURATION - hud.left}s`}
+                </strong>
+                <span className="q-stats">
+                  <span aria-label={`${hud.lives} of ${LIVES} hearts kept`}>
+                    {Array.from({ length: LIVES }, (_, i) => (
+                      <Heart
+                        key={i}
+                        size={13}
+                        fill={i < hud.lives ? 'currentColor' : 'none'}
+                      />
+                    ))}
+                  </span>
+                  {phase === 'won'
+                    ? `${hud.lives} of ${LIVES} hearts kept`
+                    : `${hud.popped} popped`}
+                </span>
+              </div>
+              <div className="q-actions">
+                <button onClick={start}>
+                  {phase === 'won' ? 'Play again' : 'Try again'}
+                </button>
+                <button className="is-quiet" onClick={restart}>
+                  <RotateCcw size={14} /> From the docking
+                </button>
+              </div>
             </div>
           )}
         </div>

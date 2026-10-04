@@ -13,6 +13,7 @@ import { Air, Lab, Researchers, Rug } from './environment'
 import { ARENA, PIG, stations, timeline, type Phase } from './layout'
 import { Slim } from './bake'
 import { Patient, Pig } from './models'
+import { Poke } from './poke'
 import { RollSequence } from './syringe'
 
 type Props = {
@@ -24,6 +25,7 @@ type Props = {
   onDrop: (slot: number) => void
   onGameChange: () => void
   onReady: () => void
+  onPig: (streak: number) => void
 }
 
 function CameraRig({ phase, reduced }: { phase: Phase; reduced: boolean }) {
@@ -85,6 +87,7 @@ function Scene({
   onDrop,
   onGameChange,
   onReady,
+  onPig,
 }: Props) {
   const since = usePhaseClock(phase)
   const hurt = useRef(-10)
@@ -136,9 +139,11 @@ function Scene({
           />
         </Slim>
         {pigHome && (
-          <Slim>
-            <Pig position={PIG} />
-          </Slim>
+          <Poke enabled={phase === 'papers'} position={PIG} onPoke={onPig}>
+            <Slim>
+              <Pig />
+            </Slim>
+          </Poke>
         )}
         {phase === 'roll' && (
           <Slim>

@@ -91,6 +91,28 @@
   position: absolute;
   inset: 0;
   z-index: 3;
+  pointer-events: none;
+}
+.q-jigsaw .q-piece {
+  pointer-events: auto;
+}
+.q-egg {
+  position: absolute;
+  right: var(--q-gutter);
+  top: 22px;
+  z-index: 4;
+  padding: 12px 18px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 10px 30px #1f2a3d33;
+  font-weight: 600;
+  animation: q-egg 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+@keyframes q-egg {
+  from {
+    scale: 0.6;
+    opacity: 0;
+  }
 }
 .q-board {
   position: absolute;
@@ -166,21 +188,6 @@
   box-shadow:
     0 0 0 4px var(--q-gold),
     0 0 40px #ffc94a99;
-}
-.q-assemble {
-  position: absolute;
-  bottom: 14px;
-  left: 42%;
-  translate: -50% 0;
-  padding: 8px 14px;
-  border: 0;
-  border-radius: 99px;
-  background: #ffffffcc;
-  color: var(--q-muted);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-  z-index: 1000;
 }
 .q-rolling {
   position: absolute;
@@ -323,10 +330,56 @@
   background: #ffffffeb;
   box-shadow: 0 10px 30px #1f2a3d26;
   z-index: 4;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  animation: q-egg 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) both;
 }
 .q-card p {
   margin: 0;
   font-size: 14px;
+}
+.q-result {
+  gap: 28px;
+  padding: 16px 16px 16px 22px;
+}
+.q-result > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+.q-verdict {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #2f9e6b;
+}
+.q-result.is-lost .q-verdict {
+  color: #e0566b;
+}
+.q-result strong {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+.q-stats {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--q-muted);
+  font-size: 13px;
+}
+.q-stats span {
+  display: flex;
+  gap: 2px;
+  color: #e0566b;
+}
+.q-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.q-card button {
+  white-space: nowrap;
 }
 .q-card button,
 .q-controls button {
@@ -375,6 +428,13 @@
   color: var(--q-muted);
 }
 
+@media (max-width: 560px) {
+  .q-result {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+}
 @media (max-width: 800px) {
   .quantori-dialog {
     width: 94vw;
