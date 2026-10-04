@@ -2,29 +2,32 @@
 
 import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Heart, RotateCcw, Terminal } from 'lucide-react'
+import { Heart, HeartCrack, RotateCcw, Siren, Trophy } from 'lucide-react'
+import { Agent } from './agent'
 import { SceneBoundary } from '../scene-boundary'
 import { DURATION, LIVES, fireAhead, newGame } from './defense'
 import { Jigsaw, Page, Sparks } from './jigsaw'
 import {
+  ask,
   candidates,
   drop,
-  hint,
   isLocked,
+  isPending,
   isSolved,
   newDock,
   pick,
+  score,
   slots,
 } from './dock'
 import { gunAt, timeline, type Phase } from './layout'
-import { oink, pickup, pop, squeak } from './sound'
+import { alarm, boop, fanfare, oink, pickup, pop, sad, squeak } from './sound'
 
 const World = dynamic(() => import('./world'), { ssr: false })
 
 const steps: Record<Phase, [string, string]> = {
   dock: [
     '01 · Docking',
-    'In 2024, before tools like this were popular, I built a Claude Code–style agent that ran supercomputers for scientists doing docking. Find the three pieces that fit the pocket, then turn them into place.',
+    'In 2024, before tools like this were popular, I built a Claude Code–style agent that ran supercomputers for scientists doing docking. Guess which three fragments bind, and where. Fill the pocket and the supercomputer scores each try.',
   ],
   grail: ['01 · Docking', 'A match.'],
   papers: [
@@ -56,9 +59,7 @@ export default function QuantoriStory({
 }) {
   const [phase, setPhase] = useState<Phase>('dock')
   const [dock, setDock] = useState(newDock)
-  const [log, setLog] = useState<{ command: string; reply: string } | null>(
-    null,
-  )
+  const [note, setNote] = useState<string | null>(null)
   const [rolling, setRolling] = useState(false)
   const [failed, setFailed] = useState(false)
   const [brute, setBrute] = useState(false)
@@ -72,12 +73,28 @@ export default function QuantoriStory({
   const popped = useRef(0)
   const armed = useRef(-1)
   const docked = isSolved(dock)
+  const pending = isPending(dock)
 
   useEffect(() => {
     if (phase !== 'dock' || !docked) return
     const timer = setTimeout(() => setPhase('grail'), 900)
     return () => clearTimeout(timer)
   }, [phase, docked])
+  useEffect(() => {
+    if (!pending) return
+    const timer = setTimeout(() => {
+      const next = score(dock)
+      setDock(next)
+      if (isSolved(next)) pickup()
+      else boop()
+    }, 1000)
+    return () => clearTimeout(timer)
+  }, [pending, dock])
+  useEffect(() => {
+    if (phase === 'ready') alarm()
+    if (phase === 'won') fanfare()
+    if (phase === 'lost') sad()
+  }, [phase])
   useEffect(() => {
     if (phase !== 'grail') return
     const timer = setTimeout(
@@ -113,18 +130,18 @@ export default function QuantoriStory({
     [],
   )
   const onDrop = useCallback(
-    (slot: number) => {
-      const next = drop(dock, slot, performance.now())
-      if (next.miss && next.miss !== dock.miss)
-        setLog({
-          command: `dock ${candidates[next.miss.index].name} --pocket ${slots[slot].name}`,
-          reply: "doesn't bind",
-        })
-      else setLog(null)
-      setDock(next)
-    },
-    [dock],
+    (slot: number) => setDock((current) => drop(current, slot)),
+    [],
   )
+  const onAsk = () => {
+    const answer = ask(dock)
+    if (!answer) return
+    setDock(answer.dock)
+    const name = candidates[answer.dock.secret[answer.slot]].name
+    setNote(
+      `ran 4,096 poses: ${name} binds in the ${slots[answer.slot].name} pocket`,
+    )
+  }
   const solved = useCallback(() => {
     setRolling(true)
     setTimeout(() => {
@@ -179,7 +196,7 @@ export default function QuantoriStory({
   const restart = () => {
     game.current = newGame()
     setDock(newDock())
-    setLog(null)
+    setNote(null)
     setPhase('dock')
   }
 
@@ -230,21 +247,7 @@ export default function QuantoriStory({
             <span>{eyebrow}</span>
             <p>{line}</p>
           </div>
-          {phase === 'dock' && (
-            <div className="q-agent" aria-live="polite">
-              {log && (
-                <p>
-                  <code>&gt; {log.command}</code>
-                  {log.reply}
-                </p>
-              )}
-              <button
-                onClick={() => setLog({ command: 'hint', reply: hint(dock) })}
-              >
-                <Terminal size={14} /> Ask the agent
-              </button>
-            </div>
-          )}
+          {phase === 'dock' && <Agent dock={dock} note={note} onAsk={onAsk} />}
           {phase === 'papers' && !rolling && <Jigsaw onSolved={solved} />}
           {brute && (
             <output className="q-egg">
@@ -276,15 +279,32 @@ export default function QuantoriStory({
             </div>
           )}
           {phase === 'ready' && (
-            <div className="q-card">
-              <p>
-                A syringe full of the new medicine. Viruses are on their way.
-              </p>
-              <button onClick={start}>Start</button>
+            <div className="q-card q-result q-alarm">
+              <span className="q-badge" aria-hidden="true">
+                <Siren size={22} />
+              </span>
+              <div>
+                <span className="q-verdict">Outbreak</span>
+                <strong>Viruses incoming</strong>
+                <span className="q-stats">
+                  The syringe is loaded. Hold them off for {DURATION}s.
+                </span>
+              </div>
+              <div className="q-actions">
+                <button onClick={start}>Start</button>
+              </div>
             </div>
           )}
           {(phase === 'won' || phase === 'lost') && (
             <div className={`q-card q-result is-${phase}`}>
+              {phase === 'won' && <Sparks count={30} reach={260} />}
+              <span className="q-badge" aria-hidden="true">
+                {phase === 'won' ? (
+                  <Trophy size={22} />
+                ) : (
+                  <HeartCrack size={22} />
+                )}
+              </span>
               <div>
                 <span className="q-verdict">
                   {phase === 'won' ? 'Patient saved' : 'Patient caught it'}
@@ -327,20 +347,20 @@ export default function QuantoriStory({
             <button
               key={name}
               onClick={() => onPick(i)}
-              disabled={isLocked(dock, i)}
+              disabled={isLocked(dock, i) || pending}
               aria-pressed={dock.selected === i}
             >
               {isLocked(dock, i)
-                ? `${name} fits`
+                ? `${name} binds`
                 : dock.placed[i] !== null
-                  ? `Turn ${name}`
+                  ? `Take ${name} out`
                   : `Pick ${name}`}
             </button>
           ))}
           {dock.selected !== null &&
             slots.map(({ name }, slot) => (
               <button key={name} onClick={() => onDrop(slot)}>
-                Try the {name} pocket
+                Put it in the {name} pocket
               </button>
             ))}
         </div>

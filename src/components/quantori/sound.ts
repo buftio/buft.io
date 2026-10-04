@@ -4,10 +4,11 @@ function tone(
   points: [number, number][],
   type: OscillatorType,
   volume: number,
+  delay = 0,
 ) {
   try {
     context ??= new AudioContext()
-    const now = context.currentTime
+    const now = context.currentTime + delay
     const oscillator = context.createOscillator()
     const gain = context.createGain()
     oscillator.type = type
@@ -78,5 +79,68 @@ export const oink = (streak: number) => {
     ],
     'sawtooth',
     0.05,
+  )
+}
+
+export const boop = () => {
+  tone(
+    [
+      [0, 330],
+      [0.12, 220],
+    ],
+    'triangle',
+    0.1,
+  )
+}
+
+export const alarm = () => {
+  ;[0, 0.45].forEach((delay) =>
+    tone(
+      [
+        [0, 620],
+        [0.2, 900],
+        [0.4, 620],
+      ],
+      'sawtooth',
+      0.035,
+      delay,
+    ),
+  )
+}
+
+export const fanfare = () => {
+  ;[523, 659, 784, 1047].forEach((note, i) =>
+    tone(
+      [
+        [0, note],
+        [i === 3 ? 0.5 : 0.14, note * 1.01],
+      ],
+      'square',
+      0.05,
+      i * 0.12,
+    ),
+  )
+}
+
+export const sad = () => {
+  ;[392, 370, 349].forEach((note, i) =>
+    tone(
+      [
+        [0, note],
+        [0.3, note * 0.97],
+      ],
+      'triangle',
+      0.12,
+      i * 0.32,
+    ),
+  )
+  tone(
+    [
+      [0, 330],
+      [0.8, 220],
+    ],
+    'triangle',
+    0.12,
+    0.96,
   )
 }

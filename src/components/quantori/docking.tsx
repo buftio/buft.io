@@ -13,7 +13,14 @@ import {
   type Mesh,
 } from 'three'
 import { Clay, geo } from '../marketdata/models/clay'
-import { candidates, isLocked, occupant, slots, type Dock } from './dock'
+import {
+  candidates,
+  isLocked,
+  isPending,
+  occupant,
+  slots,
+  type Dock,
+} from './dock'
 import { Confetti, Flash } from './fx'
 import { STEP, type Phase, type V3 } from './layout'
 
@@ -55,7 +62,6 @@ const candy = candidates.map(
       roughness: 0.28,
     }),
 )
-const MISS = 0.75
 
 function atomsOf(cells: [number, number][]) {
   const cx = cells.reduce((sum, [x]) => sum + x, 0) / cells.length
@@ -179,35 +185,32 @@ function Piece({
   const locked = isLocked(dock, index)
   const slot = dock.placed[index]
   const selected = dock.selected === index
-  const miss = dock.miss?.index === index ? dock.miss : null
+  const pending = isPending(dock)
+  const turn = -candidates[index].start * (Math.PI / 2)
   useFrame(({ clock }, dt) => {
     const group = ref.current
     if (!group) return
     const k = 1 - Math.exp(-dt * 9)
-    const missing = miss ? (performance.now() - miss.at) / 1000 : MISS
+    const t = clock.elapsedTime
     const goal = scratch.set(...tray(index))
-    if (slot !== null) goal.set(...slots[slot].socket, locked ? 0.02 : 0.4)
-    else if (miss && missing < MISS) goal.set(...slots[miss.slot].socket, 0.5)
-    else if (selected) goal.z += 0.35 + Math.sin(clock.elapsedTime * 5) * 0.05
+    if (slot !== null)
+      goal.set(
+        ...slots[slot].socket,
+        locked ? 0.02 : pending ? 0.12 + Math.sin(t * 18) * 0.03 : 0.3,
+      )
+    else if (selected) goal.z += 0.35 + Math.sin(t * 5) * 0.05
     group.position.lerp(goal, k)
-    const wobble =
-      missing < MISS ? Math.sin(missing * 30) * 0.35 * (1 - missing / MISS) : 0
-    const target = -dock.turns[index] * (Math.PI / 2) + wobble
+    const target = slot === null ? turn : 0
     let angle = group.rotation.z
     while (target - angle > Math.PI) angle += Math.PI * 2
     while (angle - target > Math.PI) angle -= Math.PI * 2
-    group.rotation.z = angle + (target - angle) * (missing < MISS ? 1 : k)
-    group.scale.setScalar(
-      group.scale.x + ((selected ? 1.18 : 1) - group.scale.x) * k,
-    )
+    group.rotation.z = angle + (target - angle) * k
+    const size = slot !== null ? 0.8 : selected ? 1.18 : 1
+    group.scale.setScalar(group.scale.x + (size - group.scale.x) * k)
   })
   if (phase !== 'dock' && slot === null) return null
   return (
-    <group
-      ref={ref}
-      position={tray(index)}
-      rotation={[0, 0, -dock.turns[index] * (Math.PI / 2)]}
-    >
+    <group ref={ref} position={tray(index)} rotation={[0, 0, turn]}>
       <Shape
         cells={candidates[index].cells}
         material={phase === 'dock' ? candy[index] : gold}
@@ -359,9 +362,13 @@ export function Docking({
       <Protein />
       <group ref={molecule} position={POCKET}>
         {phase === 'dock' &&
-          slots.map(({ cells, socket }, slot) => (
+          slots.map(({ socket }, slot) => (
             <group key={slot} position={[socket[0], socket[1], -0.02]}>
-              <Shape cells={cells} material={ghost} atomSize={0.19} />
+              <mesh
+                geometry={geo.sphere}
+                material={ghost}
+                scale={[0.72, 0.72, 0.06]}
+              />
               {dock.selected !== null && occupant(dock, slot) === -1 && (
                 <Hit onClick={() => onDrop(slot)} scale={0.9} />
               )}
