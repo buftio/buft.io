@@ -13,6 +13,7 @@ import { preload } from 'react-dom'
 import { projects } from '@/lib/projects'
 import { ProjectMark } from './project-mark'
 import { SceneBoundary } from './scene-boundary'
+import { useSpin } from './use-spin'
 
 const Scene = dynamic(() => import('./scene').then((module) => module.Scene), {
   ssr: false,
@@ -33,6 +34,29 @@ const LumiprobeStory = dynamic(() => import('./lumiprobe/story'))
 const QuantoriStory = dynamic(() => import('./quantori/story'))
 const preloadVignette = () => import('./three/project-vignette')
 const projectPath = (index: number) => `/p/${projects[index].slug}`
+const HOME_TITLE = 'Igor Ostanin · buft.io'
+
+function HomeMark() {
+  return (
+    <span className="project-mark home-mark" aria-hidden="true">
+      <span className="house">
+        {[
+          'front',
+          'back',
+          'left',
+          'right',
+          'gable',
+          'gable-back',
+          'roof',
+          'roof-left',
+          'door',
+        ].map((face) => (
+          <i key={face} className={face} />
+        ))}
+      </span>
+    </span>
+  )
+}
 let motionQuery: MediaQueryList | undefined
 const getMotionQuery = () =>
   (motionQuery ??= window.matchMedia('(prefers-reduced-motion: reduce)'))
@@ -219,6 +243,18 @@ export function Home({ initial = null }: { initial?: number | null }) {
     }
   }, [navigate])
 
+  useEffect(() => {
+    document.title =
+      selected === null
+        ? HOME_TITLE
+        : `Igor Ostanin @ ${projects[selected].name}`
+    if (selected !== null || window.location.pathname !== '/') return
+    const hash = active < 0 ? '' : `#${projects[active].slug}`
+    if (window.location.hash !== hash)
+      window.history.replaceState(null, '', `/${hash}`)
+  }, [active, selected])
+
+  const spin = useSpin(navigate, selected === null)
   const isOpen = selected !== null
   useEffect(() => {
     if (!isOpen) return
@@ -267,6 +303,7 @@ export function Home({ initial = null }: { initial?: number | null }) {
     <main className={`portfolio ${reduced ? 'reduced-motion' : ''}`}>
       <div
         className="world"
+        {...spin}
         aria-label="A seated samurai surrounded by fire and project flowers"
       >
         {showScene && (
@@ -328,6 +365,16 @@ export function Home({ initial = null }: { initial?: number | null }) {
           <span>SCROLL TO EXPLORE</span>
         </div>
         <nav className="project-nav" aria-label="Projects">
+          <button
+            onClick={() => navigate(-1)}
+            className={active === -1 ? 'current' : ''}
+            aria-label="Home"
+            aria-current={active === -1 ? 'step' : undefined}
+          >
+            <span className="nav-title">Home</span>
+            <HomeMark />
+            <i />
+          </button>
           {projects.map((item, index) => (
             <button
               key={item.id}

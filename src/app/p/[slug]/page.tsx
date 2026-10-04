@@ -15,9 +15,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const project = projects.find((item) => item.slug === slug)
   if (!project) return {}
-  const title = `${project.name}: ${project.title}`
+  const title = `Igor Ostanin @ ${project.name}`
   return {
-    title,
+    title: { absolute: title },
     description: project.summary,
     alternates: { canonical: `/p/${slug}` },
     openGraph: { title, description: project.summary, url: `/p/${slug}` },

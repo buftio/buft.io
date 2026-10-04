@@ -1,7 +1,7 @@
 'use client'
 
 import { Billboard, Html } from '@react-three/drei'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import Image from 'next/image'
@@ -66,6 +66,7 @@ export function Flower({
   const flames = useRef<THREE.Group>(null)
   const bloom = useRef(0)
   const [hovered, setHovered] = useState(false)
+  const canvas = useThree((state) => state.gl.domElement)
   const geometry = useMemo(() => petalGeometry(), [])
   const material = useMemo(
     () =>
@@ -99,8 +100,8 @@ export function Flower({
   })
   return (
     <group position={projectPosition(index)} scale={0.65}>
-      <group
-        ref={petals}
+      <mesh
+        position={[0, 0.65, 0]}
         onClick={(event) => {
           event.stopPropagation()
           onOpen()
@@ -108,9 +109,17 @@ export function Flower({
         onPointerOver={(event) => {
           event.stopPropagation()
           setHovered(true)
+          canvas.style.cursor = 'pointer'
         }}
-        onPointerOut={() => setHovered(false)}
+        onPointerOut={() => {
+          setHovered(false)
+          canvas.style.cursor = ''
+        }}
       >
+        <sphereGeometry args={[1.35, 16, 12]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+      <group ref={petals}>
         {Array.from({ length: 16 }, (_, i) => (
           <group
             key={i}
