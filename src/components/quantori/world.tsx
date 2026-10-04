@@ -21,7 +21,8 @@ type Props = {
   dock: Dock
   game: RefObject<Game>
   reduced: boolean
-  onPick: (index: number) => void
+  onTap: (index: number) => void
+  onMove: (index: number, slot: number | null) => void
   onDrop: (slot: number) => void
   onGameChange: () => void
   onReady: () => void
@@ -83,7 +84,8 @@ function Scene({
   dock,
   game,
   reduced,
-  onPick,
+  onTap,
+  onMove,
   onDrop,
   onGameChange,
   onReady,
@@ -122,7 +124,13 @@ function Scene({
       </mesh>
       <Air />
       {!arena && (
-        <Docking dock={dock} phase={phase} onPick={onPick} onDrop={onDrop} />
+        <Docking
+          dock={dock}
+          phase={phase}
+          onTap={onTap}
+          onMove={onMove}
+          onDrop={onDrop}
+        />
       )}
       {!arena && <Lab />}
       {(phase === 'grail' || phase === 'papers') && (

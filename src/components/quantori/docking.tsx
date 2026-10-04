@@ -1,13 +1,16 @@
 'use client'
 
 import { Sparkles } from '@react-three/drei'
-import { useFrame, type ThreeEvent } from '@react-three/fiber'
-import { useMemo, useRef } from 'react'
+import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
+import { useEffect, useMemo, useRef } from 'react'
 import {
   AdditiveBlending,
   MeshBasicMaterial,
   MeshStandardMaterial,
+  Plane,
   Quaternion,
+  Raycaster,
+  Vector2,
   Vector3,
   type Group,
   type Mesh,
@@ -17,9 +20,11 @@ import {
   candidates,
   isLocked,
   isPending,
+  markOf,
   occupant,
   slots,
   type Dock,
+  type Mark,
 } from './dock'
 import { Confetti, Flash } from './fx'
 import { STEP, type Phase, type V3 } from './layout'
@@ -46,6 +51,27 @@ const ghost = new MeshBasicMaterial({
   transparent: true,
   opacity: 0.32,
 })
+const marked: Record<Mark, MeshBasicMaterial> = {
+  right: new MeshBasicMaterial({
+    color: '#4fd18b',
+    transparent: true,
+    opacity: 0.6,
+  }),
+  near: new MeshBasicMaterial({
+    color: '#ffc94a',
+    transparent: true,
+    opacity: 0.6,
+  }),
+  miss: new MeshBasicMaterial({
+    color: '#0f1729',
+    transparent: true,
+    opacity: 0.55,
+  }),
+}
+const SNAP = 0.5
+const raycaster = new Raycaster()
+const ndc = new Vector2()
+const surface = new Plane(new Vector3(0, 0, 1), 0)
 export const gold = new MeshStandardMaterial({
   color: '#ffd36b',
   emissive: '#ffae00',
@@ -150,9 +176,11 @@ const pointer = (on: boolean) => () =>
 
 function Hit({
   onClick,
+  onGrab,
   scale = 0.78,
 }: {
-  onClick: () => void
+  onClick?: () => void
+  onGrab?: (event: ThreeEvent<PointerEvent>) => void
   scale?: number
 }) {
   return (
@@ -162,9 +190,12 @@ function Hit({
       scale={[scale, scale, 0.2]}
       onClick={(event: ThreeEvent<MouseEvent>) => {
         event.stopPropagation()
-        onClick()
+        onClick?.()
       }}
-      onPointerOver={pointer(true)}
+      onPointerDown={onGrab}
+      onPointerOver={() =>
+        (document.body.style.cursor = onGrab ? 'grab' : 'pointer')
+      }
       onPointerOut={pointer(false)}
     />
   )
@@ -174,14 +205,68 @@ function Piece({
   index,
   dock,
   phase,
-  onPick,
+  onTap,
+  onMove,
 }: {
   index: number
   dock: Dock
   phase: Phase
-  onPick: (index: number) => void
+  onTap: (index: number) => void
+  onMove: (index: number, slot: number | null) => void
 }) {
   const ref = useRef<Group>(null)
+  const camera = useThree((state) => state.camera)
+  const canvas = useThree((state) => state.gl.domElement)
+  const drag = useRef<{ x: number; y: number; at: Vector3 | null } | null>(null)
+  const stop = useRef<() => void>(() => {})
+  useEffect(() => () => stop.current(), [])
+  const grab = (event: ThreeEvent<PointerEvent>) => {
+    event.stopPropagation()
+    const start = event.nativeEvent
+    drag.current = { x: start.clientX, y: start.clientY, at: null }
+    document.body.style.cursor = 'grabbing'
+    const follow = (move: PointerEvent) => {
+      const held = drag.current
+      if (!held) return
+      if (
+        !held.at &&
+        Math.hypot(move.clientX - held.x, move.clientY - held.y) < 6
+      )
+        return
+      const rect = canvas.getBoundingClientRect()
+      ndc.set(
+        ((move.clientX - rect.left) / rect.width) * 2 - 1,
+        -((move.clientY - rect.top) / rect.height) * 2 + 1,
+      )
+      raycaster.setFromCamera(ndc, camera)
+      surface.constant = -(POCKET[2] + 0.5)
+      const point = raycaster.ray.intersectPlane(surface, new Vector3())
+      if (point) held.at = point.sub(new Vector3(...POCKET))
+    }
+    const release = () => {
+      const held = drag.current
+      stop.current()
+      if (!held) return
+      if (!held.at) return onTap(index)
+      const near = slots
+        .map(({ socket }, slot) => ({
+          slot,
+          d: Math.hypot(socket[0] - held.at!.x, socket[1] - held.at!.y),
+        }))
+        .sort((a, b) => a.d - b.d)[0]
+      onMove(index, near.d < SNAP ? near.slot : null)
+    }
+    stop.current = () => {
+      drag.current = null
+      document.body.style.cursor = ''
+      window.removeEventListener('pointermove', follow)
+      window.removeEventListener('pointerup', release)
+      window.removeEventListener('pointercancel', release)
+    }
+    window.addEventListener('pointermove', follow)
+    window.addEventListener('pointerup', release)
+    window.addEventListener('pointercancel', release)
+  }
   const locked = isLocked(dock, index)
   const slot = dock.placed[index]
   const selected = dock.selected === index
@@ -190,22 +275,24 @@ function Piece({
   useFrame(({ clock }, dt) => {
     const group = ref.current
     if (!group) return
-    const k = 1 - Math.exp(-dt * 9)
+    const held = drag.current?.at
+    const k = 1 - Math.exp(-dt * (held ? 24 : 9))
     const t = clock.elapsedTime
     const goal = scratch.set(...tray(index))
-    if (slot !== null)
+    if (held) goal.set(held.x, held.y, 0.5)
+    else if (slot !== null)
       goal.set(
         ...slots[slot].socket,
         locked ? 0.02 : pending ? 0.12 + Math.sin(t * 18) * 0.03 : 0.3,
       )
     else if (selected) goal.z += 0.35 + Math.sin(t * 5) * 0.05
     group.position.lerp(goal, k)
-    const target = slot === null ? turn : 0
+    const target = slot === null && !held ? turn : 0
     let angle = group.rotation.z
     while (target - angle > Math.PI) angle += Math.PI * 2
     while (angle - target > Math.PI) angle -= Math.PI * 2
     group.rotation.z = angle + (target - angle) * k
-    const size = slot !== null ? 0.8 : selected ? 1.18 : 1
+    const size = held ? 1.05 : slot !== null ? 0.8 : selected ? 1.18 : 1
     group.scale.setScalar(group.scale.x + (size - group.scale.x) * k)
   })
   if (phase !== 'dock' && slot === null) return null
@@ -215,7 +302,7 @@ function Piece({
         cells={candidates[index].cells}
         material={phase === 'dock' ? candy[index] : gold}
       />
-      {phase === 'dock' && !locked && <Hit onClick={() => onPick(index)} />}
+      {phase === 'dock' && !locked && <Hit onGrab={grab} />}
       {phase === 'dock' && locked && (
         <>
           <Flash size={0.55} color={candidates[index].color} />
@@ -325,12 +412,14 @@ function Halo() {
 export function Docking({
   dock,
   phase,
-  onPick,
+  onTap,
+  onMove,
   onDrop,
 }: {
   dock: Dock
   phase: Phase
-  onPick: (index: number) => void
+  onTap: (index: number) => void
+  onMove: (index: number, slot: number | null) => void
   onDrop: (slot: number) => void
 }) {
   const molecule = useRef<Group>(null)
@@ -362,20 +451,30 @@ export function Docking({
       <Protein />
       <group ref={molecule} position={POCKET}>
         {phase === 'dock' &&
-          slots.map(({ socket }, slot) => (
-            <group key={slot} position={[socket[0], socket[1], -0.02]}>
-              <mesh
-                geometry={geo.sphere}
-                material={ghost}
-                scale={[0.72, 0.72, 0.06]}
-              />
-              {dock.selected !== null && occupant(dock, slot) === -1 && (
-                <Hit onClick={() => onDrop(slot)} scale={0.9} />
-              )}
-            </group>
-          ))}
+          slots.map(({ socket }, slot) => {
+            const mark = isPending(dock) ? null : markOf(dock, slot)
+            return (
+              <group key={slot} position={[socket[0], socket[1], -0.02]}>
+                <mesh
+                  geometry={geo.sphere}
+                  material={mark ? marked[mark] : ghost}
+                  scale={[0.72, 0.72, 0.06]}
+                />
+                {dock.selected !== null && occupant(dock, slot) === -1 && (
+                  <Hit onClick={() => onDrop(slot)} scale={0.9} />
+                )}
+              </group>
+            )
+          })}
         {candidates.map((_, i) => (
-          <Piece key={i} index={i} dock={dock} phase={phase} onPick={onPick} />
+          <Piece
+            key={i}
+            index={i}
+            dock={dock}
+            phase={phase}
+            onTap={onTap}
+            onMove={onMove}
+          />
         ))}
         {raised &&
           links.map((from, i) => (

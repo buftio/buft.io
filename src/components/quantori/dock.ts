@@ -83,7 +83,8 @@ export const candidates: {
   },
 ]
 
-export type Try = { guess: number[]; right: number; near: number }
+export type Mark = 'right' | 'near' | 'miss'
+export type Try = { guess: number[]; marks: Mark[] }
 
 export type Dock = {
   secret: number[]
@@ -119,7 +120,9 @@ export const isPending = (dock: Dock) =>
   isFull(dock) && last(dock)?.guess.join() !== guessOf(dock).join()
 
 export const isSolved = (dock: Dock) =>
-  !isPending(dock) && isFull(dock) && last(dock)?.right === slots.length
+  !isPending(dock) &&
+  isFull(dock) &&
+  !!last(dock)?.marks.every((mark) => mark === 'right')
 
 export const isLocked = (dock: Dock, index: number) =>
   dock.given.includes(index) || (isSolved(dock) && dock.placed[index] !== null)
@@ -136,7 +139,7 @@ const place = (dock: Dock, index: number, slot: number): Dock => {
 }
 
 export function pick(dock: Dock, index: number): Dock {
-  if (isPending(dock) || isLocked(dock, index)) return dock
+  if (isLocked(dock, index)) return dock
   const slot = dock.placed[index]
   if (slot === null)
     return { ...dock, selected: dock.selected === index ? null : index }
@@ -149,7 +152,7 @@ export function pick(dock: Dock, index: number): Dock {
 
 export function drop(dock: Dock, slot: number): Dock {
   const index = dock.selected
-  if (index === null || isPending(dock)) return dock
+  if (index === null) return dock
   if (dock.given.includes(occupant(dock, slot))) return dock
   return place(dock, index, slot)
 }
@@ -157,14 +160,38 @@ export function drop(dock: Dock, slot: number): Dock {
 export function score(dock: Dock): Dock {
   if (!isPending(dock)) return dock
   const guess = guessOf(dock)
-  const right = guess.filter((index, slot) => dock.secret[slot] === index)
-  const near = guess.filter(
-    (index, slot) => dock.secret[slot] !== index && dock.secret.includes(index),
+  const marks = guess.map((index, slot): Mark =>
+    dock.secret[slot] === index
+      ? 'right'
+      : dock.secret.includes(index)
+        ? 'near'
+        : 'miss',
   )
-  return {
-    ...dock,
-    tries: [...dock.tries, { guess, right: right.length, near: near.length }],
-  }
+  return { ...dock, tries: [...dock.tries, { guess, marks }] }
+}
+
+export function markOf(dock: Dock, slot: number): Mark | null {
+  const done = last(dock)
+  if (!done || done.guess[slot] !== occupant(dock, slot)) return null
+  return done.marks[slot]
+}
+
+export function move(dock: Dock, index: number, slot: number | null): Dock {
+  if (isLocked(dock, index)) return dock
+  if (slot === null)
+    return {
+      ...dock,
+      selected: null,
+      placed: dock.placed.map((at, i) => (i === index ? null : at)),
+    }
+  if (dock.given.includes(occupant(dock, slot))) return dock
+  return place(dock, index, slot)
+}
+
+export function tap(dock: Dock, index: number): Dock {
+  if (dock.placed[index] !== null) return move(dock, index, null)
+  const free = slots.findIndex((_, slot) => occupant(dock, slot) === -1)
+  return free === -1 ? dock : move(dock, index, free)
 }
 
 export function ask(dock: Dock): { dock: Dock; slot: number } | null {

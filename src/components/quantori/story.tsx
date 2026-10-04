@@ -14,10 +14,12 @@ import {
   isLocked,
   isPending,
   isSolved,
+  move,
   newDock,
   pick,
   score,
   slots,
+  tap,
 } from './dock'
 import { gunAt, timeline, type Phase } from './layout'
 import { alarm, boop, fanfare, oink, pickup, pop, sad, squeak } from './sound'
@@ -27,7 +29,7 @@ const World = dynamic(() => import('./world'), { ssr: false })
 const steps: Record<Phase, [string, string]> = {
   dock: [
     '01 · Docking',
-    'In 2024, before tools like this were popular, I built a Claude Code–style agent that ran supercomputers for scientists doing docking. Guess which three fragments bind, and where. Fill the pocket and the supercomputer scores each try.',
+    'In 2024, before tools like this were popular, I built a Claude Code–style agent that ran supercomputers for scientists doing docking. Drag three fragments into the pocket and the supercomputer checks each one: green binds there, gold belongs in another pocket, grey doesn’t bind.',
   ],
   grail: ['01 · Docking', 'A match.'],
   papers: [
@@ -85,6 +87,7 @@ export default function QuantoriStory({
     const timer = setTimeout(() => {
       const next = score(dock)
       setDock(next)
+      setNote(null)
       if (isSolved(next)) pickup()
       else boop()
     }, 1000)
@@ -127,6 +130,15 @@ export default function QuantoriStory({
 
   const onPick = useCallback(
     (index: number) => setDock((current) => pick(current, index)),
+    [],
+  )
+  const onTap = useCallback(
+    (index: number) => setDock((current) => tap(current, index)),
+    [],
+  )
+  const onMove = useCallback(
+    (index: number, slot: number | null) =>
+      setDock((current) => move(current, index, slot)),
     [],
   )
   const onDrop = useCallback(
@@ -235,7 +247,8 @@ export default function QuantoriStory({
                 dock={dock}
                 game={game}
                 reduced={reduced}
-                onPick={onPick}
+                onTap={onTap}
+                onMove={onMove}
                 onDrop={onDrop}
                 onGameChange={onGameChange}
                 onReady={onReady}
@@ -347,7 +360,7 @@ export default function QuantoriStory({
             <button
               key={name}
               onClick={() => onPick(i)}
-              disabled={isLocked(dock, i) || pending}
+              disabled={isLocked(dock, i)}
               aria-pressed={dock.selected === i}
             >
               {isLocked(dock, i)

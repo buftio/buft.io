@@ -1,6 +1,7 @@
 'use client'
 
 import { Terminal } from 'lucide-react'
+import { Fragment } from 'react'
 import {
   candidates,
   guessOf,
@@ -8,44 +9,45 @@ import {
   isSolved,
   slots,
   type Dock,
+  type Mark,
   type Try,
 } from './dock'
 
-const names = (guess: number[]) =>
-  guess.map((index) => candidates[index].name).join(' ')
+const verdict: Record<Mark, string> = {
+  right: 'binds here',
+  near: 'binds in another pocket',
+  miss: "doesn't bind",
+}
 
-function Pegs({ done }: { done: Try }) {
-  const misses = slots.length - done.right - done.near
-  const words = [
-    done.right && `${done.right} in the right pocket`,
-    done.near && `${done.near} in the wrong pocket`,
-  ].filter(Boolean)
+function Guess({ done, words }: { done: Try; words: boolean }) {
   return (
-    <span
-      className="q-pegs"
-      aria-label={words.length ? words.join(', ') : 'nothing binds'}
-    >
-      {Array.from({ length: done.right }, (_, i) => (
-        <i key={`r${i}`} className="is-right" />
-      ))}
-      {Array.from({ length: done.near }, (_, i) => (
-        <i key={`n${i}`} className="is-near" />
-      ))}
-      {Array.from({ length: misses }, (_, i) => (
-        <i key={`m${i}`} />
-      ))}
-      <span aria-hidden="true">
-        {done.right === slots.length
-          ? 'all three bind'
-          : words.length
-            ? words.join(' · ')
-            : 'nothing binds'}
-      </span>
-    </span>
+    <>
+      <code>
+        &gt; dock{' '}
+        {done.guess.map((index, slot) => (
+          <Fragment key={slot}>
+            <b className={`is-${done.marks[slot]}`}>
+              {candidates[index].name}
+            </b>{' '}
+          </Fragment>
+        ))}
+      </code>
+      {words &&
+        (done.marks.every((mark) => mark === 'right') ? (
+          <span>all three bind</span>
+        ) : (
+          done.guess.map((index, slot) => (
+            <span key={slot} className={`is-${done.marks[slot]}`}>
+              {slots[slot].name}: {candidates[index].name}{' '}
+              {verdict[done.marks[slot]]}
+            </span>
+          ))
+        ))}
+    </>
   )
 }
 
-/** The docking agent's terminal: every scored try with its pegs, plus a button that docks one right fragment. */
+/** The docking agent's terminal: every scored try, colored per pocket, plus a button that docks one right fragment. */
 export function Agent({
   dock,
   note,
@@ -56,19 +58,27 @@ export function Agent({
   onAsk: () => void
 }) {
   const pending = isPending(dock)
+  const shown = dock.tries.slice(pending ? -2 : -3)
   return (
     <div className="q-agent" aria-live="polite">
       {(dock.tries.length > 0 || pending || note) && (
         <ol>
-          {dock.tries.slice(pending ? -2 : -3).map((done, i, shown) => (
+          {shown.map((done, i) => (
             <li key={dock.tries.length - shown.length + i}>
-              <code>&gt; dock {names(done.guess)}</code>
-              <Pegs done={done} />
+              <Guess
+                done={done}
+                words={!pending && !note && i === shown.length - 1}
+              />
             </li>
           ))}
           {pending && (
             <li className="is-running">
-              <code>&gt; dock {names(guessOf(dock))}</code>
+              <code>
+                &gt; dock{' '}
+                {guessOf(dock)
+                  .map((index) => candidates[index].name)
+                  .join(' ')}
+              </code>
               running on 64 nodes…
             </li>
           )}
