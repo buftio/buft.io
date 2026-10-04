@@ -217,7 +217,10 @@ export function Home({ initial = null }: { initial?: number | null }) {
         (item) => `/p/${item.slug}` === window.location.pathname,
       )
       setSelected(index < 0 ? null : index)
-      if (index < 0) return
+      if (index < 0) {
+        if (!window.location.hash) navigate(-1)
+        return
+      }
       window.scrollTo({
         top: (index + 1) * window.innerHeight,
         behavior: 'instant',

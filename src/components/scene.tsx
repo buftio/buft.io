@@ -1,7 +1,7 @@
 'use client'
 
-import { Canvas, useFrame } from '@react-three/fiber'
-import { Suspense, useRef } from 'react'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { projects, projectAngle, projectPosition } from '@/lib/projects'
 import { Flower } from './three/flower'
@@ -139,9 +139,30 @@ function FlowerLights({ active, reduced }: SceneProps) {
   )
 }
 
+function Backdrop({ selected }: { selected: number | null }) {
+  const invalidate = useThree((state) => state.invalidate)
+  useEffect(() => {
+    if (selected === null) return
+    const timer = setInterval(invalidate, 1000 / 15)
+    return () => clearInterval(timer)
+  }, [selected, invalidate])
+  return null
+}
+
 export function Scene(props: SceneProps) {
+  const [settled, setSettled] = useState<number | null>(null)
+  useEffect(() => {
+    if (props.selected === null) return
+    const timer = setTimeout(() => setSettled(props.selected), 1300)
+    return () => {
+      clearTimeout(timer)
+      setSettled(null)
+    }
+  }, [props.selected])
+  const behind = props.selected !== null && settled === props.selected
   return (
     <Canvas
+      frameloop={behind ? 'demand' : 'always'}
       dpr={[1, 1.5]}
       camera={{ position: [-6.5, 2.5, 10], fov: 43 }}
       gl={{
@@ -191,6 +212,7 @@ export function Scene(props: SceneProps) {
       ))}
       <FlowerLights {...props} />
       <CameraRail {...props} />
+      {behind && <Backdrop selected={props.selected} />}
       <GardenBloom />
     </Canvas>
   )

@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { projects } from '@/lib/projects'
 
 const PIXELS_PER_PROJECT = 340
@@ -15,6 +15,10 @@ type Drag = {
 
 export function useSpin(navigate: (index: number) => void, enabled: boolean) {
   const drag = useRef<Drag | null>(null)
+  useEffect(
+    () => () => document.documentElement.classList.remove('is-spinning'),
+    [],
+  )
   const release = (event: React.PointerEvent<HTMLElement>) => {
     const current = drag.current
     if (!current || current.id !== event.pointerId) return
@@ -26,7 +30,7 @@ export function useSpin(navigate: (index: number) => void, enabled: boolean) {
   }
   return {
     onPointerDown(event: React.PointerEvent<HTMLElement>) {
-      if (!enabled || event.button !== 0 || drag.current) return
+      if (!enabled || event.button !== 0 || drag.current?.spinning) return
       const from = clamp(window.scrollY / window.innerHeight - 1)
       drag.current = {
         id: event.pointerId,
@@ -41,6 +45,10 @@ export function useSpin(navigate: (index: number) => void, enabled: boolean) {
     onPointerMove(event: React.PointerEvent<HTMLElement>) {
       const current = drag.current
       if (!current || current.id !== event.pointerId) return
+      if (!current.spinning && !(event.buttons & 1)) {
+        drag.current = null
+        return
+      }
       const dx = event.clientX - current.x
       if (!current.spinning) {
         if (Math.abs(dx) < 8) return
@@ -61,5 +69,6 @@ export function useSpin(navigate: (index: number) => void, enabled: boolean) {
     },
     onPointerUp: release,
     onPointerCancel: release,
+    onLostPointerCapture: release,
   }
 }
