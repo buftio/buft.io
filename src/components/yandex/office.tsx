@@ -203,9 +203,10 @@ function Office({
   const arrival = useRef(0)
   const announced = useRef(false)
   useEffect(() => {
+    if (arrived) return
     arrival.current = 0
     announced.current = false
-  }, [candidate])
+  }, [arrived, candidate])
   useEffect(() => {
     camera.position.set(0, 3.5, 9)
     camera.lookAt(0, 1.3, 0)
