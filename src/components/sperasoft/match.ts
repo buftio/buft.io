@@ -111,13 +111,14 @@ export function createMatch(get: () => SceneState) {
       if (Math.round(time / STEP) % 4 === 0)
         state.trace = [...state.trace.slice(-90), state.football]
       if (shot.status !== 'rolling') finish()
-    } else if (state.outcome === 'setup' && state.football) {
-      state.player = {
-        x: state.football.x,
-        y: Math.min(247, state.football.y + 3.5),
-      }
-      state.kickAim = kickGuide(state.football, aim)
+    } else if (state.outcome === 'setup' && state.football) follow(state)
+  }
+  const follow = (state: SceneState) => {
+    state.player = {
+      x: state.football!.x,
+      y: Math.min(247, state.football!.y + 3.5),
     }
+    state.kickAim = kickGuide(state.football!, aim)
   }
   const settle = () => {
     for (let i = 0; i < 1800; i++) {
@@ -130,6 +131,8 @@ export function createMatch(get: () => SceneState) {
         break
       step()
     }
+    const state = get()
+    if (state.outcome === 'setup' && state.football) follow(state)
   }
   return {
     step,

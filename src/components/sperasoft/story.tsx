@@ -7,7 +7,13 @@ import { SceneBoundary } from '../scene-boundary'
 import { useGame } from './use-game'
 import { clamp } from './game'
 import { kickVector, MAX_POWER } from './football'
-import { WORLD_HEIGHT, WORLD_TOP, worldPercent, type Point } from './types'
+import {
+  WORLD_HEIGHT,
+  WORLD_TOP,
+  worldPercent,
+  type Point,
+  type SceneState,
+} from './types'
 import { fans } from './fan-layout'
 import { LooseBalls } from './loose-balls'
 
@@ -402,8 +408,17 @@ export default function SperasoftStory({
         </span>
       )}
       <output className="sr-only" aria-live="polite">
-        {game.message} {game.footballMessage}
+        {game.message} {matchNews(game.scene)}
       </output>
     </article>
   )
+}
+
+function matchNews({ outcome, score: [home, away] }: SceneState) {
+  if (outcome === 'goal') return `Goal, ${home} to ${away}`
+  if (outcome === 'saved') return 'Saved'
+  if (outcome === 'opponent-windup') return 'Opponent shooting'
+  if (outcome === 'won' || outcome === 'lost')
+    return `Full time, ${home} to ${away}`
+  return ''
 }

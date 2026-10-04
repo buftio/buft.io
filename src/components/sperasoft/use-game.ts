@@ -75,7 +75,6 @@ export function useGame(reduced: boolean) {
   const ballArrived = useRef(false)
   const ready = useRef(false)
   const [message, setMessage] = useState('')
-  const [footballMessage, setFootballMessage] = useState('')
   const [arrived, setArrived] = useState(false)
   const publish = () =>
     setScene({
@@ -151,7 +150,6 @@ export function useGame(reduced: boolean) {
       model.current.arrivedAt = model.current.clock
       ready.current = true
       setArrived(true)
-      setFootballMessage('')
       model.current.kickAim = kickGuide(PASSER, shotAim.current)
       model.current.football = { ...PASSER }
       model.current.balls = model.current.balls.filter((ball) => ball.id !== 0)
@@ -172,7 +170,7 @@ export function useGame(reduced: boolean) {
         reduced &&
         (!!flight.current ||
           windup.current !== null ||
-          model.current.outcome !== 'setup')
+          !['setup', 'won', 'lost'].includes(model.current.outcome))
       if (reduced) {
         if (flight.current || windup.current !== null)
           finishThrow(
@@ -268,7 +266,6 @@ export function useGame(reduced: boolean) {
   return {
     scene,
     message,
-    footballMessage,
     arrived,
     aim(point: Point, strength = Math.hypot(point.x, point.y) / 70) {
       if (flight.current || windup.current !== null || model.current.wallBroken)
@@ -363,7 +360,11 @@ export function useGame(reduced: boolean) {
         loose.vx = velocity.x
         loose.vy = velocity.y
       } else dropBall(rolling.current, id, velocity)
-      if (reduced) for (let i = 0; i < 720; i++) stepBalls()
+      if (reduced)
+        for (let i = 0; i < 720; i++) {
+          stepBalls()
+          fall(popped.current, STEP, [], 59.1)
+        }
       updateBalls()
       publish()
     },

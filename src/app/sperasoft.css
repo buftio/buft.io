@@ -191,7 +191,7 @@
 }
 .spera-ball-hit {
   position: absolute;
-  z-index: 1;
+  z-index: 5;
   width: max(48px, 8%);
   aspect-ratio: 1;
   border-radius: 50%;
@@ -202,6 +202,9 @@
 }
 .spera-ball-hit:active {
   cursor: grabbing;
+}
+.spera-ball-hit:disabled {
+  pointer-events: none;
 }
 .spera-ball-marker,
 .spera-pitch-marker {
