@@ -8,6 +8,9 @@ import {
   stepKick,
   keeperAt,
   STEP,
+  opponentShot,
+  resolveOpponent,
+  HOME_KEEPER,
 } from '../src/components/sperasoft/football.ts'
 import { PASSER } from '../src/components/sperasoft/types.ts'
 
@@ -75,4 +78,107 @@ test('instant reduced-motion resolution matches every animated physics step', ()
   }
   assert.deepEqual(ball, instant.kick)
   assert.equal(time, instant.time)
+})
+
+function state(reduced = false) {
+  return {
+    score: [0, 0],
+    homeKeeper: { ...HOME_KEEPER },
+    reaction: 'neutral',
+    outcome: 'setup',
+    football: { ...PASSER },
+    player: { ...PASSER },
+    defenders: formation(0, PASSER),
+    keeper: keeperAt(0),
+    shotsLeft: 3,
+    trace: [],
+    kickAim: [],
+    reduced,
+    shooter: 0,
+  }
+}
+const { createMatch, resetMatch, awardGoal, possessionResult } =
+  await import('../src/components/sperasoft/match.ts')
+
+test('opponent shots repeat with a seed and keeper position decides block or goal', () => {
+  const ball = { x: 50, y: 219 }
+  assert.deepEqual(opponentShot(ball, 1000), opponentShot(ball, 1000))
+  let found = false
+  for (let seed = 0; seed < 100; seed++) {
+    const shot = resolveOpponent(ball, seed, { x: 56, y: 244 })
+    if (shot.status !== 'goal') continue
+    const saved = resolveOpponent(ball, seed, { x: shot.x, y: 244 })
+    assert.equal(saved.status, 'saved')
+    found = true
+    break
+  }
+  assert.ok(found)
+  let onTarget = 0
+  for (let i = 0; i < 1000; i++) {
+    const shot = opponentShot(ball, Math.imul(i + 1, 2654435761) >>> 0)
+    const x = ball.x + (shot.vx / shot.vy) * (249 - ball.y)
+    if (x > 45.4 && x < 54.6) onTarget++
+  }
+  assert.ok(onTarget >= 400 && onTarget <= 500, `${onTarget} of 1000 on target`)
+})
+
+test('save, defender capture and spent flicks hand possession to red', () => {
+  for (const [status, shots, defenders] of [
+    ['saved', 2, []],
+    ['stopped', 0, []],
+    ['stopped', 2, [PASSER]],
+  ]) {
+    const s = state()
+    s.shotsLeft = shots
+    s.defenders = defenders.length ? defenders : formation(0, PASSER)
+    possessionResult({ ...launchKick(PASSER, { x: 0, y: 0 }), status }, s)
+    assert.equal(s.outcome, 'opponent-windup')
+    assert.equal(s.defenders[s.shooter].x, PASSER.x)
+  }
+})
+
+test('each team wins at two and rematch resets both scores, flicks and keeper', () => {
+  for (const team of [0, 1]) {
+    const s = state()
+    awardGoal(s, team)
+    assert.equal(s.outcome, 'goal')
+    awardGoal(s, team)
+    assert.equal(s.outcome, team === 0 ? 'won' : 'lost')
+    assert.equal(s.reaction, team === 0 ? 'cheer' : 'slump')
+    resetMatch(s)
+    assert.deepEqual(s.score, [0, 0])
+    assert.equal(s.shotsLeft, 3)
+    assert.equal(s.outcome, 'setup')
+    assert.deepEqual(s.football, PASSER)
+    assert.deepEqual(s.homeKeeper, HOME_KEEPER)
+  }
+})
+
+test('opponent visibly anticipates for 0.6 seconds, then returns possession', () => {
+  const s = state(),
+    match = createMatch(() => s)
+  s.shotsLeft = 0
+  possessionResult(
+    { ...launchKick(PASSER, { x: 0, y: 0 }), status: 'stopped' },
+    s,
+  )
+  for (let i = 0; i < 71; i++) match.step()
+  assert.equal(s.outcome, 'opponent-windup')
+  for (let i = 0; i < 2; i++) match.step()
+  assert.equal(s.outcome, 'opponent-shot')
+  for (let i = 0; i < 600; i++) match.step()
+  assert.equal(s.outcome, 'setup')
+  assert.equal(s.shotsLeft, 3)
+})
+
+test('reduced motion resolves a whole turn instantly and keeper keyboard nudges persist', () => {
+  const s = state(true),
+    match = createMatch(() => s)
+  match.keeper(44)
+  assert.equal(s.homeKeeper.x, 44)
+  s.shotsLeft = 1
+  match.play({ x: 0, y: -8 })
+  assert.equal(s.outcome, 'setup')
+  assert.equal(s.shotsLeft, 3)
+  assert.equal(s.homeKeeper.x, 44)
 })

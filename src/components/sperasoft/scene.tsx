@@ -17,16 +17,14 @@ import {
   type Vec3,
 } from '../marketdata/models/clay'
 import { along, pathLength } from './game'
-import { WORLD_HEIGHT, type Orb, type Point, type SceneState } from './types'
 import {
-  at,
-  Ground,
-  Pitch,
-  Rails,
-  Reservoir,
-  Surroundings,
-  Trooper,
-} from './stage'
+  WORLD_HEIGHT,
+  WORLD_TOP,
+  type Orb,
+  type Point,
+  type SceneState,
+} from './types'
+import { at, Ground, Pitch, Rails, Cage, Surroundings, Trooper } from './stage'
 
 const grenadeColor = '#c77750'
 const resting: Orb[] = Array.from({ length: 24 }, (_, id) => ({
@@ -40,8 +38,8 @@ function Rig() {
   const { get, size, setDpr, invalidate } = useThree()
   useLayoutEffect(() => {
     const { camera, gl } = get()
-    camera.position.set(0, 0, 300)
-    camera.lookAt(0, 0, 0)
+    camera.position.set(0, 135 - WORLD_TOP - WORLD_HEIGHT / 2, 300)
+    camera.lookAt(0, 135 - WORLD_TOP - WORLD_HEIGHT / 2, 0)
     camera.zoom = Math.min(size.width / 100, size.height / WORLD_HEIGHT)
     camera.updateProjectionMatrix()
     setDpr(
@@ -176,7 +174,15 @@ function Football({ point }: { point: Point }) {
 const playerBlue = '#3d6fa5',
   playerBase = '#274b73'
 
-function Player({ point, wiggle }: { point: Point; wiggle: boolean }) {
+function Player({
+  point,
+  wiggle,
+  scale = 1,
+}: {
+  point: Point
+  wiggle: boolean
+  scale?: number
+}) {
   const body = useRef<Group>(null)
   const clock = useRef(0)
   const invalidate = useThree((s) => s.invalidate)
@@ -198,7 +204,7 @@ function Player({ point, wiggle }: { point: Point; wiggle: boolean }) {
     invalidate()
   })
   return (
-    <group position={at(point, -1.5)}>
+    <group position={at(point, -1.5)} scale={scale}>
       <Clay
         shape="cylinder"
         color={playerBase}
@@ -273,32 +279,35 @@ function Trace({ points, color }: { points: Point[]; color: string }) {
 }
 
 function Outcome({ state }: { state: SceneState }) {
-  if (state.outcome === 'goal') return <Celebration reduced={state.reduced} />
-  if ((state.outcome === 'saved' || state.outcome === 'lost') && state.football)
-    return (
-      <group position={at(state.football, 2)}>
-        <Clay
-          shape="slab"
-          color={palette.red}
-          size={[4.6, 0.8, 0.5]}
-          rotation={[0, 0, Math.PI / 4]}
-        />
-        <Clay
-          shape="slab"
-          color={palette.red}
-          size={[4.6, 0.8, 0.5]}
-          rotation={[0, 0, -Math.PI / 4]}
-        />
-      </group>
-    )
+  if (
+    state.outcome === 'won' ||
+    (state.outcome === 'goal' && state.reaction === 'cheer')
+  )
+    return <Celebration reduced={state.reduced} />
   return null
 }
 
 function World({ state }: { state: SceneState }) {
   const invalidate = useThree((s) => s.invalidate)
   useEffect(() => invalidate(), [state, invalidate])
-  const orbs = state.wallBroken ? state.balls : resting
-  const holding = !state.grenade && !state.wallBroken
+  const open = state.gate >= 1
+  const orbs = useMemo(
+    () =>
+      open
+        ? state.balls
+        : [...resting.slice(state.balls.length), ...state.balls],
+    [open, state.balls],
+  )
+  const holding =
+    !state.grenade &&
+    state.trooper.grounded &&
+    !state.walking &&
+    state.gate === 0 &&
+    (state.cheerAt === null || state.clock - state.cheerAt > 0.7)
+  const scored =
+    (state.outcome === 'goal' || state.outcome === 'won') &&
+    state.reaction === 'cheer'
+  const shake = state.reduced ? 0 : state.shake * 1.6
   const traceColor =
     state.outcome === 'goal'
       ? '#f3efe0'
@@ -306,26 +315,48 @@ function World({ state }: { state: SceneState }) {
         ? palette.red
         : '#d8c9a3'
   return (
-    <>
+    <group
+      position={[
+        Math.sin(state.clock * 97) * shake,
+        Math.cos(state.clock * 83) * shake,
+        0,
+      ]}
+    >
       <Ground />
       <Surroundings />
-      <Trooper progress={state.throwProgress} strength={state.throwStrength} />
+      <Trooper
+        body={state.trooper}
+        progress={state.throwProgress}
+        strength={state.throwStrength}
+        clock={state.clock}
+        landedAt={state.landedAt}
+        cheerAt={state.cheerAt}
+        walking={state.walking}
+        gate={state.gate}
+      />
       <Wall
         bricks={state.wallBricks}
         broken={state.wallBroken}
         reduced={state.reduced}
+        slow={state.collapse > 0}
       />
-      <Reservoir open={state.wallBroken} />
+      <Cage gate={state.gate} />
       <Rails feeding={!state.football} />
-      <Pitch />
+      <Pitch bulge={scored} />
       <Crowd
-        cheering={state.outcome === 'goal'}
+        cheering={state.reaction === 'cheer'}
+        slumping={state.reaction === 'slump'}
         reduced={state.reduced}
         pokes={state.fanPokes}
+        live={state.pitchLive}
       />
       {holding && (
         <Grenade
-          point={grenadeHand(state.throwProgress, state.throwStrength)}
+          point={grenadeHand(
+            state.trooper,
+            state.throwProgress,
+            state.throwStrength,
+          )}
         />
       )}
       {state.grenade && <Grenade point={state.grenade} />}
@@ -340,24 +371,47 @@ function World({ state }: { state: SceneState }) {
           !!state.football &&
           state.outcome === 'setup' &&
           !state.kickDragging &&
-          !state.reduced
+          !state.reduced &&
+          state.pitchLive
         }
       />
-      <Opponent kind="keeper" point={state.keeper} reduced={state.reduced} />
+      <Player
+        point={state.homeKeeper}
+        scale={0.8}
+        wiggle={
+          !state.reduced &&
+          (state.outcome === 'opponent-windup' ||
+            state.outcome === 'opponent-shot')
+        }
+      />
+      <Opponent
+        kind="keeper"
+        point={state.keeper}
+        reduced={state.reduced}
+        live={state.pitchLive}
+        dive={
+          scored && state.football
+            ? Math.sign(state.football.x - state.keeper.x) || 1
+            : 0
+        }
+      />
       {state.defenders.map((defender, i) => (
         <Opponent
           key={i}
           kind="defender"
           index={i}
+          windup={state.outcome === 'opponent-windup' && state.shooter === i}
+          celebrating={state.outcome === 'lost'}
           point={defender}
           reduced={state.reduced}
+          live={state.pitchLive}
         />
       ))}
       <Trace points={state.trace} color={traceColor} />
       <KickAim points={state.kickAim} />
       {state.football && <Football point={state.football} />}
       <Outcome state={state} />
-    </>
+    </group>
   )
 }
 

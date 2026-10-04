@@ -41,6 +41,7 @@ function pose(
   time: number,
   level: number,
   annoyed: number[],
+  slump = false,
 ) {
   fans.forEach((fan, i) => {
     const anger = Math.min(1, (annoyed[i] ?? 0) * 2)
@@ -48,7 +49,7 @@ function pose(
     const beat = time * fan.rate + fan.phase
     const idleBob = Math.sin(beat * 2) * 0.12
     const jump = Math.abs(Math.sin(time * 5.2 * fan.rate + fan.phase)) * 1.8
-    const lift = idleBob * (1 - mood) + jump * mood
+    const lift = slump ? -0.65 : idleBob * (1 - mood) + jump * mood
     const lean =
       Math.sin(beat * 0.7) * 0.05 * (1 - mood) +
       Math.sin(time * 19 + fan.phase) * 0.13 * anger
@@ -56,7 +57,7 @@ function pose(
     const wave = Math.sin(time * 8 + fan.phase) * 0.22 * mood
     const base = at({ x: fan.x, y: fan.y }, 0)
     root.position.set(base[0], base[1] + lift, base[2])
-    root.rotation.set(0, 0, lean)
+    root.rotation.set(slump ? 0.35 : 0, 0, slump ? 0.12 : lean)
     root.scale.setScalar(fan.size)
     root.updateMatrix()
     place(body, i, [0, 1.15, 0], 0, [1.7, 2.3, 1.4])
@@ -65,12 +66,15 @@ function pose(
       i,
       [Math.sin(time * 22) * 0.25 * anger, 3.05, 0.1],
       Math.sin(time * 18) * 0.2 * anger,
-      [1.5, 1.5, 1.5],
+      [1.5, slump ? 1.25 : 1.5, 1.5],
     )
     head.setColorAt(i, tint.set(fan.skin).lerp(annoyedColor, anger * 0.75))
     for (const side of [-1, 1]) {
       const happyAngle =
-        IDLE_ARM + (RAISED_ARM - IDLE_ARM) * mood + swing + wave
+        (slump ? Math.PI : IDLE_ARM) +
+        (RAISED_ARM - IDLE_ARM) * mood +
+        swing +
+        wave
       const protestAngle = side === 1 ? 0.8 + Math.sin(time * 17) * 0.4 : 2.15
       const angle = -side * (happyAngle * (1 - anger) + protestAngle * anger)
       place(
@@ -103,12 +107,16 @@ function paint({ head, body, arm }: Parts) {
 
 export function Crowd({
   cheering,
+  slumping,
   reduced,
   pokes,
+  live,
 }: {
   cheering: boolean
+  slumping: boolean
   reduced: boolean
   pokes: number[]
+  live: boolean
 }) {
   const heads = useRef<InstancedMesh>(null)
   const bodies = useRef<InstancedMesh>(null)
@@ -127,16 +135,16 @@ export function Crowd({
     const meshes = parts()
     if (!meshes) return
     paint(meshes)
-    pose(meshes, 0, cheer.current, annoyed.current)
-  }, [])
+    pose(meshes, 0, cheer.current, annoyed.current, slumping)
+  }, [slumping])
 
   useLayoutEffect(() => {
     const meshes = parts()
     if (!meshes || !reduced) return
     cheer.current = cheering ? 1 : 0
-    pose(meshes, 0, cheer.current, annoyed.current)
+    pose(meshes, 0, cheer.current, annoyed.current, slumping)
     invalidate()
-  }, [cheering, reduced, invalidate])
+  }, [cheering, slumping, reduced, invalidate])
 
   useLayoutEffect(() => {
     pokes.forEach((count, i) => {
@@ -150,21 +158,22 @@ export function Crowd({
         reduced ? 0.13 : clock.current,
         cheer.current,
         annoyed.current,
+        slumping,
       )
     invalidate()
     if (!reduced) return
     const timer = setTimeout(() => {
       annoyed.current.fill(0)
       const current = parts()
-      if (current) pose(current, 0, cheer.current, annoyed.current)
+      if (current) pose(current, 0, cheer.current, annoyed.current, slumping)
       invalidate()
     }, 2100)
     return () => clearTimeout(timer)
-  }, [pokes, reduced, invalidate])
+  }, [pokes, slumping, reduced, invalidate])
 
   useFrame((_, delta) => {
     const meshes = parts()
-    if (!meshes || reduced) return
+    if (!meshes || reduced || !live) return
     const dt = Math.min(delta, 0.05)
     clock.current += dt
     annoyed.current = annoyed.current.map((age) => Math.max(0, age - dt))
@@ -172,7 +181,7 @@ export function Crowd({
     cheer.current +=
       Math.sign(target - cheer.current) *
       Math.min(Math.abs(target - cheer.current), dt * CHEER_RATE)
-    pose(meshes, clock.current, cheer.current, annoyed.current)
+    pose(meshes, clock.current, cheer.current, annoyed.current, slumping)
     invalidate()
   })
 

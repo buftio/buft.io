@@ -256,11 +256,19 @@ export function Opponent({
   point,
   index = 0,
   reduced,
+  windup = false,
+  celebrating = false,
+  dive = 0,
+  live = true,
 }: {
   kind: Role
   point: Point
   index?: number
   reduced: boolean
+  windup?: boolean
+  celebrating?: boolean
+  dive?: number
+  live?: boolean
 }) {
   const body = useRef<Group>(null)
   const clock = useRef(index * 1.7)
@@ -271,28 +279,46 @@ export function Opponent({
   const footprint = FOOTPRINT[kind] * 2
 
   useLayoutEffect(() => {
-    if (!reduced || !body.current) return
+    if (!body.current) return
     body.current.rotation.set(0, 0, 0)
     body.current.position.z = 0
+    body.current.position.y = 0
+    body.current.position.x = 0
+    if (reduced && celebrating) body.current.rotation.z = 0.3
+    if (reduced && dive) {
+      body.current.rotation.y = dive * 1.2
+      body.current.position.x = dive * 2
+    }
     invalidate()
-  }, [reduced, invalidate])
+  }, [reduced, celebrating, dive, invalidate])
 
   useFrame((_, delta) => {
     const group = body.current
-    if (reduced || !group) return
+    if (reduced || !group || !live) return
     const dt = Math.min(delta, 0.05)
     clock.current += dt
     const t = clock.current
     if (kind === 'keeper') {
       const vx = dt ? (point.x - lastX.current) / dt : 0
       lastX.current = point.x
-      const target = Math.max(-0.22, Math.min(0.22, vx * 0.05))
-      lean.current += (target - lean.current) * Math.min(1, dt * 8)
+      const target = dive
+        ? dive * 1.2
+        : Math.max(-0.22, Math.min(0.22, vx * 0.05))
+      lean.current +=
+        (target - lean.current) * Math.min(1, dt * (dive ? 14 : 8))
       group.rotation.set(0, lean.current, Math.sin(t * 1.7) * 0.03)
-      group.position.z = Math.abs(Math.sin(t * 5)) * 0.14
+      group.position.x = (lean.current / 1.2) * 2
+      group.position.z = dive ? 0 : Math.abs(Math.sin(t * 5)) * 0.14
     } else {
       group.rotation.set(0, Math.sin(t * 1.3) * 0.04, Math.sin(t * 2.6) * 0.06)
       group.position.z = Math.abs(Math.sin(t * 4.4)) * 0.18
+    }
+    if (windup) {
+      group.rotation.z = -0.35 + Math.sin(t * 12) * 0.08
+      group.position.y = -1.2
+    } else {
+      group.position.y = celebrating ? Math.abs(Math.sin(t * 8)) * 2 : 0
+      if (celebrating) group.rotation.z = Math.sin(t * 8) * 0.3
     }
     invalidate()
   })

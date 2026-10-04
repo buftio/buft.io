@@ -1,17 +1,8 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { fans } from './fan-layout'
 import { PASSER, WALL_BRICKS, type Point, type SceneState } from './types'
-import {
-  BLAST_RADIUS,
-  chipWall,
-  grenadeResult,
-  launch,
-  stepGrenade,
-  trajectory,
-  type Flight,
-} from './game'
 import {
   ballPosition,
   grabBall,
@@ -22,19 +13,18 @@ import {
   rollBalls,
   type RollingBall,
 } from './rolling'
-import {
-  formation,
-  keeperAt,
-  kickGuide,
-  kickOutcome,
-  launchKick,
-  stepKick,
-  STEP,
-  type Kick,
-} from './football'
+import { formation, keeperAt, kickGuide, HOME_KEEPER, STEP } from './football'
+import { createMatch } from './match'
+import { createCourse, TROOPER } from './course'
 
 export function useGame(reduced: boolean) {
   const [scene, setScene] = useState<SceneState>(() => ({
+    trooper: { ...TROOPER },
+    walking: false,
+    gate: 0,
+    landedAt: null,
+    cheerAt: null,
+    shake: 0,
     wallBroken: false,
     throwProgress: 0,
     throwCharging: false,
@@ -54,28 +44,42 @@ export function useGame(reduced: boolean) {
     football: null,
     trace: [],
     outcome: 'setup',
+    score: [0, 0],
+    homeKeeper: { ...HOME_KEEPER },
+    shooter: 0,
+    reaction: 'neutral',
+    collapse: 0,
+    clock: 0,
+    wallOpenedAt: null,
+    arrivedAt: null,
     reduced,
+    pitchLive: false,
   }))
   const model = useRef(scene)
-  const flight = useRef<Flight | null>(null)
-  const windup = useRef<number | null>(null)
+  const course = useRef<ReturnType<typeof createCourse> | null>(null)
   const rolling = useRef<RollingBall[]>([])
-  const kick = useRef<Kick | null>(null)
-  const footballTime = useRef(0)
-  const shifting = useRef<{ from: Point[]; to: Point[]; age: number } | null>(
-    null,
-  )
-  const trailSteps = useRef(0)
-  const grenadeAim = useRef({
-    x: Math.cos((62 * Math.PI) / 180) * 56,
-    y: -Math.sin((62 * Math.PI) / 180) * 56,
-  })
+  const match = useRef<ReturnType<typeof createMatch> | null>(null)
   const shotAim = useRef({ x: 0, y: -44 })
   const ballArrived = useRef(false)
   const ready = useRef(false)
   const [message, setMessage] = useState('')
-  const [footballMessage, setFootballMessage] = useState('')
   const [arrived, setArrived] = useState(false)
+  const setPitchLive = useCallback((live: boolean) => {
+    model.current.pitchLive = live
+  }, [])
+  const skipClock = (key: string, value: unknown) =>
+    key === 'clock' ? undefined : value
+  const shown = useRef('')
+  const publishIfChanged = () => {
+    const s = model.current
+    const snapshot = JSON.stringify(s, skipClock)
+    const animating =
+      (s.cheerAt !== null && s.clock - s.cheerAt < 0.8) ||
+      (s.landedAt !== null && s.clock - s.landedAt < 0.25)
+    if (snapshot === shown.current && !animating) return
+    shown.current = snapshot
+    publish()
+  }
   const publish = () =>
     setScene({
       ...model.current,
@@ -83,19 +87,11 @@ export function useGame(reduced: boolean) {
         ? { ...model.current.explosion }
         : null,
     })
-  const finishThrow = (point: Point) => {
-    flight.current = null
-    windup.current = null
-    model.current.throwProgress = 0
-    model.current.throwCharging = false
-    model.current.grenade = null
-    model.current.explosion = { ...point, radius: BLAST_RADIUS, age: 0 }
-    model.current.wallBricks = chipWall(point, model.current.wallBricks)
-    if (!model.current.wallBricks.length) {
-      model.current.wallBroken = true
-      rolling.current = releaseBalls()
-      setMessage('Wall open')
-    } else setMessage('')
+  const openGate = () => {
+    model.current.wallOpenedAt = model.current.clock
+    rolling.current = releaseBalls()
+    setMessage('Gate open')
+    updateBalls()
   }
   const stepBalls = () =>
     rollBalls(rolling.current, STEP, [
@@ -118,169 +114,86 @@ export function useGame(reduced: boolean) {
       rolling.current[0]?.travelled >= FIRST_BALL_LENGTH
     ) {
       ballArrived.current = true
+      model.current.arrivedAt = model.current.clock
       ready.current = true
       setArrived(true)
-      setFootballMessage('Three kicks remaining')
       model.current.kickAim = kickGuide(PASSER, shotAim.current)
       model.current.football = { ...PASSER }
       model.current.balls = model.current.balls.filter((ball) => ball.id !== 0)
     }
   }
-  function finishKick() {
-    const result = kick.current
-    if (!result) return
-    model.current.football = { x: result.x, y: result.y }
-    model.current.trace = [...model.current.trace, model.current.football]
-    model.current.outcome = kickOutcome(
-      result,
-      model.current.defenders,
-      model.current.shotsLeft,
-    )
-    model.current.kickAim = []
-    setFootballMessage(
-      model.current.outcome === 'goal'
-        ? 'Goal'
-        : model.current.outcome === 'saved'
-          ? 'Saved'
-          : model.current.outcome === 'lost'
-            ? 'Possession lost'
-            : `${model.current.shotsLeft} kicks remaining`,
-    )
-    kick.current = null
-    if (model.current.outcome === 'repositioning') {
-      const next = formation(
-        3 - model.current.shotsLeft,
-        model.current.football,
-      )
-      if (model.current.reduced) {
-        model.current.defenders = next
-        model.current.outcome = 'setup'
-        model.current.kickAim = kickGuide(
-          model.current.football,
-          shotAim.current,
-        )
-      } else
-        shifting.current = { from: model.current.defenders, to: next, age: 0 }
-    }
-  }
-  function footballStep() {
-    footballTime.current += STEP
-    model.current.keeper = keeperAt(footballTime.current)
-    if (!kick.current) return
-    kick.current = stepKick(
-      kick.current,
-      STEP,
-      model.current.defenders,
-      model.current.keeper,
-    )
-    model.current.football = { x: kick.current.x, y: kick.current.y }
-    if (++trailSteps.current % 4 === 0)
-      model.current.trace = [...model.current.trace, model.current.football]
-    if (kick.current.status !== 'rolling') finishKick()
-  }
-  function settleKick() {
-    for (let i = 0; i < 600 && kick.current; i++) footballStep()
-    if (model.current.football)
-      model.current.player = {
-        x: model.current.football.x,
-        y: Math.min(247, model.current.football.y + 3.5),
-      }
-  }
   useEffect(() => {
+    if (!match.current) match.current = createMatch(() => model.current)
+    if (!course.current)
+      course.current = createCourse(() => model.current, openGate)
     model.current.reduced = reduced
     let raf = 0,
       last = 0,
       carry = 0,
-      grenadeCarry = 0
+      paused = false
     const tick = (now: number) => {
-      const dt = last ? Math.min((now - last) / 1000, 0.08) : 0
+      const dt = last && !paused ? Math.min((now - last) / 1000, 0.08) : 0
       last = now
-      const reducedChange =
-        reduced &&
-        (!!flight.current ||
-          windup.current !== null ||
-          !!kick.current ||
-          !!shifting.current)
       if (reduced) {
-        if (flight.current || windup.current !== null)
-          finishThrow(
-            grenadeResult(grenadeAim.current, model.current.wallBricks).ball,
-          )
+        course.current!.settle()
         model.current.explosion = null
-        if (kick.current) settleKick()
-        if (shifting.current) {
-          model.current.defenders = shifting.current.to
-          model.current.outcome = 'setup'
-          shifting.current = null
-        }
+        match.current!.settle()
       } else {
-        if (windup.current !== null) {
-          const before = windup.current
-          windup.current += dt
-          model.current.throwProgress = Math.min(1, windup.current / 0.48)
-          if (before < 0.312 && windup.current >= 0.312) {
-            flight.current = launch(grenadeAim.current)
-            model.current.grenade = flight.current
-          }
-          if (windup.current >= 0.48) {
-            windup.current = null
-            model.current.throwProgress = 0
-          }
-        }
-        grenadeCarry += dt * 1.7
-        while (grenadeCarry >= STEP && flight.current) {
-          grenadeCarry -= STEP
-          flight.current = stepGrenade(
-            flight.current,
-            STEP,
-            model.current.wallBricks,
-          )
-          model.current.grenade = flight.current
-          if (flight.current.time >= 2.2) finishThrow(flight.current)
-        }
-        if (!flight.current) grenadeCarry = 0
-        carry += dt
+        course.current!.step(dt)
+        model.current.clock += dt
+        const speed = model.current.collapse > 0 ? 0.25 : 1
+        model.current.collapse = Math.max(0, model.current.collapse - dt)
+        carry += dt * speed
         while (carry >= STEP) {
           carry -= STEP
           if (rolling.current.length) stepBalls()
-          if (ready.current) footballStep()
+          if (
+            ready.current &&
+            (model.current.pitchLive || model.current.outcome !== 'setup')
+          )
+            match.current!.step()
         }
         if (rolling.current.length) updateBalls()
         if (model.current.explosion) {
-          model.current.explosion.age += dt
+          model.current.explosion.age += dt * speed
           if (model.current.explosion.age > 0.85) model.current.explosion = null
         }
-        if (shifting.current) {
-          const shift = shifting.current
-          shift.age = Math.min(1, shift.age + dt * 2)
-          const t = shift.age * shift.age * (3 - 2 * shift.age)
-          model.current.defenders = shift.to.map((p, i) => ({
-            x: shift.from[i].x + (p.x - shift.from[i].x) * t,
-            y: shift.from[i].y + (p.y - shift.from[i].y) * t,
-          }))
-          if (shift.age >= 1) {
-            shifting.current = null
-            model.current.outcome = 'setup'
-            model.current.kickAim = kickGuide(
-              model.current.football!,
-              shotAim.current,
-            )
-          }
-        }
-        if (model.current.football && !kick.current) {
-          const target = {
-            x: model.current.football.x,
-            y: Math.min(247, model.current.football.y + 3.5),
-          }
-          const t = Math.min(1, dt * 9)
-          model.current.player = {
-            x: model.current.player.x + (target.x - model.current.player.x) * t,
-            y: model.current.player.y + (target.y - model.current.player.y) * t,
-          }
-        }
       }
-      if (!reduced || reducedChange) publish()
+      publishIfChanged()
       raf = requestAnimationFrame(tick)
+    }
+    if (
+      process.env.NODE_ENV === 'development' &&
+      new URLSearchParams(window.location.search).has('spera-test')
+    ) {
+      const target = window as unknown as { speraTest?: unknown }
+      target.speraTest = {
+        state: () => model.current,
+        pause: (value: boolean) => {
+          paused = value
+        },
+        step: (seconds: number) => {
+          for (let i = 0; i < seconds / STEP; i++) {
+            model.current.clock += STEP
+            const speed = model.current.collapse > 0 ? 0.25 : 1
+            model.current.collapse = Math.max(0, model.current.collapse - STEP)
+            if (rolling.current.length) rollBalls(rolling.current, STEP * speed)
+            if (ready.current) match.current!.step()
+            updateBalls()
+          }
+          updateBalls()
+          publish()
+        },
+        throw: (aim: Point) => {
+          course.current!.aim(aim, 1)
+          course.current!.throw()
+          publish()
+        },
+        goal: (team: 0 | 1) => {
+          match.current!.forceGoal(team)
+          publish()
+        },
+      }
     }
     publish()
     raf = requestAnimationFrame(tick)
@@ -294,50 +207,22 @@ export function useGame(reduced: boolean) {
   return {
     scene,
     message,
-    footballMessage,
     arrived,
+    setPitchLive,
     aim(point: Point, strength = Math.hypot(point.x, point.y) / 70) {
-      if (flight.current || windup.current !== null || model.current.wallBroken)
-        return
-      grenadeAim.current = point
-      model.current.throwCharging = true
-      model.current.throwStrength = Math.max(0, Math.min(1, strength))
-      model.current.throwProgress = 0.45
-      model.current.aim = trajectory(point, model.current.wallBricks)
+      course.current!.aim(point, strength)
       publish()
     },
     cancelThrow() {
-      if (!model.current.throwCharging) return
-      model.current.throwCharging = false
-      model.current.throwProgress = 0
-      model.current.aim = []
+      course.current!.cancel()
       publish()
     },
     throwGrenade() {
-      if (flight.current || windup.current !== null || model.current.wallBroken)
-        return
-      model.current.aim = []
-      model.current.explosion = null
-      if (reduced) {
-        finishThrow(
-          grenadeResult(grenadeAim.current, model.current.wallBricks).ball,
-        )
-        model.current.explosion = null
-      } else {
-        windup.current = model.current.throwCharging ? 0.216 : 0
-        if (!model.current.throwCharging) {
-          model.current.throwStrength = 1
-          model.current.throwProgress = 0.001
-        }
-        model.current.throwCharging = false
-      }
+      course.current!.throw()
       publish()
     },
     advance() {
-      if (flight.current || windup.current !== null)
-        finishThrow(
-          grenadeResult(grenadeAim.current, model.current.wallBricks).ball,
-        )
+      course.current!.settle()
       if (rolling.current.length) {
         const target = (Math.floor(rolling.current[0].travelled / 95) + 1) * 95
         for (let i = 0; i < 1800; i++) {
@@ -350,7 +235,7 @@ export function useGame(reduced: boolean) {
         }
         updateBalls()
       }
-      if (kick.current) settleKick()
+      match.current!.settle()
       model.current.explosion = null
       publish()
     },
@@ -383,41 +268,25 @@ export function useGame(reduced: boolean) {
       publish()
     },
     aimKick(vector: Point) {
-      if (!canKick()) return
       shotAim.current = vector
-      model.current.kickAim = kickGuide(model.current.football!, vector)
+      match.current!.aim(vector)
       publish()
     },
     play(vector = shotAim.current) {
-      if (!canKick() || Math.hypot(vector.x, vector.y) < 3) return
-      model.current.kickDragging = false
-      shotAim.current = vector
-      model.current.shotsLeft--
-      model.current.trace = [model.current.football!]
-      model.current.kickAim = []
-      model.current.outcome = 'playing'
-      kick.current = launchKick(model.current.football!, vector)
-      trailSteps.current = 0
-      setFootballMessage('')
-      if (reduced) settleKick()
+      match.current!.play(vector)
+      publish()
+    },
+    moveKeeper(x: number) {
+      match.current!.keeper(x)
       publish()
     },
     retry() {
       if (!ready.current) return
-      kick.current = null
-      shifting.current = null
-      footballTime.current = 0
-      shotAim.current = { x: 0, y: -44 }
-      model.current.outcome = 'setup'
-      model.current.kickDragging = false
-      model.current.trace = []
-      model.current.shotsLeft = 3
-      model.current.defenders = formation(0, PASSER)
-      model.current.keeper = keeperAt(0)
-      model.current.football = { ...PASSER }
-      model.current.player = { x: PASSER.x, y: PASSER.y + 3.5 }
-      model.current.kickAim = kickGuide(PASSER, shotAim.current)
-      setFootballMessage('Three kicks remaining')
+      match.current!.retry()
+      publish()
+    },
+    forceGoal(team: 0 | 1) {
+      match.current!.forceGoal(team)
       publish()
     },
   }

@@ -34,13 +34,13 @@
   position: relative;
   color: #304337;
   overflow: clip;
-  padding: 0 18px 28px;
+  padding: 0 18px 190px;
   background:
     radial-gradient(ellipse at 20% 20%, #faf3df, transparent 45%), #eae9dd;
 }
 .spera-intro {
   max-width: 640px;
-  padding: 32px 6% 0;
+  padding: 22px 6% 0;
 }
 .spera-intro h2 {
   margin: 0 0 14px;
@@ -56,7 +56,7 @@
 }
 .spera-narrative {
   position: absolute;
-  width: 51%;
+  width: 56%;
   pointer-events: none;
 }
 .spera-narrative h3 {
@@ -68,20 +68,32 @@
 }
 .spera-narrative p {
   margin: 0;
-  font-size: clamp(12px, 1.5vw, 18px);
+  font-size: clamp(12px, 1.3vw, 16px);
   line-height: 1.5;
 }
 .spera-halo {
-  left: 7%;
-  top: 28.15%;
+  position: relative;
+  width: 56%;
+  margin: 26px 0 0 6%;
+}
+.spera-artists {
+  left: 5%;
+  top: 22%;
 }
 .spera-fifa {
-  left: 44%;
-  top: 47.8%;
+  left: 36%;
+  top: 48%;
+}
+.spera-ending {
+  left: 7%;
+  top: 100%;
+  width: 86%;
+  padding: 18px 0;
 }
 .spera-world {
   position: relative;
-  aspect-ratio: 100 / 270;
+  aspect-ratio: 100 / 247;
+  margin-top: 20px;
 }
 .spera-canvas {
   position: absolute;
@@ -94,12 +106,32 @@
 }
 .spera-tools {
   position: absolute;
-  top: 3%;
-  right: 7%;
+  top: 1%;
+  left: 3%;
   z-index: 2;
   display: flex;
   gap: 12px;
   align-items: center;
+}
+.spera-sign {
+  position: absolute;
+  left: 88%;
+  top: 2.6%;
+  transform: translateX(-50%) rotate(-3deg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 9px 2px;
+  border: 2px solid #6e5a3e;
+  border-radius: 4px;
+  background: #d9b98a;
+  color: #4a3a26;
+  font-size: clamp(10px, 1.2vw, 14px);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 2px 3px 0 #0002;
 }
 .spera-icon {
   display: grid;
@@ -132,35 +164,6 @@
   outline: 3px solid #b96941;
   outline-offset: 3px;
 }
-.spera-grenade {
-  display: block;
-  position: relative;
-  width: 25px;
-  height: 28px;
-  border-radius: 45%;
-  background: #c77750;
-  box-shadow: inset -5px -4px 0 #0002;
-  border: 1px solid #945135;
-  transform: rotate(-18deg);
-}
-.spera-grenade i {
-  position: absolute;
-  width: 10px;
-  height: 4px;
-  top: -4px;
-  left: 7px;
-  background: #677060;
-  border-radius: 2px;
-}
-.spera-grenade::after {
-  content: '';
-  position: absolute;
-  top: 8px;
-  left: 1px;
-  right: 1px;
-  height: 5px;
-  border-block: 1px solid #fff5;
-}
 .spera-throw-area {
   position: absolute;
   left: 0;
@@ -177,7 +180,7 @@
 }
 .spera-ball-hit {
   position: absolute;
-  z-index: 1;
+  z-index: 5;
   width: max(48px, 8%);
   aspect-ratio: 1;
   border-radius: 50%;
@@ -188,6 +191,9 @@
 }
 .spera-ball-hit:active {
   cursor: grabbing;
+}
+.spera-ball-hit:disabled {
+  pointer-events: none;
 }
 .spera-ball-marker,
 .spera-pitch-marker {
@@ -203,8 +209,8 @@
 .spera-match {
   position: absolute;
   left: 50%;
-  top: 92.6%;
-  z-index: 2;
+  top: 98%;
+  z-index: 5;
   display: flex;
   gap: 10px;
   transform: translate(-50%, -50%);
@@ -222,11 +228,11 @@
     max-height: 85dvh;
   }
   .spera-story {
-    padding: 0 6px 20px;
+    padding: 0 6px 190px;
   }
   .spera-tools {
-    top: 1.5%;
-    right: 3%;
+    top: 0.5%;
+    left: 2%;
     gap: 7px;
   }
   .spera-icon {
@@ -287,4 +293,109 @@
 .spera-fan-hit:focus-visible {
   outline-offset: 1px;
   outline-width: 1px;
+}
+
+.spera-pitch-zone {
+  position: absolute;
+  inset: 66% 0 0;
+  pointer-events: none;
+}
+.spera-score {
+  position: absolute;
+  left: 24%;
+  top: 66%;
+  display: flex;
+  gap: 12px;
+  padding: 6px 12px;
+  border: 2px solid #716653;
+  border-radius: 6px;
+  background: #f8f4e7;
+  font-size: clamp(18px, 2vw, 26px);
+  font-weight: 700;
+  box-shadow: 2px 3px 0 #0002;
+}
+.spera-score span {
+  animation: spera-pop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes spera-pop {
+  from {
+    transform: scale(1.9);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spera-score span {
+    animation: none;
+  }
+}
+.spera-score span:first-child {
+  color: #3d6fa5;
+}
+.spera-score span:last-child {
+  color: #c8553d;
+}
+.spera-keeper-hit {
+  position: absolute;
+  z-index: 4;
+  width: max(44px, 6%);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border: 0;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+}
+.spera-scroll-cue {
+  position: fixed;
+  bottom: 10vh;
+  left: 50%;
+  z-index: 10;
+  pointer-events: none;
+  color: #425d48;
+  background: #f8f4e7e6;
+  border-radius: 50%;
+  padding: 8px;
+  animation: spera-bounce 1s ease-in-out infinite;
+}
+@keyframes spera-bounce {
+  50% {
+    transform: translateY(8px);
+  }
+}
+@media (max-width: 650px) {
+  .spera-narrative p {
+    font-size: 12px;
+  }
+  .spera-intro {
+    padding-top: 18px;
+  }
+  .spera-halo {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 88%;
+    margin: 18px 6% 8px;
+  }
+  .spera-world {
+    margin-top: 0;
+  }
+  .spera-artists {
+    top: 22%;
+  }
+  .spera-fifa {
+    left: 36%;
+    width: 59%;
+    top: 48%;
+  }
+  .spera-score {
+    padding: 3px 8px;
+    gap: 8px;
+  }
+  .spera-scroll-cue {
+    bottom: 6vh;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spera-scroll-cue {
+    animation: none;
+  }
 }
