@@ -1,6 +1,6 @@
 # Portfolio content
 
-The first nine stories use Igor's supplied [résumé](https://docs.google.com/document/d/1yVdeR23Y5sJU6MKffIKWd-uo_GBjAuHN/edit), read on September 5, 2026. His [LinkedIn](https://www.linkedin.com/in/buftio) was behind a sign-in wall. Dates use completed ranges or a starting year rather than claiming the résumé's 'Present' is current.
+The first nine stories use Igor's supplied résumé, read on September 5, 2026. His [LinkedIn](https://www.linkedin.com/in/buftio) was behind a sign-in wall. Dates use completed ranges or a starting year rather than claiming the résumé's 'Present' is current.
 
 Glite: voice agents, speech evaluation, Image Test and product experiments. Quantori: shared research knowledge and collaboration. Yandex: recruiter workflows and interactive content. AKTS: a seasonal launch and internal workflow automation. EPAM: navigation, comparison and annotation of 10–30 GB research images. Sperasoft: artist integrations and FIFA 2022 interfaces. Kontur: bank integrations, tax payments and business registration. Lumiprobe: molecular notation and IUPAC names. MarketData: technical audit and team workflows.
 

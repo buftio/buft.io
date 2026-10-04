@@ -1,7 +1,7 @@
 'use client'
 
-import { Canvas, useFrame } from '@react-three/fiber'
-import { Suspense, useRef } from 'react'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { projects, projectAngle, projectPosition } from '@/lib/projects'
 import { Flower } from './three/flower'
@@ -32,46 +32,57 @@ function CameraRail({ progress, selected, reduced }: SceneProps) {
     lookY: -0.2,
     parallax: 0,
   })
-  const entry = useRef({ project: selected, time: 1 })
+  const entry = useRef({ project: selected, time: 1, from: 0 })
   useFrame(({ camera, size, pointer }, delta) => {
     const step = Math.min(delta, 0.05)
     if (entry.current.project !== selected)
-      entry.current = { project: selected, time: 0 }
+      entry.current = {
+        project: selected,
+        time: 0,
+        from: current.current.position,
+      }
     entry.current.time = Math.min(1, entry.current.time + step / 1.1)
     const dive =
-      selected !== null && !reduced
-        ? Math.sin(entry.current.time * Math.PI) ** 2
-        : 0
+      selected === null
+        ? 0
+        : reduced
+          ? 1
+          : THREE.MathUtils.smootherstep(entry.current.time, 0, 1)
     const target = selected ?? progress.current
     if (reduced) {
       current.current.position = target
       current.current.velocity = 0
+    } else if (selected !== null) {
+      const { from, time } = entry.current
+      current.current.position = THREE.MathUtils.lerp(
+        from,
+        selected,
+        THREE.MathUtils.smootherstep(time, 0, 1),
+      )
+      current.current.velocity = 0
     } else advanceRail(current.current, target, delta)
     const a = projectAngle(current.current.position)
     const mobile = size.width < 700
-    const distance =
-      selected !== null
-        ? (mobile ? 11 : 9.6) - dive * 2.2
-        : mobile
-          ? 14.8
-          : 11.8
-    const shift =
-      selected !== null
-        ? mobile
-          ? 0
-          : 3.6 * (1 - dive * 0.55)
-        : mobile
-          ? 0
-          : -1.8
-    const forward = 1.2 + dive * 2.6
+    const near = (from: number, to: number) =>
+      THREE.MathUtils.lerp(from, to, dive)
+    const open = selected !== null
+    const distance = open
+      ? near(mobile ? 11 : 9.6, mobile ? 8.8 : 8.8)
+      : mobile
+        ? 14.8
+        : 11.8
+    const shift = mobile ? 0 : open ? near(3.6, 4.6) : -1.8
+    const forward = open ? near(1.2, 0) : 1.2
+    const height = open ? near(2, 0.3) : 2.5
+    const lookY = open ? near(-0.2, -2.1) : -0.2
     const frame = framing.current
     const settle = (from: number, to: number) =>
       reduced ? to : THREE.MathUtils.damp(from, to, 3.5, step)
     frame.distance = settle(frame.distance, distance)
     frame.shift = settle(frame.shift, shift)
     frame.forward = settle(frame.forward, forward)
-    frame.height = settle(frame.height, selected !== null ? 2 - dive : 2.5)
-    frame.lookY = settle(frame.lookY, -0.2 - dive * 0.5)
+    frame.height = settle(frame.height, height)
+    frame.lookY = settle(frame.lookY, lookY)
     frame.parallax = settle(
       frame.parallax,
       !reduced && selected === null ? pointer.x * 0.1 : 0,
@@ -128,9 +139,30 @@ function FlowerLights({ active, reduced }: SceneProps) {
   )
 }
 
+function Backdrop({ selected }: { selected: number | null }) {
+  const invalidate = useThree((state) => state.invalidate)
+  useEffect(() => {
+    if (selected === null) return
+    const timer = setInterval(invalidate, 1000 / 15)
+    return () => clearInterval(timer)
+  }, [selected, invalidate])
+  return null
+}
+
 export function Scene(props: SceneProps) {
+  const [settled, setSettled] = useState<number | null>(null)
+  useEffect(() => {
+    if (props.selected === null) return
+    const timer = setTimeout(() => setSettled(props.selected), 1300)
+    return () => {
+      clearTimeout(timer)
+      setSettled(null)
+    }
+  }, [props.selected])
+  const behind = props.selected !== null && settled === props.selected
   return (
     <Canvas
+      frameloop={behind ? 'demand' : 'always'}
       dpr={[1, 1.5]}
       camera={{ position: [-6.5, 2.5, 10], fov: 43 }}
       gl={{
@@ -153,16 +185,6 @@ export function Scene(props: SceneProps) {
           metalness={0.2}
         />
       </mesh>
-      {[2.65, 5.2, 7.7].map((r, i) => (
-        <mesh key={r} rotation={[-Math.PI / 2, 0, 0]} position={[0, -2.12, 0]}>
-          <ringGeometry args={[r, r + 0.012, 128]} />
-          <meshBasicMaterial
-            color={i === 0 ? '#ac5427' : '#694333'}
-            transparent
-            opacity={0.28}
-          />
-        </mesh>
-      ))}
       <Suspense fallback={null}>
         <group
           rotation={[0, -Math.PI / 2, 0]}
@@ -190,6 +212,7 @@ export function Scene(props: SceneProps) {
       ))}
       <FlowerLights {...props} />
       <CameraRail {...props} />
+      {behind && <Backdrop selected={props.selected} />}
       <GardenBloom />
     </Canvas>
   )

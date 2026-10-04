@@ -11,7 +11,9 @@ import {
 } from 'react'
 import { preload } from 'react-dom'
 import { projects } from '@/lib/projects'
+import { ProjectMark } from './project-mark'
 import { SceneBoundary } from './scene-boundary'
+import { useSpin } from './use-spin'
 
 const Scene = dynamic(() => import('./scene').then((module) => module.Scene), {
   ssr: false,
@@ -30,15 +32,30 @@ const YandexStory = dynamic(() => import('./yandex/story'))
 const SperasoftStory = dynamic(() => import('./sperasoft/story'))
 const LumiprobeStory = dynamic(() => import('./lumiprobe/story'))
 const QuantoriStory = dynamic(() => import('./quantori/story'))
-const resumeUrl =
-  'https://docs.google.com/document/d/1yVdeR23Y5sJU6MKffIKWd-uo_GBjAuHN/edit'
 const preloadVignette = () => import('./three/project-vignette')
 const projectPath = (index: number) => `/p/${projects[index].slug}`
-const projectAt = (path: string, hash: string) => {
-  const index = projects.findIndex((item) => `/p/${item.slug}` === path)
-  return index >= 0
-    ? index
-    : projects.findIndex((item) => `#${item.id}` === hash)
+const HOME_TITLE = 'Igor Ostanin · buft.io'
+
+function HomeMark() {
+  return (
+    <span className="project-mark home-mark" aria-hidden="true">
+      <span className="house">
+        {[
+          'front',
+          'back',
+          'left',
+          'right',
+          'gable',
+          'gable-back',
+          'roof',
+          'roof-left',
+          'door',
+        ].map((face) => (
+          <i key={face} className={face} />
+        ))}
+      </span>
+    </span>
+  )
 }
 let motionQuery: MediaQueryList | undefined
 const getMotionQuery = () =>
@@ -70,12 +87,12 @@ function StoryCaption({
         if (event.target === event.currentTarget) onLeft?.()
       }}
     >
-      <div className="eyebrow">
-        <span className="ember-dot" />
-        {project ? project.field : 'SOFTWARE ENGINEER & CURIOUS HUMAN'}
-      </div>
       {project ? (
         <>
+          <div className="eyebrow">
+            <span className="ember-dot" />
+            {project.field}
+          </div>
           <span className="project-company">
             {project.name} <span>{project.period}</span>
           </span>
@@ -148,6 +165,16 @@ export function Home({ initial = null }: { initial?: number | null }) {
     window.history.pushState(null, '', projectPath(index))
   }, [])
 
+  const switchProject = useCallback((index: number) => {
+    window.scrollTo({
+      top: (index + 1) * window.innerHeight,
+      behavior: 'instant',
+    })
+    setSelected(index)
+    window.history.pushState(null, '', projectPath(index))
+    dialog.current?.scrollTo({ top: 0 })
+  }, [])
+
   const closeProject = useCallback(() => {
     dialog.current?.close()
     setSelected(null)
@@ -178,11 +205,22 @@ export function Home({ initial = null }: { initial?: number | null }) {
       pending.current = null
     }
     const readPath = () => {
-      const index = projectAt(window.location.pathname, window.location.hash)
+      const hashed = projects.findIndex(
+        (item) => `#${item.slug}` === window.location.hash,
+      )
+      if (hashed >= 0 && !window.location.pathname.startsWith('/p/')) {
+        setSelected(null)
+        navigate(hashed)
+        return
+      }
+      const index = projects.findIndex(
+        (item) => `/p/${item.slug}` === window.location.pathname,
+      )
       setSelected(index < 0 ? null : index)
-      if (index < 0) return
-      if (window.location.hash)
-        window.history.replaceState(null, '', projectPath(index))
+      if (index < 0) {
+        if (!window.location.hash) navigate(-1)
+        return
+      }
       window.scrollTo({
         top: (index + 1) * window.innerHeight,
         behavior: 'instant',
@@ -193,6 +231,7 @@ export function Home({ initial = null }: { initial?: number | null }) {
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onScroll)
     window.addEventListener('popstate', readPath)
+    window.addEventListener('hashchange', readPath)
     window.addEventListener('wheel', cancelPending, { passive: true })
     window.addEventListener('touchstart', cancelPending, { passive: true })
     window.addEventListener('keydown', cancelPending)
@@ -200,14 +239,28 @@ export function Home({ initial = null }: { initial?: number | null }) {
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onScroll)
       window.removeEventListener('popstate', readPath)
+      window.removeEventListener('hashchange', readPath)
       window.removeEventListener('wheel', cancelPending)
       window.removeEventListener('touchstart', cancelPending)
       window.removeEventListener('keydown', cancelPending)
     }
-  }, [])
+  }, [navigate])
 
   useEffect(() => {
-    if (selected === null) return
+    document.title =
+      selected === null
+        ? HOME_TITLE
+        : `Igor Ostanin @ ${projects[selected].name}`
+    if (selected !== null || window.location.pathname !== '/') return
+    const hash = active < 0 ? '' : `#${projects[active].slug}`
+    if (window.location.hash !== hash)
+      window.history.replaceState(null, '', `/${hash}`)
+  }, [active, selected])
+
+  const spin = useSpin(navigate, selected === null)
+  const isOpen = selected !== null
+  useEffect(() => {
+    if (!isOpen) return
     const element = dialog.current
     const focus = previousFocus.current
     const oldOverflow = document.body.style.overflow
@@ -247,12 +300,13 @@ export function Home({ initial = null }: { initial?: number | null }) {
         if (focus?.isConnected) focus.focus({ preventScroll: true })
       })
     }
-  }, [selected, closeProject])
+  }, [isOpen, closeProject])
 
   return (
     <main className={`portfolio ${reduced ? 'reduced-motion' : ''}`}>
       <div
         className="world"
+        {...spin}
         aria-label="A seated samurai surrounded by fire and project flowers"
       >
         {showScene && (
@@ -289,9 +343,6 @@ export function Home({ initial = null }: { initial?: number | null }) {
           >
             LinkedIn <ArrowUpRight size={13} />
           </a>
-          <a href={resumeUrl} target="_blank" rel="noreferrer">
-            Résumé <ArrowUpRight size={13} />
-          </a>
         </nav>
       </header>
       <div className={`story-layer ${selected !== null ? 'is-hidden' : ''}`}>
@@ -317,16 +368,26 @@ export function Home({ initial = null }: { initial?: number | null }) {
           <span>SCROLL TO EXPLORE</span>
         </div>
         <nav className="project-nav" aria-label="Projects">
+          <button
+            onClick={() => navigate(-1)}
+            className={active === -1 ? 'current' : ''}
+            aria-label="Home"
+            aria-current={active === -1 ? 'step' : undefined}
+          >
+            <span className="nav-title">Home</span>
+            <HomeMark />
+            <i />
+          </button>
           {projects.map((item, index) => (
             <button
               key={item.id}
               onClick={() => navigate(index)}
               className={active === index ? 'current' : ''}
-              aria-label={`${item.name} ${String(index + 1).padStart(2, '0')}`}
+              aria-label={item.name}
               aria-current={active === index ? 'step' : undefined}
             >
               <span className="nav-title">{item.name}</span>
-              <span>{String(index + 1).padStart(2, '0')}</span>
+              <ProjectMark project={item} />
               <i />
             </button>
           ))}
@@ -447,6 +508,20 @@ export function Home({ initial = null }: { initial?: number | null }) {
               </div>
             </article>
           )}
+          <nav className="dialog-nav" aria-label="Projects">
+            {projects.map((item, index) => (
+              <button
+                key={item.id}
+                onClick={() => switchProject(index)}
+                className={selected === index ? 'current' : ''}
+                aria-label={item.name}
+                aria-current={selected === index ? 'page' : undefined}
+              >
+                <ProjectMark project={item} />
+                <span className="dialog-nav-name">{item.name}</span>
+              </button>
+            ))}
+          </nav>
         </dialog>
       )}
     </main>

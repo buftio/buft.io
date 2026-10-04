@@ -83,9 +83,6 @@
   .site-header a {
     font-size: 11px;
   }
-  .site-header a:first-child {
-    display: none;
-  }
   .scene-shade {
     background: linear-gradient(
       0deg,
@@ -161,8 +158,18 @@
     padding: 7px 2px 0;
     gap: 10px;
   }
+  .project-mark {
+    width: 16px;
+    height: 16px;
+  }
+  .rug-mark {
+    width: 12px;
+  }
+  .monogram-mark {
+    font-size: 12px;
+  }
   .project-nav .nav-title {
-    bottom: 39px;
+    bottom: 42px;
     font-size: 9px;
   }
   .journey-actions {

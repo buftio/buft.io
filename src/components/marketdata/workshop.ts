@@ -63,14 +63,9 @@ export function useWorkshop(reduced: boolean) {
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       try {
-        const raw = localStorage.getItem(STORAGE)
-        if (raw) {
-          const saved = JSON.parse(raw)
-          if (
-            ![1, 2].includes(saved.version) ||
-            !Array.isArray(saved.carpets) ||
-            !Array.isArray(saved.queue)
-          )
+        const saved = JSON.parse(localStorage.getItem(STORAGE) ?? 'null')
+        if (saved?.version === 2) {
+          if (!Array.isArray(saved.carpets) || !Array.isArray(saved.queue))
             throw new Error('Invalid workshop')
           const completed = saved.carpets.filter(isCarpet) as Carpet[]
           const seen = new Set(completed.map((rug) => rug.id))
@@ -84,7 +79,6 @@ export function useWorkshop(reduced: boolean) {
                 seen.has(rug.id)
               )
                 return false
-              if (saved.version === 1 && rug.progress < 0) return false
               seen.add(rug.id)
               return true
             }),
