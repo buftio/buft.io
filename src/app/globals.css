@@ -337,6 +337,35 @@ h1 {
   background: #ff9a5d;
   box-shadow: 0 0 10px #e8783d;
 }
+.project-mark {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  filter: grayscale(1) brightness(1.15);
+  opacity: 0.42;
+  transition:
+    opacity 0.2s,
+    filter 0.2s;
+}
+.rug-mark {
+  width: 15px;
+}
+.monogram-mark {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0;
+  white-space: nowrap;
+  color: var(--project-color);
+}
+.project-nav button:hover .project-mark,
+.project-nav button:focus-visible .project-mark,
+.project-nav button.current .project-mark {
+  filter: none;
+  opacity: 1;
+}
 .project-nav .nav-title {
   position: absolute;
   bottom: 57px;

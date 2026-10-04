@@ -11,6 +11,7 @@ import {
 } from 'react'
 import { preload } from 'react-dom'
 import { projects } from '@/lib/projects'
+import { ProjectMark } from './project-mark'
 import { SceneBoundary } from './scene-boundary'
 
 const Scene = dynamic(() => import('./scene').then((module) => module.Scene), {
@@ -30,8 +31,6 @@ const YandexStory = dynamic(() => import('./yandex/story'))
 const SperasoftStory = dynamic(() => import('./sperasoft/story'))
 const LumiprobeStory = dynamic(() => import('./lumiprobe/story'))
 const QuantoriStory = dynamic(() => import('./quantori/story'))
-const resumeUrl =
-  'https://docs.google.com/document/d/1yVdeR23Y5sJU6MKffIKWd-uo_GBjAuHN/edit'
 const preloadVignette = () => import('./three/project-vignette')
 const projectPath = (index: number) => `/p/${projects[index].slug}`
 const projectAt = (path: string, hash: string) => {
@@ -70,12 +69,12 @@ function StoryCaption({
         if (event.target === event.currentTarget) onLeft?.()
       }}
     >
-      <div className="eyebrow">
-        <span className="ember-dot" />
-        {project ? project.field : 'SOFTWARE ENGINEER & CURIOUS HUMAN'}
-      </div>
       {project ? (
         <>
+          <div className="eyebrow">
+            <span className="ember-dot" />
+            {project.field}
+          </div>
           <span className="project-company">
             {project.name} <span>{project.period}</span>
           </span>
@@ -178,6 +177,14 @@ export function Home({ initial = null }: { initial?: number | null }) {
       pending.current = null
     }
     const readPath = () => {
+      const hashed = projects.findIndex(
+        (item) => `#${item.slug}` === window.location.hash,
+      )
+      if (hashed >= 0 && !window.location.pathname.startsWith('/p/')) {
+        setSelected(null)
+        navigate(hashed)
+        return
+      }
       const index = projectAt(window.location.pathname, window.location.hash)
       setSelected(index < 0 ? null : index)
       if (index < 0) return
@@ -193,6 +200,7 @@ export function Home({ initial = null }: { initial?: number | null }) {
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onScroll)
     window.addEventListener('popstate', readPath)
+    window.addEventListener('hashchange', readPath)
     window.addEventListener('wheel', cancelPending, { passive: true })
     window.addEventListener('touchstart', cancelPending, { passive: true })
     window.addEventListener('keydown', cancelPending)
@@ -200,11 +208,12 @@ export function Home({ initial = null }: { initial?: number | null }) {
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onScroll)
       window.removeEventListener('popstate', readPath)
+      window.removeEventListener('hashchange', readPath)
       window.removeEventListener('wheel', cancelPending)
       window.removeEventListener('touchstart', cancelPending)
       window.removeEventListener('keydown', cancelPending)
     }
-  }, [])
+  }, [navigate])
 
   useEffect(() => {
     if (selected === null) return
@@ -289,9 +298,6 @@ export function Home({ initial = null }: { initial?: number | null }) {
           >
             LinkedIn <ArrowUpRight size={13} />
           </a>
-          <a href={resumeUrl} target="_blank" rel="noreferrer">
-            Résumé <ArrowUpRight size={13} />
-          </a>
         </nav>
       </header>
       <div className={`story-layer ${selected !== null ? 'is-hidden' : ''}`}>
@@ -322,11 +328,11 @@ export function Home({ initial = null }: { initial?: number | null }) {
               key={item.id}
               onClick={() => navigate(index)}
               className={active === index ? 'current' : ''}
-              aria-label={`${item.name} ${String(index + 1).padStart(2, '0')}`}
+              aria-label={item.name}
               aria-current={active === index ? 'step' : undefined}
             >
               <span className="nav-title">{item.name}</span>
-              <span>{String(index + 1).padStart(2, '0')}</span>
+              <ProjectMark project={item} />
               <i />
             </button>
           ))}

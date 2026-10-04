@@ -11,6 +11,7 @@ export type Project = {
   details: string[]
   color: string
   logo?: string
+  mark?: string
   url?: string
   scene:
     | 'conversation'
@@ -143,6 +144,7 @@ export const projects: Project[] = [
     ],
     color: '#ea9c79',
     logo: '/logos/sperasoft.png',
+    mark: '/logos/sperasoft-mark.png',
     url: 'https://sperasoft.com',
     scene: 'game',
   },
@@ -183,6 +185,7 @@ export const projects: Project[] = [
     ],
     color: '#ceaaf6',
     logo: '/logos/lumiprobe.svg',
+    mark: '/logos/lumiprobe-mark.svg',
     url: 'https://github.com/buftio/buftinom',
     scene: 'molecule',
   },
@@ -205,6 +208,13 @@ export const projects: Project[] = [
     scene: 'metrics',
   },
 ]
+
+export const monogram = (project: Project) =>
+  project.id === 'yandex'
+    ? 'Я'
+    : project.id === 'epam'
+      ? '<e>'
+      : project.name.slice(0, 1)
 
 export const projectAngle = (index: number) => index * 0.59
 export const projectPosition = (index: number): [number, number, number] => [

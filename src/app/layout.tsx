@@ -19,7 +19,7 @@ import './lumiprobe-responsive.css'
 import './quantori.css'
 
 const description =
-  'Software, curiosity, and a little fire. Explore Igor Ostanin’s work in AI, science, games, and the tools people use.'
+  'Explore Igor Ostanin’s work in AI, science, games, and the tools people use.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

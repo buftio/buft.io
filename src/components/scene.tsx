@@ -153,16 +153,6 @@ export function Scene(props: SceneProps) {
           metalness={0.2}
         />
       </mesh>
-      {[2.65, 5.2, 7.7].map((r, i) => (
-        <mesh key={r} rotation={[-Math.PI / 2, 0, 0]} position={[0, -2.12, 0]}>
-          <ringGeometry args={[r, r + 0.012, 128]} />
-          <meshBasicMaterial
-            color={i === 0 ? '#ac5427' : '#694333'}
-            transparent
-            opacity={0.28}
-          />
-        </mesh>
-      ))}
       <Suspense fallback={null}>
         <group
           rotation={[0, -Math.PI / 2, 0]}

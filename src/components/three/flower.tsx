@@ -5,7 +5,7 @@ import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import Image from 'next/image'
-import { projectPosition, type Project } from '@/lib/projects'
+import { monogram, projectPosition, type Project } from '@/lib/projects'
 import { Flames } from './fire'
 
 function petalGeometry() {
@@ -158,11 +158,7 @@ export function Flower({
               />
             ) : (
               <span className={`wordmark wordmark-${project.id}`}>
-                {project.id === 'yandex'
-                  ? 'Я'
-                  : project.id === 'epam'
-                    ? '<e>'
-                    : project.name.slice(0, 1)}
+                {monogram(project)}
               </span>
             )}
             <span className="flower-name">{project.name}</span>
