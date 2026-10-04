@@ -313,7 +313,12 @@ export function Pitch() {
       ))}
       <Block x={[20.6, 43.5]} y={[191.6, 192.3]} z={BANK} color={line} />
       <Block x={[56.5, 79.4]} y={[191.6, 192.3]} z={BANK} color={line} />
-      <Block x={[20.6, 79.4]} y={[250.7, 251.4]} z={BANK} color={line} />
+      <Block x={[20.6, 43.5]} y={[250.7, 251.4]} z={BANK} color={line} />
+      <Block x={[56.5, 79.4]} y={[250.7, 251.4]} z={BANK} color={line} />
+      <Block x={[43.5, 44.2]} y={[248, 254]} z={[0, 3]} color={line} />
+      <Block x={[55.8, 56.5]} y={[248, 254]} z={[0, 3]} color={line} />
+      <Block x={[43.5, 56.5]} y={[254, 254.7]} z={[0, 3]} color={line} />
+      <Block x={[44.2, 55.8]} y={[248.5, 254]} z={[-1, -0.8]} color="#d5e0cf" />
       <Block x={[20.6, 21.3]} y={[191.6, 251.4]} z={BANK} color={line} />
       <Block x={[78.7, 79.4]} y={[191.6, 251.4]} z={BANK} color={line} />
       <Block

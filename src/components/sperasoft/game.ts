@@ -5,7 +5,9 @@ export const clamp = (n: number, min: number, max: number) =>
 export const distance = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y)
 export type Flight = Point & { vx: number; vy: number; time: number }
 export const BLAST_RADIUS = 25
-export const CHIP_RADIUS = 9
+export const GRENADE_FUSE = 1.55
+export const GRENADE_SPEED = 2.1
+export const THROW_WINDUP = 0.24
 export function launch(aim: Point): Flight {
   return {
     ...START,
@@ -65,55 +67,26 @@ export function stepGrenade(
   return next
 }
 export function chipWall(point: Point, bricks: WallBrick[]) {
-  const nearest = Math.min(
-    ...bricks.map((brick) =>
-      Math.hypot(
-        Math.max(0, Math.abs(brick.x - point.x) - 1.5),
-        Math.max(0, Math.abs(brick.y - point.y) - 1.5),
-      ),
-    ),
+  if (!bricks.length || point.x <= 49) return bricks
+  const sorted = [...bricks].sort(
+    (a, b) => distance(a, point) - distance(b, point),
   )
-  if (nearest > 18) return bricks
-  const radius = Math.max(CHIP_RADIUS, nearest + 3)
-  const remaining = bricks.filter((brick) => {
-    const dx = Math.max(0, Math.abs(brick.x - point.x) - 1.5)
-    const dy = Math.max(0, Math.abs(brick.y - point.y) - 1.5)
-    return Math.hypot(dx, dy) > radius
-  })
-  const supported = new Set(
-    remaining.filter((brick) => brick.row === 11).map((brick) => brick.id),
-  )
-  let changed = true
-  while (changed) {
-    changed = false
-    for (const brick of remaining) {
-      if (supported.has(brick.id)) continue
-      if (
-        remaining.some(
-          (other) =>
-            supported.has(other.id) &&
-            Math.abs(other.row - brick.row) +
-              Math.abs(other.col - brick.col) ===
-              1,
-        )
-      ) {
-        supported.add(brick.id)
-        changed = true
-      }
-    }
-  }
-  return remaining.filter((brick) => supported.has(brick.id))
+  const nearest = distance(sorted[0], point)
+  const count = Math.max(8, Math.min(22, Math.round(24 - nearest * 0.65)))
+  const removed = new Set(sorted.slice(0, count).map((brick) => brick.id))
+  const remaining = bricks.filter((brick) => !removed.has(brick.id))
+  return remaining.length <= 6 ? [] : remaining
 }
 export function grenadeResult(aim: Point, bricks: WallBrick[] = WALL_BRICKS) {
   let ball = launch(aim)
-  while (ball.time < 2.2) ball = stepGrenade(ball, 1 / 120, bricks)
+  while (ball.time < GRENADE_FUSE) ball = stepGrenade(ball, 1 / 120, bricks)
   const remaining = chipWall(ball, bricks)
   return { ball, bricks: remaining, broken: remaining.length === 0 }
 }
 export function trajectory(aim: Point, bricks: WallBrick[] = WALL_BRICKS) {
   let ball = launch(aim)
   const points: Point[] = []
-  for (let i = 0; i < 264; i++) {
+  for (let i = 0; i < Math.ceil(GRENADE_FUSE * 120); i++) {
     ball = stepGrenade(ball, 1 / 120, bricks)
     if (i % 12 === 0) points.push({ x: ball.x, y: ball.y })
   }

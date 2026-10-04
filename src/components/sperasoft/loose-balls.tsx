@@ -1,7 +1,13 @@
 'use client'
 
 import { useRef, type RefObject, type PointerEvent } from 'react'
-import { WORLD_HEIGHT, type Orb, type Point } from './types'
+import {
+  WORLD_HEIGHT,
+  WORLD_TOP,
+  worldPercent,
+  type Orb,
+  type Point,
+} from './types'
 
 type Props = {
   balls: Orb[]
@@ -23,7 +29,7 @@ export function LooseBalls({ balls, world, grab, move, drop }: Props) {
     const rect = world.current!.getBoundingClientRect()
     return {
       x: ((event.clientX - rect.left) / rect.width) * 100,
-      y: ((event.clientY - rect.top) / rect.height) * WORLD_HEIGHT,
+      y: ((event.clientY - rect.top) / rect.height) * WORLD_HEIGHT + WORLD_TOP,
     }
   }
   const finish = (pointerId: number, time: number, cancel = false) => {
@@ -40,10 +46,10 @@ export function LooseBalls({ balls, world, grab, move, drop }: Props) {
       <button
         key={ball.id}
         className={`spera-loose-ball ${ball.held ? 'is-held' : ''}`}
-        aria-label={`Loose football ${ball.id}. Drag and release to toss. Space picks up or drops, arrows move.`}
+        aria-label={`Loose football ${ball.id}`}
         aria-pressed={!!ball.held}
         data-loose-ball={ball.id}
-        style={{ left: `${ball.x}%`, top: `${(ball.y / WORLD_HEIGHT) * 100}%` }}
+        style={{ left: `${ball.x}%`, top: `${worldPercent(ball.y)}%` }}
         onPointerDown={(event) => {
           if (drag.current) drop(drag.current.id, { x: 0, y: 0 })
           drag.current = null

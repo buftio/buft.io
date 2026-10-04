@@ -149,3 +149,37 @@ export function kickGuide(ball: Point, vector: Point): Point[] {
     y: ball.y + ((v.y / power) * (i + 1) * power) / 26,
   }))
 }
+
+export const HOME_KEEPER = { x: 50, y: 244 }
+export function opponentShot(ball: Point, seed: number): Kick {
+  const random = ((Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296
+  const target = 50 + (random - 0.5) * 21
+  const dx = target - ball.x,
+    dy = 249 - ball.y
+  const length = Math.hypot(dx, dy)
+  const speed = Math.sqrt(2 * DRAG * length + 180)
+  return {
+    ...ball,
+    vx: (dx / length) * speed,
+    vy: (dy / length) * speed,
+    time: 0,
+    status: 'rolling',
+    rebounds: 0,
+  }
+}
+export function stepOpponent(shot: Kick, dt: number, keeper: Point): Kick {
+  const mirror = 443
+  const result = stepKick(
+    { ...shot, y: mirror - shot.y, vy: -shot.vy },
+    dt,
+    [],
+    { x: keeper.x, y: mirror - keeper.y },
+  )
+  return { ...result, y: mirror - result.y, vy: -result.vy }
+}
+export function resolveOpponent(ball: Point, seed: number, keeper: Point) {
+  let shot = opponentShot(ball, seed)
+  for (let i = 0; i < 600 && shot.status === 'rolling'; i++)
+    shot = stepOpponent(shot, STEP, keeper)
+  return shot
+}

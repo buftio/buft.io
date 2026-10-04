@@ -256,11 +256,15 @@ export function Opponent({
   point,
   index = 0,
   reduced,
+  windup = false,
+  celebrating = false,
 }: {
   kind: Role
   point: Point
   index?: number
   reduced: boolean
+  windup?: boolean
+  celebrating?: boolean
 }) {
   const body = useRef<Group>(null)
   const clock = useRef(index * 1.7)
@@ -271,11 +275,13 @@ export function Opponent({
   const footprint = FOOTPRINT[kind] * 2
 
   useLayoutEffect(() => {
-    if (!reduced || !body.current) return
+    if (!body.current) return
     body.current.rotation.set(0, 0, 0)
     body.current.position.z = 0
+    body.current.position.y = 0
+    if (reduced && celebrating) body.current.rotation.z = 0.3
     invalidate()
-  }, [reduced, invalidate])
+  }, [reduced, celebrating, invalidate])
 
   useFrame((_, delta) => {
     const group = body.current
@@ -293,6 +299,13 @@ export function Opponent({
     } else {
       group.rotation.set(0, Math.sin(t * 1.3) * 0.04, Math.sin(t * 2.6) * 0.06)
       group.position.z = Math.abs(Math.sin(t * 4.4)) * 0.18
+    }
+    if (windup) {
+      group.rotation.z = -0.35 + Math.sin(t * 12) * 0.08
+      group.position.y = -1.2
+    } else {
+      group.position.y = celebrating ? Math.abs(Math.sin(t * 8)) * 2 : 0
+      if (celebrating) group.rotation.z = Math.sin(t * 8) * 0.3
     }
     invalidate()
   })

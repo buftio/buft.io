@@ -1,13 +1,13 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useRef, type PointerEvent } from 'react'
+import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import { ArrowDown, RotateCcw, StepForward } from 'lucide-react'
 import { SceneBoundary } from '../scene-boundary'
 import { useGame } from './use-game'
 import { clamp } from './game'
 import { kickVector, MAX_POWER } from './football'
-import { WORLD_HEIGHT, type Point } from './types'
+import { WORLD_HEIGHT, WORLD_TOP, worldPercent, type Point } from './types'
 import { fans } from './fan-layout'
 import { LooseBalls } from './loose-balls'
 
@@ -22,17 +22,24 @@ export default function SperasoftStory({
 }) {
   const game = useGame(reduced)
   const world = useRef<HTMLDivElement>(null)
-  const ballMarker = useRef<HTMLSpanElement>(null)
-  const pitch = useRef<HTMLSpanElement>(null)
+  const [scrolled, setScrolled] = useState(false)
+  const keeperDrag = useRef<number | null>(null)
+  useEffect(() => {
+    if (!game.scene.wallBroken) return
+    const dialog = world.current?.closest('dialog')
+    const hide = () => setScrolled(true)
+    dialog?.addEventListener('scroll', hide, { once: true })
+    return () => dialog?.removeEventListener('scroll', hide)
+  }, [game.scene.wallBroken])
   const drag = useRef<(Point & { pointerId: number }) | null>(null)
-  const keyboardAim = useRef({ x: 26.3, y: -49.4 })
+  const keyboardAim = useRef({ x: 44, y: -38 })
   const shotAim = useRef({ x: 0, y: -44 })
   const ballDrag = useRef<(Point & { pointerId: number }) | null>(null)
   const point = (event: PointerEvent): Point => {
     const rect = world.current!.getBoundingClientRect()
     return {
       x: ((event.clientX - rect.left) / rect.width) * 100,
-      y: ((event.clientY - rect.top) / rect.height) * WORLD_HEIGHT,
+      y: ((event.clientY - rect.top) / rect.height) * WORLD_HEIGHT + WORLD_TOP,
     }
   }
   const aimFrom = (event: PointerEvent) => {
@@ -57,18 +64,15 @@ export default function SperasoftStory({
     })
     game.aimKick(shotAim.current)
   }
-  const follow = () =>
-    (game.arrived ? pitch.current : ballMarker.current)?.scrollIntoView({
-      block: 'center',
-      behavior: reduced ? 'instant' : 'smooth',
-    })
-  const leader = game.scene.balls[0]
   const canKick =
     game.arrived && game.scene.outcome === 'setup' && game.scene.shotsLeft > 0
   const football = game.scene.football
   return (
     <article
       className="spera-story"
+      data-score={JSON.stringify(game.scene.score)}
+      data-home-keeper={JSON.stringify(game.scene.homeKeeper)}
+      data-clock={game.scene.clock}
       data-wall={game.scene.wallBroken ? 'open' : 'intact'}
       data-bricks={game.scene.wallBricks.length}
       data-outcome={game.scene.outcome}
@@ -93,6 +97,14 @@ export default function SperasoftStory({
           and football team management systems for FIFA.
         </p>
       </header>
+      <aside className="spera-narrative spera-halo">
+        <h3>Behind the throw</h3>
+        <p>
+          Grenades were one example. I built the editor tools designers used to
+          set up how they behave, and an in-engine testing framework that kept
+          the editor stable.
+        </p>
+      </aside>
       <div className="spera-world" ref={world}>
         <figure
           className="spera-canvas"
@@ -102,18 +114,18 @@ export default function SperasoftStory({
             <GameScene state={game.scene} onReady={onReady} />
           </SceneBoundary>
         </figure>
-        <aside className="spera-narrative spera-halo">
-          <h3>Behind the throw</h3>
+        <aside className="spera-narrative spera-artists">
+          <h3>For the artists</h3>
           <p>
-            Grenades were one example. I also built the editor tools used to
-            configure how they behaved.
+            Artists make the game too. My Maya and Perforce integrations cut a
+            typical art task from 4 hours to 2.
           </p>
         </aside>
         <aside className="spera-narrative spera-fifa">
           <h3>Over to FIFA</h3>
           <p>
-            My FIFA work was on football team management systems inside the
-            game.
+            On FIFA 2022 I worked on team management systems and the menus
+            around them, together with designers and QA.
           </p>
         </aside>
         <div className="spera-tools" aria-label="Grenade controls">
@@ -131,15 +143,7 @@ export default function SperasoftStory({
                 <i />
               </span>
             </button>
-          ) : (
-            <button
-              className="spera-icon"
-              aria-label="Follow footballs"
-              onClick={follow}
-            >
-              <ArrowDown size={22} />
-            </button>
-          )}
+          ) : null}
           {reduced && game.scene.wallBroken && (
             <button
               className="spera-icon"
@@ -152,7 +156,7 @@ export default function SperasoftStory({
         </div>
         <button
           className="spera-throw-area"
-          aria-label="Aim grenade with arrow keys, then press Enter to throw"
+          aria-label="Trooper"
           disabled={
             game.scene.wallBroken ||
             !!game.scene.grenade ||
@@ -209,20 +213,58 @@ export default function SperasoftStory({
             }
           }}
         />
-        <span
-          ref={ballMarker}
-          className="spera-ball-marker"
-          style={{ top: `${((leader?.y ?? 60) / WORLD_HEIGHT) * 100}%` }}
-        />
-        <span ref={pitch} className="spera-pitch-marker" />
+        <div
+          className="spera-score"
+          aria-label={`${game.scene.score[0]} to ${game.scene.score[1]}`}
+        >
+          <span>{game.scene.score[0]}</span>
+          <span>{game.scene.score[1]}</span>
+        </div>
+        {game.arrived && (
+          <button
+            className="spera-keeper-hit"
+            aria-label="Blue keeper"
+            style={{
+              left: `${game.scene.homeKeeper.x}%`,
+              top: `${worldPercent(game.scene.homeKeeper.y)}%`,
+            }}
+            onPointerDown={(event) => {
+              keeperDrag.current = event.pointerId
+              event.currentTarget.setPointerCapture(event.pointerId)
+              game.moveKeeper(point(event).x)
+            }}
+            onPointerMove={(event) => {
+              if (keeperDrag.current === event.pointerId)
+                game.moveKeeper(point(event).x)
+            }}
+            onPointerUp={() => {
+              keeperDrag.current = null
+            }}
+            onPointerCancel={() => {
+              keeperDrag.current = null
+            }}
+            onLostPointerCapture={() => {
+              keeperDrag.current = null
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                event.preventDefault()
+                game.moveKeeper(
+                  game.scene.homeKeeper.x +
+                    (event.key === 'ArrowLeft' ? -2 : 2),
+                )
+              }
+            }}
+          />
+        )}
         {football && (
           <button
             className={`spera-ball-hit ${canKick ? 'is-waiting' : ''}`}
-            aria-label="Flick football. Drag back and release. Arrow left and right aim, up and down change power, Enter kicks."
+            aria-label="Blue player"
             disabled={!canKick}
             style={{
               left: `${game.scene.player.x}%`,
-              top: `${((game.scene.player.y - 1.75) / WORLD_HEIGHT) * 100}%`,
+              top: `${worldPercent(game.scene.player.y - 1.75)}%`,
             }}
             onPointerDown={(event) => {
               event.currentTarget.setPointerCapture(event.pointerId)
@@ -302,11 +344,20 @@ export default function SperasoftStory({
             data-fan={id}
             style={{
               left: `${fan.x}%`,
-              top: `${((fan.y - 1.6) / WORLD_HEIGHT) * 100}%`,
+              top: `${worldPercent(fan.y - 1.6)}%`,
             }}
             onClick={() => game.pokeFan(id)}
           />
         ))}
+        {(game.scene.outcome === 'won' || game.scene.outcome === 'lost') && (
+          <aside className="spera-narrative spera-ending">
+            <h3>Full time</h3>
+            <p>
+              Most of what I built at Sperasoft was for the people making the
+              game: designers, artists and QA.
+            </p>
+          </aside>
+        )}
         <div className="spera-match" aria-label="Football controls">
           <span className="spera-kicks">
             <span className="sr-only">
@@ -323,7 +374,9 @@ export default function SperasoftStory({
           <button
             className="spera-icon"
             aria-label="Retry"
-            disabled={!game.arrived}
+            disabled={
+              game.scene.outcome !== 'won' && game.scene.outcome !== 'lost'
+            }
             onClick={() => {
               ballDrag.current = null
               shotAim.current = { x: 0, y: -44 }
@@ -343,6 +396,11 @@ export default function SperasoftStory({
           )}
         </div>
       </div>
+      {game.scene.wallBroken && !scrolled && (
+        <span className="spera-scroll-cue" aria-hidden="true">
+          <ArrowDown size={26} />
+        </span>
+      )}
       <output className="sr-only" aria-live="polite">
         {game.message} {game.footballMessage}
       </output>

@@ -19,10 +19,10 @@ function brickItems(list: WallBrick[]): Item[] {
     color: brickColor(brick),
   }))
 }
-const DEBRIS_LIFE = 0.9
+const DEBRIS_LIFE = 1.5
 type Debris = {
   chunks: (WallBrick & { vx: number; vy: number; spin: number })[]
-  start: number
+  age: number
 }
 function scatter(removed: WallBrick[]): Debris['chunks'] {
   const cx = removed.reduce((sum, b) => sum + b.x, 0) / removed.length
@@ -40,18 +40,13 @@ function scatter(removed: WallBrick[]): Debris['chunks'] {
     }
   })
 }
-function debrisItems(debris: Debris, age: number): Item[] {
-  const fade = 1 - Math.min(1, Math.max(0, (age - 0.35) / (DEBRIS_LIFE - 0.35)))
+function debrisItems(debris: Debris): Item[] {
+  const fade = 1 - Math.min(1, Math.max(0, (debris.age - 0.9) / 0.6))
   const scale = Math.max(0.01, BRICK * 0.9 * fade)
-  const floor = 135 - GROUND + scale / 2
-  return debris.chunks.map((chunk, i) => ({
-    position: [
-      chunk.x - 50 + chunk.vx * age,
-      Math.max(floor, 135 - chunk.y + chunk.vy * age - 60 * age * age),
-      2.5 + (i % 3) * 0.5,
-    ],
-    rotation: [0, 0, chunk.spin * age],
-    scale: [scale, scale, 3],
+  return debris.chunks.map((chunk) => ({
+    position: at(chunk, 2.5),
+    rotation: [0, 0, chunk.spin * debris.age],
+    scale: [scale, scale, Math.max(0.01, 3 * fade)],
     color: brickColor(chunk),
   }))
 }
@@ -76,14 +71,16 @@ export function Wall({
   bricks: standing,
   broken,
   reduced,
+  slow,
 }: {
   bricks: WallBrick[]
   broken: boolean
   reduced: boolean
+  slow: boolean
 }) {
   const invalidate = useThree((s) => s.invalidate)
   const previous = useRef(standing)
-  const [debris, setDebris] = useState<(Debris & { age: number }) | null>(null)
+  const [debris, setDebris] = useState<Debris[]>([])
   useEffect(() => {
     const before = previous.current
     previous.current = standing
@@ -91,27 +88,37 @@ export function Wall({
     const kept = new Set(standing.map((brick) => brick.id))
     const removed = before.filter((brick) => !kept.has(brick.id))
     if (!removed.length) return
-    setDebris({ chunks: scatter(removed), start: performance.now(), age: 0 })
+    setDebris((previous) => [...previous, { chunks: scatter(removed), age: 0 }])
     invalidate()
   }, [standing, reduced, invalidate])
-  useFrame(() => {
-    if (!debris) return
-    const elapsed = (performance.now() - debris.start) / 1000
-    if (elapsed >= DEBRIS_LIFE || reduced) {
-      setDebris(null)
-      return
-    }
-    setDebris({ ...debris, age: elapsed })
+  useFrame((_, delta) => {
+    if (!debris.length) return
+    const dt = Math.min(delta, 0.08) * (slow ? 0.25 : 1)
+    setDebris(
+      debris.flatMap((batch) => {
+        const age = batch.age + dt
+        if (age >= DEBRIS_LIFE || reduced) return []
+        const chunks = batch.chunks.map((chunk) => {
+          const next = { ...chunk, vy: chunk.vy - 120 * dt }
+          next.x += next.vx * dt
+          next.y -= next.vy * dt
+          if (next.y > GROUND - BRICK / 2) {
+            next.y = GROUND - BRICK / 2
+            next.vy = Math.abs(next.vy) < 4 ? 0 : Math.abs(next.vy) * 0.35
+            next.vx *= 0.75
+          }
+          return next
+        })
+        return [{ chunks, age }]
+      }),
+    )
     invalidate()
   })
   const items = useMemo(
     () => (broken ? rubbleItems() : brickItems(standing)),
     [broken, standing],
   )
-  const falling = useMemo(
-    () => (debris ? debrisItems(debris, debris.age) : null),
-    [debris],
-  )
+  const falling = useMemo(() => debris.flatMap(debrisItems), [debris])
   return (
     <>
       {items.length > 0 && <Instanced items={items} />}

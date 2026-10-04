@@ -20,10 +20,10 @@ export const releaseBalls = (): RollingBall[] =>
   Array.from({ length: 24 }, (_, id) => ({
     id,
     travelled: -id * 3.9,
-    speed: 24,
+    speed: 32,
     drop: null,
   }))
-function constrain(ball: FallingBall, previous = ball) {
+function constrain(ball: FallingBall, previous = ball, floor = 264.6) {
   if (ball.held) return
   if (ball.x < 2 || ball.x > 98) {
     ball.x = clamp(ball.x, 2, 98)
@@ -57,16 +57,17 @@ function constrain(ball: FallingBall, previous = ball) {
       ball.vx *= -0.45
     }
   }
-  if (ball.y > 266 - RADIUS) {
-    ball.y = 266 - RADIUS
+  if (ball.y > floor) {
+    ball.y = floor
     ball.vy = Math.abs(ball.vy) < 3 ? 0 : -Math.abs(ball.vy) * 0.38
     ball.vx *= 0.96
   }
 }
-function fall(
+export function fall(
   balls: FallingBall[],
   dt: number,
   obstacles: (Point & { radius: number })[],
+  floor = 264.6,
 ) {
   for (const ball of balls) {
     if (ball.held) continue
@@ -76,7 +77,7 @@ function fall(
     ball.x += ball.vx * dt
     ball.y += ball.vy * dt
     ball.spin += (ball.vx * dt) / RADIUS
-    constrain(ball, previous)
+    constrain(ball, previous, floor)
     for (const p of obstacles) {
       const dx = ball.x - p.x,
         dy = ball.y - p.y,
@@ -121,8 +122,8 @@ function fall(
           b.vx += impulse * nx * weightB
           b.vy += impulse * ny * weightB
         }
-        constrain(a)
-        constrain(b)
+        constrain(a, a, floor)
+        constrain(b, b, floor)
       }
     }
   }
@@ -139,7 +140,7 @@ export function rollBalls(
     const before = along(path, Math.max(0, ball.travelled))
     const after = along(path, Math.max(0, ball.travelled) + 0.5)
     const gravity = ((after.y - before.y) / 0.5) * 75
-    ball.speed = clamp(ball.speed + (gravity - ball.speed * 0.1) * dt, 32, 74)
+    ball.speed = clamp(ball.speed + (gravity - ball.speed * 0.1) * dt, 32, 64)
     ball.travelled = Math.min(length, ball.travelled + ball.speed * dt)
     if (ball.id && ball.travelled >= length) {
       const end = path.at(-1)!,

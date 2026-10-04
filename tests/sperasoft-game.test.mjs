@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  chipWall,
   grenadeResult,
   launch,
   stepGrenade,
@@ -18,23 +19,41 @@ import {
 } from '../src/components/sperasoft/rolling.ts'
 import { WALL_BRICKS, PASSER } from '../src/components/sperasoft/types.ts'
 
-test('blasts remove local chunks persistently and the unsupported wall eventually collapses', () => {
-  const aim = { x: 26.3, y: -49.4 }
-  const first = grenadeResult(aim)
-  assert.ok(first.bricks.length > 0 && first.bricks.length < WALL_BRICKS.length)
-  assert.equal(first.broken, false)
-  const second = grenadeResult(aim, first.bricks)
-  assert.ok(
-    second.bricks.length > 0 && second.bricks.length < first.bricks.length,
-  )
-  assert.ok(
-    second.bricks.every((brick) =>
-      first.bricks.some((previous) => previous.id === brick.id),
-    ),
-  )
-  const third = grenadeResult(aim, second.bricks)
-  assert.equal(third.broken, true)
-  assert.equal(third.bricks.length, 0)
+test('every wall-side blast removes nearest bricks and closer blasts remove more', () => {
+  for (const point of [
+    { x: 50, y: 60 },
+    { x: 95, y: 5 },
+    { x: 80, y: 85 },
+  ]) {
+    assert.ok(chipWall(point, WALL_BRICKS).length < WALL_BRICKS.length)
+  }
+  const point = { x: 75, y: 44 }
+  const close = chipWall(point, WALL_BRICKS)
+  const far = chipWall({ x: 50, y: 70 }, WALL_BRICKS)
+  assert.ok(close.length < far.length)
+  assert.ok(!close.some((brick) => distance(brick, point) < 6))
+  assert.deepEqual(chipWall({ x: 40, y: 55 }, WALL_BRICKS), WALL_BRICKS)
+})
+
+test('decent throws open in three, far wall-side throws in five, and damage persists', () => {
+  for (const [aim, expected] of [
+    [{ x: 44, y: -38 }, 3],
+    [{ x: 66, y: -62 }, 5],
+  ]) {
+    let bricks = WALL_BRICKS,
+      throws = 0
+    while (bricks.length && throws < 8) {
+      const next = grenadeResult(aim, bricks).bricks
+      assert.ok(next.length < bricks.length)
+      assert.ok(
+        next.every((brick) => bricks.some((old) => old.id === brick.id)),
+      )
+      bricks = next
+      throws++
+    }
+    assert.equal(throws, expected)
+    assert.equal(bricks.length, 0)
+  }
   assert.equal(
     grenadeResult({ x: 8, y: -10 }).bricks.length,
     WALL_BRICKS.length,
@@ -88,7 +107,10 @@ test('the first ball reaches the player promptly while spare balls remain in mot
       )
     }
   }
-  assert.ok(time < 8, `arrival took ${time} seconds`)
+  assert.ok(
+    time + 0.45 >= 5 && time + 0.45 <= 6,
+    `arrival with collapse took ${time + 0.45} seconds`,
+  )
   assert.ok(
     balls
       .slice(1)
