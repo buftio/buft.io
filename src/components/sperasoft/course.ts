@@ -131,7 +131,29 @@ export function createCourse(get: () => SceneState, open: () => void) {
       s.throwCharging = false
     },
     settle() {
-      if (flight || windup !== null) resolve()
+      const s = get()
+      if (flight || windup !== null) return resolve()
+      if (sinking) {
+        sinking = 0
+        s.trooper = { ...safe, vx: 0, vy: 0, grounded: true }
+      }
+      if (!s.trooper.grounded) {
+        for (let i = 0; i < 1200 && !s.trooper.grounded; i++)
+          s.trooper = stepTrooper(s.trooper, STEP, s.wallBricks)
+        land()
+        if (sinking) {
+          sinking = 0
+          s.trooper = { ...safe, vx: 0, vy: 0, grounded: true }
+        }
+      }
+      if (s.walking || (s.gate > 0 && s.gate < 1)) {
+        s.walking = false
+        s.trooper = { ...s.trooper, x: GATE }
+        s.gate = 1
+        open()
+      }
+      s.shake = 0
+      finale()
     },
     step(dt: number) {
       const s = get()

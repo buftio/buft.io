@@ -50,6 +50,7 @@ export type SceneState = {
   wallOpenedAt: number | null
   arrivedAt: number | null
   reduced: boolean
+  pitchLive: boolean
 }
 export const WORLD_TOP = 23
 export const WORLD_HEIGHT = 247

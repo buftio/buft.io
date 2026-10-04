@@ -28,6 +28,17 @@ export default function SperasoftStory({
 }) {
   const game = useGame(reduced)
   const world = useRef<HTMLDivElement>(null)
+  const pitch = useRef<HTMLDivElement>(null)
+  const { setPitchLive } = game
+  useEffect(() => {
+    const zone = pitch.current
+    if (!zone) return
+    const watch = new IntersectionObserver(([entry]) =>
+      setPitchLive(entry.isIntersecting),
+    )
+    watch.observe(zone)
+    return () => watch.disconnect()
+  }, [setPitchLive])
   const [scrolled, setScrolled] = useState(false)
   const keeperDrag = useRef<number | null>(null)
   const released = game.scene.gate >= 1
@@ -121,6 +132,7 @@ export default function SperasoftStory({
         </p>
       </aside>
       <div className="spera-world" ref={world}>
+        <div className="spera-pitch-zone" ref={pitch} aria-hidden="true" />
         <figure
           className="spera-canvas"
           aria-label="Grenade playground connected by football chutes to a stadium"
@@ -162,7 +174,7 @@ export default function SperasoftStory({
         </div>
         <button
           className="spera-throw-area"
-          aria-label="Trooper"
+          aria-label="Throw grenade. Drag back and release, or aim with arrow keys and press Enter."
           disabled={!canThrow}
           onPointerDown={(event) => {
             event.currentTarget.setPointerCapture(event.pointerId)
@@ -225,7 +237,7 @@ export default function SperasoftStory({
         {game.arrived && (
           <button
             className="spera-keeper-hit"
-            aria-label="Blue keeper"
+            aria-label="Blue keeper. Drag, or use arrow left and right to move."
             style={{
               left: `${game.scene.homeKeeper.x}%`,
               top: `${worldPercent(game.scene.homeKeeper.y)}%`,
@@ -262,7 +274,7 @@ export default function SperasoftStory({
         {football && (
           <button
             className={`spera-ball-hit ${canKick ? 'is-waiting' : ''}`}
-            aria-label="Blue player"
+            aria-label="Flick football. Drag back and release. Arrow left and right aim, up and down change power, Enter kicks."
             disabled={!canKick}
             style={{
               left: `${game.scene.player.x}%`,

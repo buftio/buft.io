@@ -65,7 +65,8 @@ export function createMatch(get: () => SceneState) {
     age = 0,
     time = 0,
     seed = 7281
-  let aim = { x: 0, y: -44 }
+  let aim = { x: 0, y: -44 },
+    guided = ''
   const canKick = () => get().outcome === 'setup' && !!get().football
   const finish = () => {
     const state = get()
@@ -118,6 +119,9 @@ export function createMatch(get: () => SceneState) {
       x: state.football!.x,
       y: Math.min(247, state.football!.y + 3.5),
     }
+    const key = `${state.football!.x},${state.football!.y},${aim.x},${aim.y}`
+    if (key === guided && state.kickAim.length) return
+    guided = key
     state.kickAim = kickGuide(state.football!, aim)
   }
   const settle = () => {

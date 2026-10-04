@@ -259,6 +259,7 @@ export function Opponent({
   windup = false,
   celebrating = false,
   dive = 0,
+  live = true,
 }: {
   kind: Role
   point: Point
@@ -267,6 +268,7 @@ export function Opponent({
   windup?: boolean
   celebrating?: boolean
   dive?: number
+  live?: boolean
 }) {
   const body = useRef<Group>(null)
   const clock = useRef(index * 1.7)
@@ -292,7 +294,7 @@ export function Opponent({
 
   useFrame((_, delta) => {
     const group = body.current
-    if (reduced || !group) return
+    if (reduced || !group || !live) return
     const dt = Math.min(delta, 0.05)
     clock.current += dt
     const t = clock.current

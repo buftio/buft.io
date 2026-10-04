@@ -110,11 +110,13 @@ export function Crowd({
   slumping,
   reduced,
   pokes,
+  live,
 }: {
   cheering: boolean
   slumping: boolean
   reduced: boolean
   pokes: number[]
+  live: boolean
 }) {
   const heads = useRef<InstancedMesh>(null)
   const bodies = useRef<InstancedMesh>(null)
@@ -171,7 +173,7 @@ export function Crowd({
 
   useFrame((_, delta) => {
     const meshes = parts()
-    if (!meshes || reduced) return
+    if (!meshes || reduced || !live) return
     const dt = Math.min(delta, 0.05)
     clock.current += dt
     annoyed.current = annoyed.current.map((age) => Math.max(0, age - dt))

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { fans } from './fan-layout'
 import { PASSER, WALL_BRICKS, type Point, type SceneState } from './types'
 import {
@@ -53,6 +53,7 @@ export function useGame(reduced: boolean) {
     wallOpenedAt: null,
     arrivedAt: null,
     reduced,
+    pitchLive: false,
   }))
   const model = useRef(scene)
   const course = useRef<ReturnType<typeof createCourse> | null>(null)
@@ -63,6 +64,22 @@ export function useGame(reduced: boolean) {
   const ready = useRef(false)
   const [message, setMessage] = useState('')
   const [arrived, setArrived] = useState(false)
+  const setPitchLive = useCallback((live: boolean) => {
+    model.current.pitchLive = live
+  }, [])
+  const skipClock = (key: string, value: unknown) =>
+    key === 'clock' ? undefined : value
+  const shown = useRef('')
+  const publishIfChanged = () => {
+    const s = model.current
+    const snapshot = JSON.stringify(s, skipClock)
+    const animating =
+      (s.cheerAt !== null && s.clock - s.cheerAt < 0.8) ||
+      (s.landedAt !== null && s.clock - s.landedAt < 0.25)
+    if (snapshot === shown.current && !animating) return
+    shown.current = snapshot
+    publish()
+  }
   const publish = () =>
     setScene({
       ...model.current,
@@ -117,8 +134,6 @@ export function useGame(reduced: boolean) {
     const tick = (now: number) => {
       const dt = last && !paused ? Math.min((now - last) / 1000, 0.08) : 0
       last = now
-      const reducedChange =
-        reduced && !['setup', 'won', 'lost'].includes(model.current.outcome)
       if (reduced) {
         course.current!.settle()
         model.current.explosion = null
@@ -132,7 +147,11 @@ export function useGame(reduced: boolean) {
         while (carry >= STEP) {
           carry -= STEP
           if (rolling.current.length) stepBalls()
-          if (ready.current) match.current!.step()
+          if (
+            ready.current &&
+            (model.current.pitchLive || model.current.outcome !== 'setup')
+          )
+            match.current!.step()
         }
         if (rolling.current.length) updateBalls()
         if (model.current.explosion) {
@@ -140,7 +159,7 @@ export function useGame(reduced: boolean) {
           if (model.current.explosion.age > 0.85) model.current.explosion = null
         }
       }
-      if (!reduced || reducedChange) publish()
+      publishIfChanged()
       raf = requestAnimationFrame(tick)
     }
     if (
@@ -189,6 +208,7 @@ export function useGame(reduced: boolean) {
     scene,
     message,
     arrived,
+    setPitchLive,
     aim(point: Point, strength = Math.hypot(point.x, point.y) / 70) {
       course.current!.aim(point, strength)
       publish()

@@ -295,6 +295,11 @@
   outline-width: 1px;
 }
 
+.spera-pitch-zone {
+  position: absolute;
+  inset: 66% 0 0;
+  pointer-events: none;
+}
 .spera-score {
   position: absolute;
   left: 24%;

@@ -290,10 +290,14 @@ function Outcome({ state }: { state: SceneState }) {
 function World({ state }: { state: SceneState }) {
   const invalidate = useThree((s) => s.invalidate)
   useEffect(() => invalidate(), [state, invalidate])
-  const orbs =
-    state.gate >= 1
-      ? state.balls
-      : [...resting.slice(state.balls.length), ...state.balls]
+  const open = state.gate >= 1
+  const orbs = useMemo(
+    () =>
+      open
+        ? state.balls
+        : [...resting.slice(state.balls.length), ...state.balls],
+    [open, state.balls],
+  )
   const holding =
     !state.grenade &&
     state.trooper.grounded &&
@@ -344,6 +348,7 @@ function World({ state }: { state: SceneState }) {
         slumping={state.reaction === 'slump'}
         reduced={state.reduced}
         pokes={state.fanPokes}
+        live={state.pitchLive}
       />
       {holding && (
         <Grenade
@@ -366,7 +371,8 @@ function World({ state }: { state: SceneState }) {
           !!state.football &&
           state.outcome === 'setup' &&
           !state.kickDragging &&
-          !state.reduced
+          !state.reduced &&
+          state.pitchLive
         }
       />
       <Player
@@ -382,6 +388,7 @@ function World({ state }: { state: SceneState }) {
         kind="keeper"
         point={state.keeper}
         reduced={state.reduced}
+        live={state.pitchLive}
         dive={
           scored && state.football
             ? Math.sign(state.football.x - state.keeper.x) || 1
@@ -397,6 +404,7 @@ function World({ state }: { state: SceneState }) {
           celebrating={state.outcome === 'lost'}
           point={defender}
           reduced={state.reduced}
+          live={state.pitchLive}
         />
       ))}
       <Trace points={state.trace} color={traceColor} />
