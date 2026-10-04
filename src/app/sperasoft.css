@@ -72,11 +72,9 @@
   line-height: 1.5;
 }
 .spera-halo {
-  position: absolute;
-  width: 48%;
-  left: 8%;
-  top: 190px;
-  z-index: 1;
+  position: relative;
+  width: 56%;
+  margin: 26px 0 0 6%;
 }
 .spera-artists {
   left: 5%;
@@ -108,12 +106,32 @@
 }
 .spera-tools {
   position: absolute;
-  top: 3%;
-  right: 7%;
+  top: 1%;
+  left: 3%;
   z-index: 2;
   display: flex;
   gap: 12px;
   align-items: center;
+}
+.spera-sign {
+  position: absolute;
+  left: 88%;
+  top: 2.6%;
+  transform: translateX(-50%) rotate(-3deg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 9px 2px;
+  border: 2px solid #6e5a3e;
+  border-radius: 4px;
+  background: #d9b98a;
+  color: #4a3a26;
+  font-size: clamp(10px, 1.2vw, 14px);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 2px 3px 0 #0002;
 }
 .spera-icon {
   display: grid;
@@ -145,35 +163,6 @@
 .spera-story button:focus-visible {
   outline: 3px solid #b96941;
   outline-offset: 3px;
-}
-.spera-grenade {
-  display: block;
-  position: relative;
-  width: 25px;
-  height: 28px;
-  border-radius: 45%;
-  background: #c77750;
-  box-shadow: inset -5px -4px 0 #0002;
-  border: 1px solid #945135;
-  transform: rotate(-18deg);
-}
-.spera-grenade i {
-  position: absolute;
-  width: 10px;
-  height: 4px;
-  top: -4px;
-  left: 7px;
-  background: #677060;
-  border-radius: 2px;
-}
-.spera-grenade::after {
-  content: '';
-  position: absolute;
-  top: 8px;
-  left: 1px;
-  right: 1px;
-  height: 5px;
-  border-block: 1px solid #fff5;
 }
 .spera-throw-area {
   position: absolute;
@@ -242,8 +231,8 @@
     padding: 0 6px 190px;
   }
   .spera-tools {
-    top: 1.5%;
-    right: 3%;
+    top: 0.5%;
+    left: 2%;
     gap: 7px;
   }
   .spera-icon {
@@ -319,6 +308,19 @@
   font-size: clamp(18px, 2vw, 26px);
   font-weight: 700;
   box-shadow: 2px 3px 0 #0002;
+}
+.spera-score span {
+  animation: spera-pop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes spera-pop {
+  from {
+    transform: scale(1.9);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spera-score span {
+    animation: none;
+  }
 }
 .spera-score span:first-child {
   color: #3d6fa5;

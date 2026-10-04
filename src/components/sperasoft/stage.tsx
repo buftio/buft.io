@@ -8,7 +8,14 @@ import {
   type Shape,
   type Vec3,
 } from '../marketdata/models/clay'
-import { CHANNEL, FIRST_BALL_CHANNEL, GOAL, type Point } from './types'
+import {
+  CHANNEL,
+  FIRST_BALL_CHANNEL,
+  GOAL,
+  type Body,
+  type Point,
+} from './types'
+import { CAGE, CRATES, GROUND, PIT, TRENCH } from './game'
 import { throwPose } from './throw-pose'
 
 export const at = (p: Point, z = 0): Vec3 => [p.x - 50, 135 - p.y, z]
@@ -45,35 +52,62 @@ const armor = '#5f6e5a',
   sand = '#cfc3a5',
   line = '#f3efe0'
 
+const crate = '#8f7a5a',
+  slat = '#6e5a3e'
+function Crate({ x, y }: { x: [number, number]; y: [number, number] }) {
+  return (
+    <>
+      <Block x={x} y={y} z={[-3, 3]} color={crate} />
+      {[0.3, 0.7].map((t) => (
+        <Block
+          key={t}
+          x={x}
+          y={[y[0] + (y[1] - y[0]) * t - 0.35, y[0] + (y[1] - y[0]) * t + 0.35]}
+          z={[3, 3.3]}
+          color={slat}
+          shape="slab"
+        />
+      ))}
+    </>
+  )
+}
 export function Ground() {
   return (
     <>
-      <Block x={[0, 83]} y={[60.5, 66]} z={[-6, 4]} color={sand} />
-      <Block x={[89, 100]} y={[60.5, 66]} z={[-6, 4]} color={sand} />
-      <Block x={[43, 49]} y={[51, 60.5]} z={[-3, 3]} color="#8f7a5a" />
+      <Block x={[0, PIT.left]} y={[GROUND, 66]} z={[-6, 4]} color={sand} />
+      <Block x={[PIT.right, 83]} y={[GROUND, 66]} z={[-6, 4]} color={sand} />
+      <Block x={[89, 100]} y={[GROUND, 66]} z={[-6, 4]} color={sand} />
       <Block
-        x={[43, 49]}
-        y={[53.8, 54.5]}
-        z={[3, 3.3]}
-        color="#6e5a3e"
-        shape="slab"
+        x={[PIT.left, PIT.right]}
+        y={[GROUND, TRENCH]}
+        z={[-6, -4]}
+        color="#5d5545"
       />
       <Block
-        x={[43, 49]}
-        y={[57, 57.7]}
-        z={[3, 3.3]}
-        color="#6e5a3e"
-        shape="slab"
+        x={[PIT.left, PIT.right]}
+        y={[TRENCH, 78]}
+        z={[-6, 4]}
+        color="#7a6d52"
+      />
+      {[PIT.left, PIT.right - 0.8].map((x) => (
+        <Block
+          key={x}
+          x={[x, x + 0.8]}
+          y={[GROUND, TRENCH]}
+          z={[-6, 4]}
+          color="#857760"
+        />
+      ))}
+      <Crate x={[CRATES.left, CRATES.right]} y={[53.8, GROUND]} />
+      <Crate
+        x={[CRATES.left + 0.6, CRATES.right - 0.4]}
+        y={[CRATES.top, 53.8]}
       />
     </>
   )
 }
 
 const greenSeeds: [number, number, number, string][] = [
-  [7, 69, 2.8, '#738966'],
-  [16, 72, 1.8, '#91a678'],
-  [32, 69, 2.1, '#718b6d'],
-  [92, 68, 2.4, '#859d71'],
   [8, 115, 2.6, '#728d70'],
   [91, 113, 2.1, '#8ca174'],
   [7, 155, 2.3, '#718b6d'],
@@ -93,12 +127,14 @@ const stones: Item[] = [
   [91, 139, 2.3],
   [28, 185, 1.7],
   [72, 186, 2],
-].map(([x, y, scale], i) => ({
-  position: at({ x, y }, -2),
-  rotation: [0, 0, i * 0.5] as Vec3,
-  scale: [scale, scale * 0.65, scale * 0.8] as Vec3,
-  color: i % 2 ? '#b7aa91' : '#968d7d',
-}))
+]
+  .filter(([, y]) => y > 80)
+  .map(([x, y, scale], i) => ({
+    position: at({ x, y }, -2),
+    rotation: [0, 0, i * 0.5] as Vec3,
+    scale: [scale, scale * 0.65, scale * 0.8] as Vec3,
+    color: i % 2 ? '#b7aa91' : '#968d7d',
+  }))
 export function Surroundings() {
   return (
     <>
@@ -108,126 +144,199 @@ export function Surroundings() {
   )
 }
 
-export function Trooper({
-  progress,
-  strength,
-}: {
+export type Moves = {
+  body: Body
   progress: number
   strength: number
-}) {
-  const pose = throwPose(progress, strength)
+  clock: number
+  landedAt: number | null
+  cheerAt: number | null
+  walking: boolean
+  gate: number
+}
+function pose({ body, progress, strength, clock, cheerAt, gate }: Moves) {
+  if (gate > 0)
+    return {
+      angle: -1.55,
+      reach: 2.85 + Math.sin(gate * Math.PI) * 2.2,
+      support: 0.35,
+    }
+  if (!body.grounded) return { angle: -0.5, reach: 4.4, support: -2.5 }
+  const cheer = cheerAt === null ? 1 : clock - cheerAt
+  if (cheer < 0.7)
+    return {
+      angle: -0.12,
+      reach: 4.6 + Math.sin(cheer * 28) * 0.5,
+      support: 0.35,
+    }
+  return throwPose(progress, strength)
+}
+export function Trooper(moves: Moves) {
+  const { body, clock, landedAt, walking } = moves
+  const arm = pose(moves)
+  const lean = body.grounded
+    ? 0
+    : Math.max(-0.7, Math.min(0.7, -body.vx * 0.018))
+  const squash = landedAt === null ? 1 : clock - landedAt
+  const squish =
+    squash < 0.18 ? 1 - Math.sin((squash / 0.18) * Math.PI) * 0.16 : 1
+  const stride = walking ? Math.sin(clock * 14) : 0
   return (
-    <group position={at({ x: 12.5, y: 60.5 })}>
-      {[-1.2, 1.2].map((x) => (
-        <group key={x} position={[x, 0, 0]}>
+    <group position={at(body)} scale={[2 - squish, squish, 1]}>
+      <group position={[0, 6, 0]} rotation={[0, 0, lean]}>
+        <group position={[0, -6, 0]}>
+          {[-1.2, 1.2].map((x, i) => (
+            <group
+              key={x}
+              position={[
+                x + stride * (i ? 0.7 : -0.7),
+                Math.max(0, stride * (i ? -1 : 1)) * 0.7,
+                0,
+              ]}
+            >
+              <Clay
+                shape="sphere"
+                color={dark}
+                size={[2.3, 1.2, 2.4]}
+                position={[0.2, 0.5, 0]}
+              />
+              <Clay
+                shape="cylinder"
+                color={suit}
+                size={[1.6, 4.2, 1.6]}
+                position={[0, 2.9, 0]}
+              />
+              <Clay
+                shape="sphere"
+                color={armor}
+                size={1.5}
+                position={[0, 2.9, 0.6]}
+              />
+            </group>
+          ))}
+          <Clay color={dark} size={[4.8, 0.9, 3.4]} position={[0, 5, 0]} />
+          <Clay color={armor} size={[4.6, 4.4, 3.2]} position={[0, 7.4, 0]} />
           <Clay
-            shape="sphere"
+            color="#6f7f69"
+            size={[3.4, 2.8, 1]}
+            position={[0.2, 7.5, 1.6]}
+          />
+          <Clay
             color={dark}
-            size={[2.3, 1.2, 2.4]}
-            position={[0.2, 0.5, 0]}
+            size={[1.6, 3.2, 2.4]}
+            position={[-2.6, 7.2, -0.4]}
           />
-          <Clay
-            shape="cylinder"
-            color={suit}
-            size={[1.6, 4.2, 1.6]}
-            position={[0, 2.9, 0]}
-          />
+          {[-2.7, 2.7].map((x) => (
+            <Clay
+              key={x}
+              shape="sphere"
+              color={armor}
+              size={[2.4, 1.8, 2.6]}
+              position={[x, 9.1, 0]}
+            />
+          ))}
           <Clay
             shape="sphere"
             color={armor}
-            size={1.5}
-            position={[0, 2.9, 0.6]}
+            size={[3.6, 3.4, 3.6]}
+            position={[0.2, 11.2, 0]}
           />
+          <Clay
+            color="#e0b84a"
+            size={[1.4, 1.2, 2.4]}
+            position={[1.6, 11.2, 0.5]}
+          />
+          <group position={[2.7, 9.1, 0.4]} rotation={[0, 0, arm.angle]}>
+            <Clay
+              shape="cylinder"
+              color={suit}
+              size={[1.3, arm.reach, 1.3]}
+              position={[0, arm.reach / 2, 0]}
+            />
+            <Clay
+              shape="sphere"
+              color={dark}
+              size={1.6}
+              position={[0, arm.reach, 0.1]}
+            />
+          </group>
+          <group position={[-2.6, 8.4, 0.6]} rotation={[0, 0, arm.support]}>
+            <Clay
+              shape="cylinder"
+              color={suit}
+              size={[1.3, 3.2, 1.3]}
+              position={[0, -1.6, 0]}
+            />
+            <Clay
+              shape="sphere"
+              color={dark}
+              size={1.4}
+              position={[0, -3.4, 0]}
+            />
+          </group>
         </group>
-      ))}
-      <Clay color={dark} size={[4.8, 0.9, 3.4]} position={[0, 5, 0]} />
-      <Clay color={armor} size={[4.6, 4.4, 3.2]} position={[0, 7.4, 0]} />
-      <Clay color="#6f7f69" size={[3.4, 2.8, 1]} position={[0.2, 7.5, 1.6]} />
-      <Clay color={dark} size={[1.6, 3.2, 2.4]} position={[-2.6, 7.2, -0.4]} />
-      {[-2.7, 2.7].map((x) => (
-        <Clay
-          key={x}
-          shape="sphere"
-          color={armor}
-          size={[2.4, 1.8, 2.6]}
-          position={[x, 9.1, 0]}
-        />
-      ))}
-      <Clay
-        shape="sphere"
-        color={armor}
-        size={[3.6, 3.4, 3.6]}
-        position={[0.2, 11.2, 0]}
-      />
-      <Clay
-        color="#e0b84a"
-        size={[1.4, 1.2, 2.4]}
-        position={[1.6, 11.2, 0.5]}
-      />
-      <group position={[2.7, 9.1, 0.4]} rotation={[0, 0, pose.angle]}>
-        <Clay
-          shape="cylinder"
-          color={suit}
-          size={[1.3, pose.reach, 1.3]}
-          position={[0, pose.reach / 2, 0]}
-        />
-        <Clay
-          shape="sphere"
-          color={dark}
-          size={1.6}
-          position={[0, pose.reach, 0.1]}
-        />
-      </group>
-      <group position={[-2.6, 8.4, 0.6]} rotation={[0, 0, pose.support]}>
-        <Clay
-          shape="cylinder"
-          color={suit}
-          size={[1.3, 3.2, 1.3]}
-          position={[0, -1.6, 0]}
-        />
-        <Clay shape="sphere" color={dark} size={1.4} position={[0, -3.4, 0]} />
       </group>
     </group>
   )
 }
 
-export function Reservoir({ open }: { open: boolean }) {
+export function Cage({ gate }: { gate: number }) {
   const steel = '#7d8a7d'
+  const { left, right, top, bottom } = CAGE
   return (
     <>
-      <Block x={[70, 96]} y={[24, 26]} z={[-3, 4]} color={steel} />
-      <Block x={[94, 96]} y={[24, 62]} z={[-3, 4]} color={steel} />
-      {[44, 50, 56].map((y) => (
-        <Block key={y} x={[82, 94]} y={[y, y + 0.8]} z={[3, 4]} color={steel} />
-      ))}
-      <Block x={[82, 94]} y={[40, 58]} z={[-3, -2.2]} color={steel} />
-      <Block x={[82, 82.7]} y={[40, 60.5]} z={[-3, 2.5]} color={steel} />
-      <Block x={[93, 94]} y={[40, 60.5]} z={[-3, 2.5]} color={steel} />
-      <Block x={[82, 83.5]} y={[58, 59]} z={[-3, 2.5]} color={steel} />
-      <Block x={[87, 94]} y={[58, 59]} z={[-3, 2.5]} color={steel} />
-      <mesh
-        geometry={geo.slab}
-        position={[38, 85, 2.7]}
-        scale={[10.3, 16, 0.4]}
-        dispose={null}
-      >
-        <meshStandardMaterial
-          color="#bfe3ec"
-          transparent
-          opacity={0.28}
-          roughness={0.35}
-          depthWrite={false}
-        />
-      </mesh>
+      <Block x={[left, right]} y={[top, top + 1.5]} z={[-3, 4]} color={steel} />
+      <Block x={[left, left + 1]} y={[top, GROUND]} z={[-3, 3]} color={steel} />
+      <Block
+        x={[right - 1, right]}
+        y={[top, GROUND]}
+        z={[-3, 3]}
+        color={steel}
+      />
+      <Block x={[left, right]} y={[top, bottom]} z={[-3, -2.2]} color={steel} />
+      <Block
+        x={[88, right]}
+        y={[bottom - 1, bottom]}
+        z={[-3, 2.5]}
+        color={steel}
+      />
       <group
-        position={at({ x: 87, y: 58.5 })}
-        rotation={[0, 0, open ? 1.3 : 0]}
+        position={at({ x: 88, y: bottom - 0.5 })}
+        rotation={[0, 0, gate >= 1 ? -1.3 : 0]}
       >
         <Clay
           shape="slab"
           color="#5b6a5b"
-          size={[3.5, 0.8, 5]}
-          position={[-1.75, 0, 0]}
+          size={[5, 0.8, 5]}
+          position={[-2.5, 0, 0]}
+        />
+      </group>
+      <group
+        position={at({ x: left + 0.5, y: top }, 3.4)}
+        rotation={[0, -gate * 1.9, 0]}
+      >
+        {[2, 4.2, 6.4, 8.6].map((x) => (
+          <Clay
+            key={x}
+            shape="cylinder"
+            color="#5b6a5b"
+            size={[0.6, bottom - top, 0.6]}
+            position={[x, -(bottom - top) / 2, 0]}
+          />
+        ))}
+        {[2.5, (bottom - top) / 2, bottom - top - 1.5].map((y) => (
+          <Clay
+            key={y}
+            color={steel}
+            size={[11, 0.8, 0.8]}
+            position={[5.5, -y, 0]}
+          />
+        ))}
+        <Clay
+          shape="sphere"
+          color="#e0b84a"
+          size={1.3}
+          position={[1, -(bottom - top) / 2, 0.6]}
         />
       </group>
     </>
@@ -296,7 +405,7 @@ export function Rails({ feeding }: { feeding: boolean }) {
 
 const stripe = 61 / 6
 const BANK: [number, number] = [-1.5, 0.9]
-export function Pitch() {
+export function Pitch({ bulge = false }: { bulge?: boolean }) {
   return (
     <>
       <Block x={[19, 81]} y={[190, 253]} z={[-4.2, -3.4]} color="#3f6b43" />
@@ -376,14 +485,14 @@ export function Pitch() {
       />
       <mesh
         geometry={geo.slab}
-        position={at({ x: GOAL.x, y: 194.75 }, 0.5)}
-        scale={[12, 4.5, 0.3]}
+        position={at({ x: GOAL.x, y: bulge ? 193.9 : 194.75 }, 0.5)}
+        scale={[bulge ? 13 : 12, bulge ? 6.2 : 4.5, 0.3]}
         dispose={null}
       >
         <meshStandardMaterial
           color={line}
           transparent
-          opacity={0.4}
+          opacity={bulge ? 0.65 : 0.4}
           roughness={1}
           depthWrite={false}
         />

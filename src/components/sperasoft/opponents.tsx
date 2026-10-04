@@ -258,6 +258,7 @@ export function Opponent({
   reduced,
   windup = false,
   celebrating = false,
+  dive = 0,
 }: {
   kind: Role
   point: Point
@@ -265,6 +266,7 @@ export function Opponent({
   reduced: boolean
   windup?: boolean
   celebrating?: boolean
+  dive?: number
 }) {
   const body = useRef<Group>(null)
   const clock = useRef(index * 1.7)
@@ -279,9 +281,14 @@ export function Opponent({
     body.current.rotation.set(0, 0, 0)
     body.current.position.z = 0
     body.current.position.y = 0
+    body.current.position.x = 0
     if (reduced && celebrating) body.current.rotation.z = 0.3
+    if (reduced && dive) {
+      body.current.rotation.y = dive * 1.2
+      body.current.position.x = dive * 2
+    }
     invalidate()
-  }, [reduced, celebrating, invalidate])
+  }, [reduced, celebrating, dive, invalidate])
 
   useFrame((_, delta) => {
     const group = body.current
@@ -292,10 +299,14 @@ export function Opponent({
     if (kind === 'keeper') {
       const vx = dt ? (point.x - lastX.current) / dt : 0
       lastX.current = point.x
-      const target = Math.max(-0.22, Math.min(0.22, vx * 0.05))
-      lean.current += (target - lean.current) * Math.min(1, dt * 8)
+      const target = dive
+        ? dive * 1.2
+        : Math.max(-0.22, Math.min(0.22, vx * 0.05))
+      lean.current +=
+        (target - lean.current) * Math.min(1, dt * (dive ? 14 : 8))
       group.rotation.set(0, lean.current, Math.sin(t * 1.7) * 0.03)
-      group.position.z = Math.abs(Math.sin(t * 5)) * 0.14
+      group.position.x = (lean.current / 1.2) * 2
+      group.position.z = dive ? 0 : Math.abs(Math.sin(t * 5)) * 0.14
     } else {
       group.rotation.set(0, Math.sin(t * 1.3) * 0.04, Math.sin(t * 2.6) * 0.06)
       group.position.z = Math.abs(Math.sin(t * 4.4)) * 0.18

@@ -5,7 +5,14 @@ export type Orb = Point & {
   loose?: boolean
   held?: boolean
 }
+export type Body = Point & { vx: number; vy: number; grounded: boolean }
 export type SceneState = {
+  trooper: Body
+  walking: boolean
+  gate: number
+  landedAt: number | null
+  cheerAt: number | null
+  shake: number
   wallBroken: boolean
   throwProgress: number
   throwCharging: boolean
@@ -48,7 +55,6 @@ export const WORLD_TOP = 23
 export const WORLD_HEIGHT = 247
 export const worldPercent = (y: number) =>
   ((y - WORLD_TOP) / WORLD_HEIGHT) * 100
-export const START = { x: 18, y: 51 }
 export const PASSER = { x: 50, y: 237 }
 export const GOAL = { x: 50, y: 196 }
 export const CHANNEL = [
@@ -63,10 +69,10 @@ export const CHANNEL = [
 export const FIRST_BALL_CHANNEL = [...CHANNEL, { x: 59, y: 248 }, PASSER]
 
 export type WallBrick = Point & { id: number; row: number; col: number }
-export const WALL_BRICKS: WallBrick[] = Array.from({ length: 48 }, (_, id) => ({
+export const WALL_BRICKS: WallBrick[] = Array.from({ length: 30 }, (_, id) => ({
   id,
-  row: Math.floor(id / 4),
-  col: id % 4,
-  x: 71.5 + (id % 4) * 3,
-  y: 27.5 + Math.floor(id / 4) * 3,
+  row: Math.floor(id / 3),
+  col: id % 3,
+  x: 69.425 + (id % 3) * 2.85,
+  y: 59.075 - Math.floor(id / 3) * 2.85,
 }))

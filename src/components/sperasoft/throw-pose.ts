@@ -33,10 +33,14 @@ export function throwPose(progress: number, strength = 1) {
     support: mix(0.1, 0.35, t),
   }
 }
-export function grenadeHand(progress: number, strength = 1): Point {
+export function grenadeHand(
+  trooper: Point,
+  progress: number,
+  strength = 1,
+): Point {
   const { angle, reach } = throwPose(progress, strength)
   return {
-    x: 15.2 - Math.sin(angle) * reach,
-    y: 51.4 - Math.cos(angle) * reach,
+    x: trooper.x + 2.7 - Math.sin(angle) * reach,
+    y: trooper.y - 9.1 - Math.cos(angle) * reach,
   }
 }

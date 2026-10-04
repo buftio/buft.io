@@ -24,15 +24,7 @@ import {
   type Point,
   type SceneState,
 } from './types'
-import {
-  at,
-  Ground,
-  Pitch,
-  Rails,
-  Reservoir,
-  Surroundings,
-  Trooper,
-} from './stage'
+import { at, Ground, Pitch, Rails, Cage, Surroundings, Trooper } from './stage'
 
 const grenadeColor = '#c77750'
 const resting: Orb[] = Array.from({ length: 24 }, (_, id) => ({
@@ -298,10 +290,20 @@ function Outcome({ state }: { state: SceneState }) {
 function World({ state }: { state: SceneState }) {
   const invalidate = useThree((s) => s.invalidate)
   useEffect(() => invalidate(), [state, invalidate])
-  const orbs = state.wallBroken
-    ? state.balls
-    : [...resting.slice(state.balls.length), ...state.balls]
-  const holding = !state.grenade && !state.wallBroken
+  const orbs =
+    state.gate >= 1
+      ? state.balls
+      : [...resting.slice(state.balls.length), ...state.balls]
+  const holding =
+    !state.grenade &&
+    state.trooper.grounded &&
+    !state.walking &&
+    state.gate === 0 &&
+    (state.cheerAt === null || state.clock - state.cheerAt > 0.7)
+  const scored =
+    (state.outcome === 'goal' || state.outcome === 'won') &&
+    state.reaction === 'cheer'
+  const shake = state.reduced ? 0 : state.shake * 1.6
   const traceColor =
     state.outcome === 'goal'
       ? '#f3efe0'
@@ -309,19 +311,34 @@ function World({ state }: { state: SceneState }) {
         ? palette.red
         : '#d8c9a3'
   return (
-    <>
+    <group
+      position={[
+        Math.sin(state.clock * 97) * shake,
+        Math.cos(state.clock * 83) * shake,
+        0,
+      ]}
+    >
       <Ground />
       <Surroundings />
-      <Trooper progress={state.throwProgress} strength={state.throwStrength} />
+      <Trooper
+        body={state.trooper}
+        progress={state.throwProgress}
+        strength={state.throwStrength}
+        clock={state.clock}
+        landedAt={state.landedAt}
+        cheerAt={state.cheerAt}
+        walking={state.walking}
+        gate={state.gate}
+      />
       <Wall
         bricks={state.wallBricks}
         broken={state.wallBroken}
         reduced={state.reduced}
         slow={state.collapse > 0}
       />
-      <Reservoir open={state.wallBroken} />
+      <Cage gate={state.gate} />
       <Rails feeding={!state.football} />
-      <Pitch />
+      <Pitch bulge={scored} />
       <Crowd
         cheering={state.reaction === 'cheer'}
         slumping={state.reaction === 'slump'}
@@ -330,7 +347,11 @@ function World({ state }: { state: SceneState }) {
       />
       {holding && (
         <Grenade
-          point={grenadeHand(state.throwProgress, state.throwStrength)}
+          point={grenadeHand(
+            state.trooper,
+            state.throwProgress,
+            state.throwStrength,
+          )}
         />
       )}
       {state.grenade && <Grenade point={state.grenade} />}
@@ -357,7 +378,16 @@ function World({ state }: { state: SceneState }) {
             state.outcome === 'opponent-shot')
         }
       />
-      <Opponent kind="keeper" point={state.keeper} reduced={state.reduced} />
+      <Opponent
+        kind="keeper"
+        point={state.keeper}
+        reduced={state.reduced}
+        dive={
+          scored && state.football
+            ? Math.sign(state.football.x - state.keeper.x) || 1
+            : 0
+        }
+      />
       {state.defenders.map((defender, i) => (
         <Opponent
           key={i}
@@ -373,7 +403,7 @@ function World({ state }: { state: SceneState }) {
       <KickAim points={state.kickAim} />
       {state.football && <Football point={state.football} />}
       <Outcome state={state} />
-    </>
+    </group>
   )
 }
 

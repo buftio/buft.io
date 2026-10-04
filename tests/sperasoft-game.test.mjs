@@ -1,9 +1,15 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  CAGE,
+  CRATES,
+  GROUND,
+  PIT,
   chipWall,
   grenadeResult,
+  inTrench,
   launch,
+  settleTrooper,
   stepGrenade,
   distance,
 } from '../src/components/sperasoft/game.ts'
@@ -19,45 +25,46 @@ import {
 } from '../src/components/sperasoft/rolling.ts'
 import { WALL_BRICKS, PASSER } from '../src/components/sperasoft/types.ts'
 
-test('every wall-side blast removes nearest bricks and closer blasts remove more', () => {
-  for (const point of [
-    { x: 50, y: 60 },
-    { x: 95, y: 5 },
-    { x: 80, y: 85 },
-  ]) {
-    assert.ok(chipWall(point, WALL_BRICKS).length < WALL_BRICKS.length)
-  }
-  const point = { x: 75, y: 44 }
-  const close = chipWall(point, WALL_BRICKS)
-  const far = chipWall({ x: 50, y: 70 }, WALL_BRICKS)
-  assert.ok(close.length < far.length)
-  assert.ok(!close.some((brick) => distance(brick, point) < 6))
-  assert.deepEqual(chipWall({ x: 40, y: 55 }, WALL_BRICKS), WALL_BRICKS)
+const body = (x, y = GROUND) => ({ x, y, vx: 0, vy: 0, grounded: true })
+const land = (from, aim, bricks = WALL_BRICKS) => {
+  const { ball } = grenadeResult(aim, bricks, from)
+  return settleTrooper(from, ball, bricks)
+}
+
+test('a throw that bounces off the crates back to his feet pops the trooper over them', () => {
+  const after = land(body(8), { x: 62, y: -16 })
+  assert.ok(
+    after.x > CRATES.right && after.x < PIT.left,
+    `landed at ${after.x}`,
+  )
+  assert.equal(after.grounded, true)
+  const lob = land(body(8), { x: 30, y: -50 })
+  assert.ok(lob.x < CRATES.left, 'a plain lob leaves him in place')
 })
 
-test('decent throws open in three, far wall-side throws in five, and damage persists', () => {
-  for (const [aim, expected] of [
-    [{ x: 44, y: -38 }, 3],
-    [{ x: 66, y: -62 }, 5],
-  ]) {
-    let bricks = WALL_BRICKS,
-      throws = 0
-    while (bricks.length && throws < 8) {
-      const next = grenadeResult(aim, bricks).bricks
-      assert.ok(next.length < bricks.length)
-      assert.ok(
-        next.every((brick) => bricks.some((old) => old.id === brick.id)),
-      )
-      bricks = next
-      throws++
+test('a grenade lobbed behind him carries the trooper across the pit, a weak one drops him in', () => {
+  const across = land(body(40), { x: -16, y: -18 })
+  assert.ok(across.x > PIT.right && !inTrench(across), `landed at ${across.x}`)
+  const short = land(body(44), { x: -40, y: -10 })
+  assert.ok(inTrench(short) || short.x < PIT.left)
+})
+
+test('knocking out the base drops the wall, lobs onto the top only chip it', () => {
+  const base = grenadeResult({ x: 6, y: -10 }, WALL_BRICKS, body(60))
+  assert.equal(base.broken, true)
+  const top = chipWall({ x: 72, y: 31 }, WALL_BRICKS)
+  assert.ok(top.length > 0 && top.length < WALL_BRICKS.length)
+  const chipped = WALL_BRICKS.filter((brick) => !top.includes(brick))
+  assert.ok(chipped.every((brick) => brick.row >= 5))
+  assert.deepEqual(chipWall({ x: 30, y: 55 }, WALL_BRICKS), WALL_BRICKS)
+})
+
+test('the trooper cannot pass the standing wall or reach the cage over it', () => {
+  for (let x = -40; x <= 66; x += 4)
+    for (let y = -62; y <= -4; y += 4) {
+      const after = land(body(62), { x, y }, WALL_BRICKS)
+      assert.ok(after.x < WALL_BRICKS[0].x, `passed the wall with ${x},${y}`)
     }
-    assert.equal(throws, expected)
-    assert.equal(bricks.length, 0)
-  }
-  assert.equal(
-    grenadeResult({ x: 8, y: -10 }).bricks.length,
-    WALL_BRICKS.length,
-  )
 })
 
 test('all footballs travel continuously through the chute; the first reaches the passer', () => {
@@ -76,21 +83,25 @@ test('all footballs travel continuously through the chute; the first reaches the
   assert.ok(balls.every((ball) => ball.travelled >= CHANNEL_LENGTH))
 })
 
-test('high and low throws cannot enter the football cage, even through a broken wall', () => {
-  for (const bricks of [WALL_BRICKS, []]) {
-    for (let x = 8; x <= 66; x += 2) {
-      for (let y = -62; y <= -8; y += 2) {
-        let ball = launch({ x, y })
-        for (let i = 0; i < 264; i++) {
-          ball = stepGrenade(ball, 1 / 120, bricks)
-          assert.ok(
-            !(ball.x > 80.5 && ball.y > 24.5 && ball.y < 63.5),
-            `entered cage: ${x},${y}`,
-          )
+test('no throw from anywhere on the course lands a grenade inside the cage', () => {
+  for (const from of [body(8), body(26, CRATES.top), body(40), body(62)])
+    for (const bricks of [WALL_BRICKS, []])
+      for (let x = -40; x <= 66; x += 3)
+        for (let y = -62; y <= -4; y += 3) {
+          let ball = launch({ x, y }, from)
+          for (let i = 0; i < 186; i++) {
+            ball = stepGrenade(ball, 1 / 120, bricks)
+            assert.ok(
+              !(
+                ball.x > CAGE.left + 1 &&
+                ball.x < CAGE.right - 1 &&
+                ball.y > CAGE.top + 1.5 &&
+                ball.y < CAGE.bottom
+              ),
+              `entered cage: ${x},${y}`,
+            )
+          }
         }
-      }
-    }
-  }
 })
 
 test('the first ball reaches the player promptly while spare balls remain in motion outside the pitch', () => {

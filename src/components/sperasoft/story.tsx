@@ -30,13 +30,20 @@ export default function SperasoftStory({
   const world = useRef<HTMLDivElement>(null)
   const [scrolled, setScrolled] = useState(false)
   const keeperDrag = useRef<number | null>(null)
+  const released = game.scene.gate >= 1
+  const canThrow =
+    !game.scene.grenade &&
+    game.scene.trooper.grounded &&
+    !game.scene.walking &&
+    game.scene.gate === 0 &&
+    (game.scene.throwCharging || game.scene.throwProgress === 0)
   useEffect(() => {
-    if (!game.scene.wallBroken) return
+    if (!released) return
     const dialog = world.current?.closest('dialog')
     const hide = () => setScrolled(true)
     dialog?.addEventListener('scroll', hide, { once: true })
     return () => dialog?.removeEventListener('scroll', hide)
-  }, [game.scene.wallBroken])
+  }, [released])
   const drag = useRef<(Point & { pointerId: number }) | null>(null)
   const keyboardAim = useRef({ x: 44, y: -38 })
   const shotAim = useRef({ x: 0, y: -44 })
@@ -52,8 +59,8 @@ export default function SperasoftStory({
     if (drag.current?.pointerId !== event.pointerId) return
     const current = point(event)
     keyboardAim.current = {
-      x: clamp((drag.current.x - current.x) * 3, 8, 66),
-      y: clamp((drag.current.y - current.y) * 3, -62, -8),
+      x: clamp((drag.current.x - current.x) * 3, -40, 66),
+      y: clamp((drag.current.y - current.y) * 3, -62, -4),
     }
     game.aim(
       keyboardAim.current,
@@ -80,6 +87,8 @@ export default function SperasoftStory({
       data-home-keeper={JSON.stringify(game.scene.homeKeeper)}
       data-clock={game.scene.clock}
       data-wall={game.scene.wallBroken ? 'open' : 'intact'}
+      data-trooper={JSON.stringify(game.scene.trooper)}
+      data-gate={game.scene.gate}
       data-bricks={game.scene.wallBricks.length}
       data-outcome={game.scene.outcome}
       data-arrived={game.arrived}
@@ -134,23 +143,14 @@ export default function SperasoftStory({
             around them, together with designers and QA.
           </p>
         </aside>
-        <div className="spera-tools" aria-label="Grenade controls">
-          {!game.scene.wallBroken ? (
-            <button
-              className="spera-icon"
-              aria-label="Throw grenade"
-              disabled={
-                !!game.scene.grenade ||
-                (!game.scene.throwCharging && game.scene.throwProgress > 0)
-              }
-              onClick={game.throwGrenade}
-            >
-              <span className="spera-grenade" aria-hidden="true">
-                <i />
-              </span>
-            </button>
-          ) : null}
-          {reduced && game.scene.wallBroken && (
+        {!released && (
+          <span className="spera-sign" aria-hidden="true">
+            get there
+            <ArrowDown size={16} />
+          </span>
+        )}
+        <div className="spera-tools">
+          {reduced && released && (
             <button
               className="spera-icon"
               aria-label="Advance footballs"
@@ -163,11 +163,7 @@ export default function SperasoftStory({
         <button
           className="spera-throw-area"
           aria-label="Trooper"
-          disabled={
-            game.scene.wallBroken ||
-            !!game.scene.grenade ||
-            (!game.scene.throwCharging && game.scene.throwProgress > 0)
-          }
+          disabled={!canThrow}
           onPointerDown={(event) => {
             event.currentTarget.setPointerCapture(event.pointerId)
             if (drag.current) return
@@ -208,8 +204,8 @@ export default function SperasoftStory({
             if (shift) {
               event.preventDefault()
               keyboardAim.current = {
-                x: clamp(keyboardAim.current.x + shift[0], 8, 66),
-                y: clamp(keyboardAim.current.y + shift[1], -62, -8),
+                x: clamp(keyboardAim.current.x + shift[0], -40, 66),
+                y: clamp(keyboardAim.current.y + shift[1], -62, -4),
               }
               game.aim(keyboardAim.current)
             }
@@ -223,8 +219,8 @@ export default function SperasoftStory({
           className="spera-score"
           aria-label={`${game.scene.score[0]} to ${game.scene.score[1]}`}
         >
-          <span>{game.scene.score[0]}</span>
-          <span>{game.scene.score[1]}</span>
+          <span key={`h${game.scene.score[0]}`}>{game.scene.score[0]}</span>
+          <span key={`a${game.scene.score[1]}`}>{game.scene.score[1]}</span>
         </div>
         {game.arrived && (
           <button
@@ -391,7 +387,7 @@ export default function SperasoftStory({
           >
             <RotateCcw size={22} />
           </button>
-          {reduced && !game.arrived && game.scene.wallBroken && (
+          {reduced && !game.arrived && released && (
             <button
               className="spera-icon"
               aria-label="Advance footballs"
@@ -402,7 +398,7 @@ export default function SperasoftStory({
           )}
         </div>
       </div>
-      {game.scene.wallBroken && !scrolled && (
+      {released && !scrolled && (
         <span className="spera-scroll-cue" aria-hidden="true">
           <ArrowDown size={26} />
         </span>

@@ -4,20 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import { fans } from './fan-layout'
 import { PASSER, WALL_BRICKS, type Point, type SceneState } from './types'
 import {
-  BLAST_RADIUS,
-  GRENADE_FUSE,
-  GRENADE_SPEED,
-  THROW_WINDUP,
-  chipWall,
-  grenadeResult,
-  launch,
-  stepGrenade,
-  trajectory,
-  type Flight,
-} from './game'
-import {
-  fall,
-  type FallingBall,
   ballPosition,
   grabBall,
   moveBall,
@@ -29,9 +15,16 @@ import {
 } from './rolling'
 import { formation, keeperAt, kickGuide, HOME_KEEPER, STEP } from './football'
 import { createMatch } from './match'
+import { createCourse, TROOPER } from './course'
 
 export function useGame(reduced: boolean) {
   const [scene, setScene] = useState<SceneState>(() => ({
+    trooper: { ...TROOPER },
+    walking: false,
+    gate: 0,
+    landedAt: null,
+    cheerAt: null,
+    shake: 0,
     wallBroken: false,
     throwProgress: 0,
     throwCharging: false,
@@ -62,15 +55,9 @@ export function useGame(reduced: boolean) {
     reduced,
   }))
   const model = useRef(scene)
-  const flight = useRef<Flight | null>(null)
-  const windup = useRef<number | null>(null)
+  const course = useRef<ReturnType<typeof createCourse> | null>(null)
   const rolling = useRef<RollingBall[]>([])
   const match = useRef<ReturnType<typeof createMatch> | null>(null)
-  const popped = useRef<(FallingBall & { id: number })[]>([])
-  const grenadeAim = useRef({
-    x: 44,
-    y: -38,
-  })
   const shotAim = useRef({ x: 0, y: -44 })
   const ballArrived = useRef(false)
   const ready = useRef(false)
@@ -83,40 +70,10 @@ export function useGame(reduced: boolean) {
         ? { ...model.current.explosion }
         : null,
     })
-  const finishThrow = (point: Point) => {
-    flight.current = null
-    windup.current = null
-    model.current.throwProgress = 0
-    model.current.throwCharging = false
-    model.current.grenade = null
-    model.current.explosion = { ...point, radius: BLAST_RADIUS, age: 0 }
-    const before = model.current.wallBricks
-    model.current.wallBricks = chipWall(point, before)
-    const removed = before.filter(
-      (b) => !model.current.wallBricks.some((kept) => kept.id === b.id),
-    )
-    if (removed.length && model.current.wallBricks.length) {
-      const hole = removed[Math.floor(removed.length / 2)]
-      for (let i = 0; i < Math.min(3, Math.ceil(removed.length / 8)); i++)
-        popped.current.push({
-          id: 100 + popped.current.length,
-          x: hole.x - i * 2,
-          y: hole.y,
-          vx: -8 - i * 3,
-          vy: -14,
-          spin: 0,
-        })
-      if (model.current.reduced)
-        for (let i = 0; i < 240; i++) fall(popped.current, STEP, [], 59.1)
-    }
-    if (!model.current.wallBricks.length) {
-      model.current.wallBroken = true
-      model.current.wallOpenedAt = model.current.clock
-      model.current.collapse = model.current.reduced ? 0 : 0.6
-      model.current.explosion.radius = BLAST_RADIUS * 1.5
-      rolling.current = releaseBalls()
-      setMessage('Wall open')
-    } else setMessage('')
+  const openGate = () => {
+    model.current.wallOpenedAt = model.current.clock
+    rolling.current = releaseBalls()
+    setMessage('Gate open')
     updateBalls()
   }
   const stepBalls = () =>
@@ -135,13 +92,6 @@ export function useGame(reduced: boolean) {
         loose: !!ball.drop,
         held: !!ball.drop?.held,
       }))
-    model.current.balls = [
-      ...model.current.balls,
-      ...popped.current.map((ball) => ({
-        ...ball,
-        loose: true,
-      })),
-    ]
     if (
       !ballArrived.current &&
       rolling.current[0]?.travelled >= FIRST_BALL_LENGTH
@@ -157,56 +107,24 @@ export function useGame(reduced: boolean) {
   }
   useEffect(() => {
     if (!match.current) match.current = createMatch(() => model.current)
+    if (!course.current)
+      course.current = createCourse(() => model.current, openGate)
     model.current.reduced = reduced
     let raf = 0,
       last = 0,
       carry = 0,
-      grenadeCarry = 0,
       paused = false
     const tick = (now: number) => {
       const dt = last && !paused ? Math.min((now - last) / 1000, 0.08) : 0
       last = now
       const reducedChange =
-        reduced &&
-        (!!flight.current ||
-          windup.current !== null ||
-          !['setup', 'won', 'lost'].includes(model.current.outcome))
+        reduced && !['setup', 'won', 'lost'].includes(model.current.outcome)
       if (reduced) {
-        if (flight.current || windup.current !== null)
-          finishThrow(
-            grenadeResult(grenadeAim.current, model.current.wallBricks).ball,
-          )
+        course.current!.settle()
         model.current.explosion = null
         match.current!.settle()
       } else {
-        if (windup.current !== null) {
-          const before = windup.current
-          windup.current += dt
-          model.current.throwProgress = Math.min(
-            1,
-            windup.current / THROW_WINDUP,
-          )
-          if (before < 0.12 && windup.current >= 0.12) {
-            flight.current = launch(grenadeAim.current)
-            model.current.grenade = flight.current
-          }
-          if (windup.current >= THROW_WINDUP) {
-            windup.current = null
-            model.current.throwProgress = 0
-          }
-        }
-        grenadeCarry += dt * GRENADE_SPEED
-        while (grenadeCarry >= STEP && flight.current) {
-          grenadeCarry -= STEP
-          flight.current = stepGrenade(
-            flight.current,
-            STEP,
-            model.current.wallBricks,
-          )
-          model.current.grenade = flight.current
-          if (flight.current.time >= GRENADE_FUSE) finishThrow(flight.current)
-        }
-        if (!flight.current) grenadeCarry = 0
+        course.current!.step(dt)
         model.current.clock += dt
         const speed = model.current.collapse > 0 ? 0.25 : 1
         model.current.collapse = Math.max(0, model.current.collapse - dt)
@@ -214,10 +132,9 @@ export function useGame(reduced: boolean) {
         while (carry >= STEP) {
           carry -= STEP
           if (rolling.current.length) stepBalls()
-          if (popped.current.length) fall(popped.current, STEP, [], 59.1)
           if (ready.current) match.current!.step()
         }
-        if (rolling.current.length || popped.current.length) updateBalls()
+        if (rolling.current.length) updateBalls()
         if (model.current.explosion) {
           model.current.explosion.age += dt * speed
           if (model.current.explosion.age > 0.85) model.current.explosion = null
@@ -248,6 +165,11 @@ export function useGame(reduced: boolean) {
           updateBalls()
           publish()
         },
+        throw: (aim: Point) => {
+          course.current!.aim(aim, 1)
+          course.current!.throw()
+          publish()
+        },
         goal: (team: 0 | 1) => {
           match.current!.forceGoal(team)
           publish()
@@ -268,47 +190,19 @@ export function useGame(reduced: boolean) {
     message,
     arrived,
     aim(point: Point, strength = Math.hypot(point.x, point.y) / 70) {
-      if (flight.current || windup.current !== null || model.current.wallBroken)
-        return
-      grenadeAim.current = point
-      model.current.throwCharging = true
-      model.current.throwStrength = Math.max(0, Math.min(1, strength))
-      model.current.throwProgress = 0.45
-      model.current.aim = trajectory(point, model.current.wallBricks)
+      course.current!.aim(point, strength)
       publish()
     },
     cancelThrow() {
-      if (!model.current.throwCharging) return
-      model.current.throwCharging = false
-      model.current.throwProgress = 0
-      model.current.aim = []
+      course.current!.cancel()
       publish()
     },
     throwGrenade() {
-      if (flight.current || windup.current !== null || model.current.wallBroken)
-        return
-      model.current.aim = []
-      model.current.explosion = null
-      if (reduced) {
-        finishThrow(
-          grenadeResult(grenadeAim.current, model.current.wallBricks).ball,
-        )
-        model.current.explosion = null
-      } else {
-        windup.current = model.current.throwCharging ? 0.07 : 0
-        if (!model.current.throwCharging) {
-          model.current.throwStrength = 1
-          model.current.throwProgress = 0.001
-        }
-        model.current.throwCharging = false
-      }
+      course.current!.throw()
       publish()
     },
     advance() {
-      if (flight.current || windup.current !== null)
-        finishThrow(
-          grenadeResult(grenadeAim.current, model.current.wallBricks).ball,
-        )
+      course.current!.settle()
       if (rolling.current.length) {
         const target = (Math.floor(rolling.current[0].travelled / 95) + 1) * 95
         for (let i = 0; i < 1800; i++) {
@@ -333,38 +227,19 @@ export function useGame(reduced: boolean) {
       publish()
     },
     grabBall(id: number) {
-      const loose = popped.current.find((ball) => ball.id === id)
-      if (loose) {
-        loose.held = true
-        loose.vx = 0
-        loose.vy = 0
-      }
-      const grabbed = !!loose || grabBall(rolling.current, id)
+      const grabbed = grabBall(rolling.current, id)
       updateBalls()
       publish()
       return grabbed
     },
     moveBall(id: number, point: Point) {
-      const loose = popped.current.find((ball) => ball.id === id)
-      if (loose?.held) {
-        loose.x = Math.max(2, Math.min(81, point.x))
-        loose.y = Math.max(26, Math.min(59.1, point.y))
-      } else moveBall(rolling.current, id, point)
+      moveBall(rolling.current, id, point)
       updateBalls()
       publish()
     },
     dropBall(id: number, velocity: Point) {
-      const loose = popped.current.find((ball) => ball.id === id)
-      if (loose) {
-        loose.held = false
-        loose.vx = velocity.x
-        loose.vy = velocity.y
-      } else dropBall(rolling.current, id, velocity)
-      if (reduced)
-        for (let i = 0; i < 720; i++) {
-          stepBalls()
-          fall(popped.current, STEP, [], 59.1)
-        }
+      dropBall(rolling.current, id, velocity)
+      if (reduced) for (let i = 0; i < 720; i++) stepBalls()
       updateBalls()
       publish()
     },

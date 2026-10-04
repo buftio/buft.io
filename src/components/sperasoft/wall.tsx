@@ -57,9 +57,9 @@ function rubbleItems(): Item[] {
     const lift = i % 5 === 0 ? h * 0.9 : 0
     return {
       position: [
-        68 + rand(i, 0) * 13 - 50,
+        67 + rand(i, 0) * 11 - 50,
         135 - (60.5 - h / 2 - lift),
-        -1.5 + rand(i, 3) * 3,
+        -5 + rand(i, 3) * 2,
       ],
       rotation: [0, 0, (rand(i, 4) - 0.5) * 0.9],
       scale: [w, h, 2.6],
@@ -123,7 +123,9 @@ export function Wall({
     <>
       {items.length > 0 && <Instanced items={items} />}
       {falling && falling.length > 0 && <Instanced items={falling} />}
-      {broken && <Block x={[70.1, 81.9]} y={[59, 62]} color="#b8916c" />}
+      {broken && (
+        <Block x={[67.5, 78]} y={[59.6, 61]} z={[-5, -2]} color="#b8916c" />
+      )}
     </>
   )
 }
