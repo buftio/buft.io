@@ -141,7 +141,13 @@ function Scene({
         <Slim>
           <Patient
             pose={
-              phase === 'won' ? 'dance' : phase === 'lost' ? 'recline' : 'stand'
+              phase === 'won'
+                ? 'dance'
+                : phase === 'lost'
+                  ? 'recline'
+                  : phase === 'ready' || phase === 'play'
+                    ? 'scared'
+                    : 'stand'
             }
             hurt={hurt}
           />

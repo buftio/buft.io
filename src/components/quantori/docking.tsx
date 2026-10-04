@@ -222,12 +222,13 @@ function Piece({
   useEffect(() => () => stop.current(), [])
   const grab = (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation()
+    if (drag.current) return
     const start = event.nativeEvent
     drag.current = { x: start.clientX, y: start.clientY, at: null }
     document.body.style.cursor = 'grabbing'
     const follow = (move: PointerEvent) => {
       const held = drag.current
-      if (!held) return
+      if (!held || move.pointerId !== start.pointerId) return
       if (
         !held.at &&
         Math.hypot(move.clientX - held.x, move.clientY - held.y) < 6
@@ -243,7 +244,8 @@ function Piece({
       const point = raycaster.ray.intersectPlane(surface, new Vector3())
       if (point) held.at = point.sub(new Vector3(...POCKET))
     }
-    const release = () => {
+    const release = (end: PointerEvent) => {
+      if (end.pointerId !== start.pointerId) return
       const held = drag.current
       stop.current()
       if (!held) return

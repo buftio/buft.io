@@ -139,21 +139,14 @@ const place = (dock: Dock, index: number, slot: number): Dock => {
 }
 
 export function pick(dock: Dock, index: number): Dock {
-  if (isLocked(dock, index)) return dock
-  const slot = dock.placed[index]
-  if (slot === null)
-    return { ...dock, selected: dock.selected === index ? null : index }
-  if (dock.selected !== null) return place(dock, dock.selected, slot)
-  return {
-    ...dock,
-    placed: dock.placed.map((at, i) => (i === index ? null : at)),
-  }
+  if (dock.placed[index] !== null || isSolved(dock)) return dock
+  return { ...dock, selected: dock.selected === index ? null : index }
 }
 
 export function drop(dock: Dock, slot: number): Dock {
   const index = dock.selected
-  if (index === null) return dock
-  if (dock.given.includes(occupant(dock, slot))) return dock
+  if (index === null || isSolved(dock)) return dock
+  if (isLocked(dock, occupant(dock, slot))) return dock
   return place(dock, index, slot)
 }
 
@@ -177,14 +170,14 @@ export function markOf(dock: Dock, slot: number): Mark | null {
 }
 
 export function move(dock: Dock, index: number, slot: number | null): Dock {
-  if (isLocked(dock, index)) return dock
+  if (isLocked(dock, index) || isSolved(dock)) return dock
   if (slot === null)
     return {
       ...dock,
       selected: null,
       placed: dock.placed.map((at, i) => (i === index ? null : at)),
     }
-  if (dock.given.includes(occupant(dock, slot))) return dock
+  if (isLocked(dock, occupant(dock, slot))) return dock
   return place(dock, index, slot)
 }
 

@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Heart, HeartCrack, RotateCcw, Siren, Trophy } from 'lucide-react'
 import { Agent } from './agent'
 import { SceneBoundary } from '../scene-boundary'
-import { DURATION, LIVES, fireAhead, newGame } from './defense'
+import { DURATION, LIVES, collect, fireAhead, newGame } from './defense'
 import { Jigsaw, Page, Sparks } from './jigsaw'
 import {
   ask,
@@ -74,6 +74,7 @@ export default function QuantoriStory({
   const game = useRef(newGame())
   const popped = useRef(0)
   const armed = useRef(-1)
+  const finished = useRef(false)
   const docked = isSolved(dock)
   const pending = isPending(dock)
 
@@ -121,6 +122,8 @@ export default function QuantoriStory({
       const turn = { ArrowLeft: 0.18, ArrowRight: -0.18 }[event.code]
       if (turn) game.current.aim += turn
       else if (event.code === 'Space') fireAhead(game.current, gunAt)
+      else if (event.code === 'KeyE' && game.current.drops[0])
+        collect(game.current, game.current.drops[0].id)
       else return
       event.preventDefault()
     }
@@ -155,6 +158,8 @@ export default function QuantoriStory({
     )
   }
   const solved = useCallback(() => {
+    if (finished.current) return
+    finished.current = true
     setRolling(true)
     setTimeout(() => {
       setRolling(false)
@@ -209,6 +214,7 @@ export default function QuantoriStory({
     game.current = newGame()
     setDock(newDock())
     setNote(null)
+    finished.current = false
     setPhase('dock')
   }
 
@@ -259,6 +265,11 @@ export default function QuantoriStory({
           <div className="q-step" aria-live="polite">
             <span>{eyebrow}</span>
             <p>{line}</p>
+            {phase === 'play' && (
+              <p className="sr-only">
+                Keyboard: arrows aim, Space fires, E grabs a golden capsule.
+              </p>
+            )}
           </div>
           {phase === 'dock' && <Agent dock={dock} note={note} onAsk={onAsk} />}
           {phase === 'papers' && !rolling && <Jigsaw onSolved={solved} />}
@@ -359,8 +370,10 @@ export default function QuantoriStory({
           {candidates.map(({ name }, i) => (
             <button
               key={name}
-              onClick={() => onPick(i)}
-              disabled={isLocked(dock, i)}
+              onClick={() =>
+                dock.placed[i] === null ? onPick(i) : onMove(i, null)
+              }
+              disabled={docked || isLocked(dock, i)}
               aria-pressed={dock.selected === i}
             >
               {isLocked(dock, i)
