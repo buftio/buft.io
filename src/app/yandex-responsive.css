@@ -27,7 +27,6 @@
   .yandex-dialog {
     width: 94vw;
     inset: 12% 3% 3%;
-    max-height: 85dvh;
   }
   .hiring-intro {
     padding: 20px;
@@ -61,10 +60,6 @@
   .hiring-papers {
     grid-template-columns: minmax(0, 1fr);
     gap: 20px;
-  }
-  .hiring-file,
-  .hiring-desk {
-    scroll-margin-top: 145px;
   }
   .hiring-paper {
     padding: 19px;

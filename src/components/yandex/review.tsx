@@ -41,7 +41,7 @@ export function Receipt({
       >
         {game.files.every((item) => item.decision)
           ? 'Finish the day'
-          : 'Next application'}
+          : 'Call the next candidate'}
         <ArrowRight size={17} />
       </button>
     </section>
@@ -80,7 +80,7 @@ export function DayReview({
       <p>
         {score.perfect
           ? 'You checked the experience, cleared the paperwork, and made offers the team could afford.'
-          : 'The review below shows which evidence could have changed each decision. Try another day with the folders in a different order.'}
+          : 'The review below shows which evidence could have changed each decision. Try another day with the candidates in a different order.'}
       </p>
       <div className="hiring-result-numbers">
         <div>

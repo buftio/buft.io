@@ -2,11 +2,12 @@
 
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useRef } from 'react'
-import { Group, MathUtils } from 'three'
+import { Group, MathUtils, Mesh, MeshBasicMaterial, Vector3 } from 'three'
 import { Clay } from '../marketdata/models/clay'
 import { Shopper, shopperParts } from '../marketdata/models/people'
 
 export type OfficeStage =
+  | 'brief'
   | 'review'
   | 'interview'
   | 'security'
@@ -19,8 +20,18 @@ type Props = {
   stage: OfficeStage
   hired: number[]
   paused: boolean
+  arrived: boolean
+  onArrive: () => void
   onReady: () => void
 }
+
+const walk = 1.4
+const reach = 2
+const handoff = 2.6
+const desk = new Vector3(0, 0.9, 1.4)
+const hand = new Vector3()
+const ease = (from: number, to: number, t: number) =>
+  MathUtils.smootherstep(t, from, to)
 
 function Furniture() {
   return (
@@ -174,11 +185,27 @@ function Furniture() {
   )
 }
 
-function Office({ candidate, stage, hired, paused, onReady }: Props) {
+function Office({
+  candidate,
+  stage,
+  hired,
+  paused,
+  arrived,
+  onArrive,
+  onReady,
+}: Props) {
   const { camera, size } = useThree()
   const person = useRef<Group>(null)
+  const paper = useRef<Group>(null)
+  const glow = useRef<Mesh>(null)
   const scanner = useRef<Group>(null)
   const time = useRef(0)
+  const arrival = useRef(0)
+  const announced = useRef(false)
+  useEffect(() => {
+    arrival.current = 0
+    announced.current = false
+  }, [candidate])
   useEffect(() => {
     camera.position.set(0, 3.5, 9)
     camera.lookAt(0, 1.3, 0)
@@ -187,20 +214,71 @@ function Office({ candidate, stage, hired, paused, onReady }: Props) {
   }, [camera, size.width])
   useEffect(onReady, [onReady])
   useFrame((_, delta) => {
-    if (!paused) time.current += Math.min(delta, 0.05)
+    const step = Math.min(delta, 0.05)
+    if (!paused) time.current += step
     const t = time.current
+    const present = stage !== 'closed' && stage !== 'brief'
+    const walking = present && !arrived && !paused
+    if (walking) arrival.current += step
+    else if (present) arrival.current = Math.max(arrival.current, handoff + 2)
+    const a = arrival.current
+    if (present && a >= handoff && !announced.current) {
+      announced.current = true
+      onArrive()
+    }
     if (person.current) {
-      person.current.visible = stage !== 'closed'
+      person.current.visible = present
       const leaving = stage === 'rejected' ? -5.5 : stage === 'hired' ? 3.1 : 0
-      person.current.position.x = paused
-        ? leaving
-        : MathUtils.damp(person.current.position.x, leaving, 2.5, delta)
+      const arm = person.current.getObjectByName(shopperParts.armR)
+      if (a < handoff) {
+        const moved = ease(0, walk, a)
+        person.current.position.x = -6.2 * (1 - moved)
+        person.current.position.y =
+          a < walk ? Math.abs(Math.sin(a * 11)) * 0.06 : 0
+        if (arm)
+          arm.rotation.x =
+            -1.25 * (ease(walk, reach, a) - ease(reach, handoff, a))
+      } else {
+        person.current.position.y = 0
+        if (arm && stage !== 'hired' && stage !== 'offer') arm.rotation.x = 0
+        person.current.position.x = paused
+          ? leaving
+          : MathUtils.damp(person.current.position.x, leaving, 2.5, delta)
+      }
       const head = person.current.getObjectByName(shopperParts.head)
       if (head)
         head.rotation.z = paused
           ? 0
           : Math.sin(t * (stage === 'interview' ? 3 : 1.2)) * 0.06
-      person.current.rotation.y = stage === 'rejected' ? -0.9 : 0
+      person.current.rotation.y =
+        stage === 'rejected'
+          ? -0.9
+          : a < walk
+            ? 0.7 * (1 - ease(0, walk, a))
+            : 0
+    }
+    if (paper.current) {
+      paper.current.visible = present && a >= walk
+      const held = person.current?.getObjectByName(shopperParts.handR)
+      if (a < reach && held) {
+        held.getWorldPosition(hand)
+        paper.current.position.copy(hand)
+        paper.current.rotation.x = -1.1
+      } else {
+        const placed = ease(reach, handoff, a)
+        if (held && a < handoff) held.getWorldPosition(hand)
+        else hand.copy(desk)
+        paper.current.position.lerpVectors(hand, desk, placed)
+        paper.current.rotation.x = -1.1 * (1 - placed)
+      }
+    }
+    if (glow.current) {
+      const shine = a - handoff
+      const material = glow.current.material as MeshBasicMaterial
+      material.opacity =
+        present && shine > -0.2 && shine < 1.6
+          ? Math.sin((Math.max(shine, 0) / 1.6) * Math.PI) * 0.7
+          : 0
     }
     if (scanner.current) {
       scanner.current.visible = stage === 'security'
@@ -235,7 +313,11 @@ function Office({ candidate, stage, hired, paused, onReady }: Props) {
           }
         />
       </group>
-      <group position={[0, 0.9, 1.4]} rotation={[0, 0.13, 0]}>
+      <group ref={paper} position={[0, 0.9, 1.4]} rotation={[0, 0.13, 0]}>
+        <mesh ref={glow} position={[0, -0.005, 0]} scale={[1.6, 1, 1.05]}>
+          <boxGeometry args={[1, 0.01, 1]} />
+          <meshBasicMaterial color="#ffd866" transparent opacity={0} />
+        </mesh>
         <Clay color="#f4eedb" size={[1.3, 0.02, 0.75]} />
         {[0, 1, 2].map((i) => (
           <Clay

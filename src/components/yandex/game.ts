@@ -57,6 +57,9 @@ export function revealed(file: File): Evidence[] {
     ...(file.offers.length ? ['salary' as const] : []),
   ]
 }
+export function interviewed(file: File) {
+  return file.seen.includes('technical') && file.seen.includes('project')
+}
 export function canCheck(game: Game, check: Check) {
   const file = game.files[game.current]
   if (
@@ -74,8 +77,7 @@ export function hireBlock(game: Game): string | null {
   const file = game.files[game.current]
   if (file.decision || game.finished) return 'This file is already closed.'
   if (hires(game) >= vacancy.seats) return 'Both seats are filled.'
-  if (!file.seen.includes('technical') || !file.seen.includes('project'))
-    return 'Complete both interview rounds before hiring.'
+  if (!interviewed(file)) return 'Complete both interview rounds before hiring.'
   if (!file.seen.includes('security'))
     return 'Run the security check before hiring.'
   if (candidates[game.current].discrepancy && !file.seen.includes('clarify'))
@@ -92,6 +94,7 @@ export function canOffer(game: Game, salary: number) {
   return (
     !game.finished &&
     !file.decision &&
+    interviewed(file) &&
     game.checks > 0 &&
     file.offers.length < 2 &&
     file.agreed === undefined &&

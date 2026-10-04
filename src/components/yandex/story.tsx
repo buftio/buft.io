@@ -2,22 +2,25 @@
 
 import dynamic from 'next/dynamic'
 import { useReducer, useRef, useEffect, useState } from 'react'
-import { Users, Coins, ClipboardCheck } from 'lucide-react'
+import { Users, Coins, ClipboardCheck, FastForward } from 'lucide-react'
 import { SceneBoundary } from '../scene-boundary'
-import { candidates, vacancy } from './candidates'
+import { candidates, evidenceNames, vacancy, type Evidence } from './candidates'
 import {
   gameReducer,
   hireBlock,
   hires,
   initialGame,
+  revealed,
   salaryUsed,
   type Action,
 } from './game'
-import { CandidateFile, DeskTools, Vacancy } from './papers'
+import { CandidateFile, DeskTools, Vacancy, VacancyBrief } from './papers'
 import { DayReview, Receipt } from './review'
 import type { OfficeStage } from './office'
 
 const HiringOffice = dynamic(() => import('./office'), { ssr: false })
+
+type Phase = 'brief' | 'arriving' | 'file'
 
 export default function YandexStory({
   reduced,
@@ -30,64 +33,68 @@ export default function YandexStory({
     initialGame(),
   )
   const [stage, setStage] = useState<OfficeStage>('review')
-  const candidateIndex = game.current
+  const [phase, setPhase] = useState<Phase>('brief')
+  const [said, setSaid] = useState<Evidence | null>(null)
+  const [sceneFailed, setSceneFailed] = useState(false)
   const finished = game.finished
   const paper = useRef<HTMLDivElement>(null)
   const desk = useRef<HTMLDivElement>(null)
   const feedback = useRef<HTMLDivElement>(null)
-  const lastPage = useRef(`${game.current}:false`)
   const file = game.files[game.current]
   const candidate = candidates[game.current]
+  const first = candidate.name.split(' ')[0]
   const hired = game.files.flatMap((record, index) =>
     record.decision?.kind === 'hire' ? [index] : [],
   )
   const block = hireBlock(game)
+  const instant = reduced || sceneFailed
+  const call = () => {
+    setSaid(null)
+    setStage('review')
+    setPhase(instant ? 'file' : 'arriving')
+  }
   const act = (action: Action) => {
     dispatch(action)
-    if (action.type === 'check')
+    if (action.type === 'check') {
       setStage(
         action.check === 'security' || action.check === 'clarify'
           ? 'security'
           : 'interview',
       )
-    if (action.type === 'offer') setStage('offer')
-    if (action.type === 'decide')
+      setSaid(action.check)
+    }
+    if (action.type === 'offer') {
+      setStage('offer')
+      setSaid('salary')
+    }
+    if (action.type === 'decide') {
+      setSaid(null)
       setStage(action.kind === 'hire' ? 'hired' : 'rejected')
-    if (
-      action.type === 'open' ||
-      action.type === 'next' ||
-      action.type === 'restart'
-    )
-      setStage('review')
+    }
+    if (action.type === 'next' || action.type === 'restart') call()
   }
   useEffect(() => {
-    if (file.decision) {
+    if (file.decision)
       feedback.current?.querySelector('h3')?.focus({ preventScroll: true })
-      feedback.current?.scrollIntoView({
-        behavior: reduced ? 'instant' : 'smooth',
-        block: 'center',
-      })
-    }
-  }, [file.decision, reduced])
+  }, [file.decision])
   useEffect(() => {
-    const page = `${candidateIndex}:${finished}`
-    if (lastPage.current !== page) {
-      const heading = finished
-        ? desk.current?.querySelector<HTMLElement>('.hiring-results h3')
-        : paper.current?.querySelector<HTMLElement>('.hiring-file h3')
-      heading?.focus({ preventScroll: true })
-      const target = finished
-        ? desk.current
-        : window.matchMedia('(max-width: 600px)').matches
-          ? paper.current?.querySelector('.hiring-file')
-          : paper.current
-      target?.scrollIntoView({
-        behavior: reduced ? 'instant' : 'smooth',
-        block: 'start',
-      })
-      lastPage.current = page
-    }
-  }, [candidateIndex, finished, reduced])
+    const heading = finished
+      ? desk.current?.querySelector<HTMLElement>('.hiring-results h3')
+      : phase === 'file'
+        ? paper.current?.querySelector<HTMLElement>('.hiring-file h3')
+        : null
+    heading?.focus({ preventScroll: true })
+  }, [phase, game.current, finished])
+  const sceneStage: OfficeStage =
+    phase === 'brief'
+      ? 'brief'
+      : finished
+        ? 'closed'
+        : file.decision
+          ? file.decision.kind === 'hire'
+            ? 'hired'
+            : 'rejected'
+          : stage
   return (
     <article className="hiring-story">
       <header className="hiring-intro">
@@ -100,32 +107,71 @@ export default function YandexStory({
       </header>
       <div className="hiring-office">
         <figure aria-label="A clay recruitment office, with a candidate at your desk, a computer, files, and a waiting area">
-          <SceneBoundary compact onFailure={onReady}>
+          <SceneBoundary
+            compact
+            onFailure={() => {
+              setSceneFailed(true)
+              if (phase === 'arriving') setPhase('file')
+              onReady()
+            }}
+          >
             <HiringOffice
               candidate={game.current}
               hired={hired}
-              stage={
-                game.finished
-                  ? 'closed'
-                  : file.decision
-                    ? file.decision.kind === 'hire'
-                      ? 'hired'
-                      : 'rejected'
-                    : stage
-              }
+              stage={sceneStage}
               paused={reduced}
+              arrived={phase !== 'arriving'}
+              onArrive={() => setPhase('file')}
               onReady={onReady}
             />
           </SceneBoundary>
         </figure>
         <div className="hiring-office-note">
           <i />
-          {game.finished ? 'OFFICE CLOSED' : `NOW MEETING / ${candidate.name}`}
+          {phase === 'brief'
+            ? `OPEN VACANCY / ${vacancy.role}`
+            : finished
+              ? 'OFFICE CLOSED'
+              : phase === 'arriving'
+                ? `${first} brings a resume…`
+                : `NOW MEETING / ${candidate.name}`}
         </div>
+        {said &&
+          phase === 'file' &&
+          !file.decision &&
+          revealed(file).includes(said) && (
+            <div key={said} className="hiring-bubble" aria-hidden="true">
+              <small>
+                {said === 'salary'
+                  ? first
+                  : said === 'security'
+                    ? 'Security desk'
+                    : 'Interview notes'}{' '}
+                · {evidenceNames[said]}
+              </small>
+              <p>
+                {said === 'salary'
+                  ? file.reply
+                  : said !== 'application' && candidate.evidence[said]}
+              </p>
+            </div>
+          )}
+        {phase === 'arriving' && (
+          <button className="hiring-skip" onClick={() => setPhase('file')}>
+            Skip
+            <FastForward size={14} />
+          </button>
+        )}
       </div>
-      <div className="hiring-daybar" aria-label="Hiring day resources">
+      <div
+        className="hiring-daybar"
+        aria-label="Hiring day resources"
+        hidden={phase === 'brief'}
+      >
         <strong>
-          {game.finished ? 'DAY COMPLETE' : 'YOUR FIRST HIRING DAY'}
+          {finished
+            ? 'DAY COMPLETE'
+            : `CANDIDATE ${game.order.indexOf(game.current) + 1} OF ${candidates.length}`}
         </strong>
         <span>
           <ClipboardCheck size={15} />
@@ -141,34 +187,30 @@ export default function YandexStory({
         </span>
       </div>
       <div ref={desk} className="hiring-desk">
-        {game.finished ? (
+        {finished ? (
           <DayReview game={game} dispatch={act} />
+        ) : phase === 'brief' ? (
+          <VacancyBrief onStart={call} />
         ) : (
           <>
-            <nav className="hiring-folders" aria-label="Candidate folders">
-              {game.order.map((index) => (
-                <button
-                  key={index}
-                  onClick={() => act({ type: 'open', index })}
-                  aria-current={index === game.current ? 'true' : undefined}
-                >
-                  <span>{candidates[index].name.split(' ')[0]}</span>
-                  <small>
-                    {game.files[index].decision?.kind === 'hire'
-                      ? 'Hired'
-                      : game.files[index].decision
-                        ? 'Rejected'
-                        : 'Application'}
-                  </small>
-                </button>
-              ))}
-            </nav>
             <div ref={paper} className="hiring-papers">
               <Vacancy />
-              <CandidateFile game={game} dispatch={act} />
-              <DeskTools key={candidate.id} game={game} dispatch={act} />
+              {phase === 'file' ? (
+                <>
+                  <CandidateFile
+                    key={`file-${candidate.id}`}
+                    game={game}
+                    dispatch={act}
+                  />
+                  <DeskTools key={candidate.id} game={game} dispatch={act} />
+                </>
+              ) : (
+                <div className="hiring-slot" aria-live="polite">
+                  {first} is walking to your desk with a resume.
+                </div>
+              )}
             </div>
-            {!file.decision && (
+            {phase === 'file' && !file.decision && (
               <div className="hiring-decisions">
                 <p className="hiring-decision-note">
                   {block ??
