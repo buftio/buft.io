@@ -17,7 +17,7 @@ import {
   slots,
 } from './dock'
 import { gunAt, timeline, type Phase } from './layout'
-import { pop, squeak } from './sound'
+import { pickup, pop, squeak } from './sound'
 
 const World = dynamic(() => import('./world'), { ssr: false })
 
@@ -39,7 +39,10 @@ const steps: Record<Phase, [string, string]> = {
     '04 · Patients',
     'Viruses are coming. Keep them away from the patient.',
   ],
-  play: ['04 · Patients', 'Click anywhere to fire a syringe. Hold to spray.'],
+  play: [
+    '04 · Patients',
+    'Click anywhere to fire a syringe. Hold to spray. Grab golden capsules.',
+  ],
   won: ['04 · Patients', 'The patient stayed healthy.'],
   lost: ['04 · Patients', 'The patient caught it.'],
 }
@@ -58,9 +61,15 @@ export default function QuantoriStory({
   )
   const [rolling, setRolling] = useState(false)
   const [failed, setFailed] = useState(false)
-  const [hud, setHud] = useState({ lives: LIVES, left: DURATION, popped: 0 })
+  const [hud, setHud] = useState({
+    lives: LIVES,
+    left: DURATION,
+    popped: 0,
+    shotgun: 0,
+  })
   const game = useRef(newGame())
   const popped = useRef(0)
+  const armed = useRef(-1)
   const docked = isSolved(dock)
 
   useEffect(() => {
@@ -126,6 +135,8 @@ export default function QuantoriStory({
     const state = game.current
     if (state.popped > popped.current) pop()
     popped.current = state.popped
+    if (state.shotgun !== armed.current && state.shotgun > state.time) pickup()
+    armed.current = state.shotgun
     setHud({
       lives: state.lives,
       left: Math.max(
@@ -133,6 +144,10 @@ export default function QuantoriStory({
         Math.ceil(DURATION - (state.end < 0 ? state.time : state.end)),
       ),
       popped: state.popped,
+      shotgun:
+        state.status === 'play'
+          ? Math.max(0, Math.ceil(state.shotgun - state.time))
+          : 0,
     })
     if (state.status !== 'play')
       setPhase((current) => (current === 'play' ? state.status : current))
@@ -140,7 +155,7 @@ export default function QuantoriStory({
   const start = () => {
     game.current = newGame()
     popped.current = 0
-    setHud({ lives: LIVES, left: DURATION, popped: 0 })
+    setHud({ lives: LIVES, left: DURATION, popped: 0, shotgun: 0 })
     setPhase('play')
   }
   const restart = () => {
@@ -231,6 +246,9 @@ export default function QuantoriStory({
               </span>
               <span>{hud.left}s</span>
               <span>{hud.popped} popped</span>
+              {hud.shotgun > 0 && (
+                <span className="q-shotgun">×5 {hud.shotgun}s</span>
+              )}
             </div>
           )}
           {phase === 'ready' && (

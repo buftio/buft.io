@@ -139,7 +139,7 @@ function Explosion({ pop, game }: { pop: Pop; game: RefObject<Game> }) {
     }
   })
   return (
-    <group position={[pop.x, 0, pop.z]}>
+    <group position={[pop.x, 0, pop.z]} scale={pop.big ? 1.8 : 1}>
       <Flash position={[0, 0.6, 0]} size={0.9} color={color} life={0.35} />
       {bits.map((bit, i) => (
         <mesh

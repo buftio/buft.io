@@ -6,9 +6,14 @@ import { MeshBasicMaterial, type Group, type Mesh } from 'three'
 import { geo } from '../marketdata/models/clay'
 import { Bake } from './bake'
 import { Boom } from './boom'
+import { Capsule } from './capsule'
 import {
   aimAt,
+  BIG,
+  BIG_HP,
+  collect,
   fire,
+  HP,
   gait,
   RISE,
   settle,
@@ -36,7 +41,9 @@ function Walker({ virus, game }: { virus: VirusState; game: RefObject<Game> }) {
   const body = useRef<Group>(null)
   const portal = useRef<Group>(null)
   const flash = useRef<Mesh>(null)
-  useFrame(() => {
+  const bar = useRef<Group>(null)
+  const fill = useRef<Mesh>(null)
+  useFrame(({ camera }) => {
     const group = root.current
     const inner = body.current
     if (!group || !inner) return
@@ -52,7 +59,7 @@ function Walker({ virus, game }: { virus: VirusState; game: RefObject<Game> }) {
     const h = now - virus.hit
     const knock = h < 0.45 ? Math.exp(-h * 9) * Math.cos(h * 30) : 0
     const size =
-      (virus.kind === TOUGH ? (virus.hp > 1 ? 1.3 : 1.1) : 1) *
+      (virus.big ? BIG : virus.kind === TOUGH ? 1.15 : 1) *
       Math.max(0.0001, backOut(rise))
     const squish = Math.sin(t * 14) * 0.05 * rise
     inner.scale.set(
@@ -62,9 +69,18 @@ function Walker({ virus, game }: { virus: VirusState; game: RefObject<Game> }) {
     )
     inner.rotation.set(-knock * 0.6, 0, Math.sin(t * 5 + virus.id) * 0.18)
     if (flash.current) {
-      flash.current.visible = h < 0.3
+      flash.current.visible = h < 0.12
       ;(flash.current.material as MeshBasicMaterial).opacity =
-        0.9 * (1 - h / 0.3)
+        0.55 * (1 - h / 0.12)
+    }
+    const max = virus.big ? BIG_HP : HP
+    if (bar.current && fill.current) {
+      const left = virus.hp / max
+      bar.current.visible = left < 1
+      bar.current.position.set(virus.x, group.position.y + 0.55 * size, virus.z)
+      bar.current.quaternion.copy(camera.quaternion)
+      fill.current.scale.x = Math.max(0.0001, left * 0.9)
+      fill.current.position.x = -(1 - left) * 0.45
     }
     if (portal.current) {
       const open = clamp(t * 5) * clamp((RISE + 0.35 - t) * 4)
@@ -85,6 +101,20 @@ function Walker({ virus, game }: { virus: VirusState; game: RefObject<Game> }) {
             <meshBasicMaterial color="#ffffff" transparent depthWrite={false} />
           </mesh>
         </group>
+      </group>
+      <group ref={bar} visible={false} scale={virus.big ? 1.6 : 1}>
+        <mesh
+          geometry={geo.slab}
+          material={barMaterials.back}
+          scale={[1, 0.16, 0.01]}
+        />
+        <mesh
+          ref={fill}
+          geometry={geo.slab}
+          material={barMaterials.fill}
+          position={[0, 0, 0.01]}
+          scale={[0.9, 0.09, 0.01]}
+        />
       </group>
       <group ref={portal} visible={false}>
         <mesh
@@ -115,6 +145,11 @@ function Walker({ virus, game }: { virus: VirusState; game: RefObject<Game> }) {
   )
 }
 
+const barMaterials = {
+  back: new MeshBasicMaterial({ color: '#1f2a3d' }),
+  fill: new MeshBasicMaterial({ color: '#ff6b7f' }),
+}
+
 const portalMaterials = {
   hole: new MeshBasicMaterial({ color: '#3b2357' }),
   rim: new MeshBasicMaterial({ color: '#b48ad8' }),
@@ -141,6 +176,7 @@ const snapshot = (state: Game) => ({
   viruses: [...state.viruses],
   darts: [...state.darts],
   pops: [...state.pops],
+  drops: [...state.drops],
 })
 
 /** Runs the virus game. `onChange` fires when anything the page shows has changed. */
@@ -171,7 +207,7 @@ export function Arena({
     if (playing) step(state, Math.min(dt, 0.05))
     else settle(state, Math.min(dt, 0.05))
     if (playing && trigger.current) fire(state, trigger.current, gunAt)
-    const signature = `${state.ids}:${state.viruses.length}:${state.darts.length}:${state.pops.length}:${state.lives}:${state.popped}:${Math.floor(state.time)}:${state.status}`
+    const signature = `${state.ids}:${state.viruses.length}:${state.darts.length}:${state.pops.length}:${state.lives}:${state.popped}:${Math.floor(state.time)}:${state.status}:${state.drops.length}:${state.shotgun}`
     if (signature !== seen.current) {
       seen.current = signature
       setShown(snapshot(state))
@@ -220,6 +256,14 @@ export function Arena({
       ))}
       {shown.pops.map((pop) => (
         <Boom key={pop.id} pop={pop} game={game} />
+      ))}
+      {shown.drops.map((drop) => (
+        <Capsule
+          key={drop.id}
+          drop={drop}
+          game={game}
+          onCollect={() => collect(game.current, drop.id)}
+        />
       ))}
     </>
   )
