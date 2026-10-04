@@ -33,12 +33,6 @@ const LumiprobeStory = dynamic(() => import('./lumiprobe/story'))
 const QuantoriStory = dynamic(() => import('./quantori/story'))
 const preloadVignette = () => import('./three/project-vignette')
 const projectPath = (index: number) => `/p/${projects[index].slug}`
-const projectAt = (path: string, hash: string) => {
-  const index = projects.findIndex((item) => `/p/${item.slug}` === path)
-  return index >= 0
-    ? index
-    : projects.findIndex((item) => `#${item.id}` === hash)
-}
 let motionQuery: MediaQueryList | undefined
 const getMotionQuery = () =>
   (motionQuery ??= window.matchMedia('(prefers-reduced-motion: reduce)'))
@@ -185,11 +179,11 @@ export function Home({ initial = null }: { initial?: number | null }) {
         navigate(hashed)
         return
       }
-      const index = projectAt(window.location.pathname, window.location.hash)
+      const index = projects.findIndex(
+        (item) => `/p/${item.slug}` === window.location.pathname,
+      )
       setSelected(index < 0 ? null : index)
       if (index < 0) return
-      if (window.location.hash)
-        window.history.replaceState(null, '', projectPath(index))
       window.scrollTo({
         top: (index + 1) * window.innerHeight,
         behavior: 'instant',
