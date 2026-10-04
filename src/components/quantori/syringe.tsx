@@ -61,7 +61,7 @@ export function Syringe() {
       <Clay
         shape="box"
         color="#d9dde2"
-        size={[0.05, 0.44, 0.14]}
+        size={[0.05, 0.44, 0.44]}
         position={[-0.36, 0, 0]}
       />
       <Clay
@@ -77,13 +77,6 @@ export function Syringe() {
         size={[0.025, 0.36, 0.025]}
         position={[0.62, 0, 0]}
         rotation={[0, 0, Math.PI / 2]}
-      />
-      <Clay
-        shape="box"
-        color={palette.terracotta}
-        size={[0.12, 0.32, 0.12]}
-        position={[-0.22, -0.24, 0]}
-        rotation={[0, 0, 0.25]}
       />
     </group>
   )
