@@ -113,7 +113,6 @@
     linear-gradient(120deg, #c8a66b, #a08054);
 }
 .hiring-papers {
-  scroll-margin-top: 115px;
   display: grid;
   grid-template-columns: minmax(210px, 0.8fr) minmax(0, 1.45fr) minmax(
       200px,
@@ -121,32 +120,6 @@
     );
   align-items: start;
   gap: 19px;
-}
-.hiring-folders {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin: 0 0 20px;
-}
-.hiring-folders button {
-  border-radius: 7px 7px 2px 2px;
-  background: #c8b483;
-  border: 1px solid #796b4d;
-  padding: 7px 13px;
-  font-size: 13px;
-  text-align: left;
-}
-.hiring-folders button[aria-current] {
-  background: #f2e7bb;
-  border-color: #e9d59c;
-}
-.hiring-folders small {
-  display: block;
-  font:
-    10px 'DM Mono',
-    monospace;
-  color: #586047;
-  margin-top: 3px;
 }
 .hiring-citations {
   border: 0;

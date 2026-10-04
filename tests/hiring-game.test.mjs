@@ -18,7 +18,7 @@ const interviews = [check('technical'), check('project'), check('security')]
 test('a complete evidence-led day hires both suitable candidates within 12 checks', () => {
   let game = initialGame()
   game = act(game, decide('pass'), open(1), check('security'), decide('pass'))
-  game = act(game, open(5), offer(100), decide('pass'))
+  game = act(game, open(5), decide('pass'))
   game = act(
     game,
     open(2),
@@ -36,7 +36,7 @@ test('a complete evidence-led day hires both suitable candidates within 12 check
     decide('hire'),
   )
   game = act(game, open(4), decide('pass'), { type: 'next' })
-  assert.equal(game.checks, 0)
+  assert.equal(game.checks, 1)
   assert.equal(game.finished, true)
   assert.deepEqual(results(game), {
     points: 18,
@@ -78,7 +78,7 @@ test('unsupported rejection gets partial credit, and rejecting everyone cannot w
 })
 
 test('checks, offers and closed files cannot be spent or stamped twice', () => {
-  const first = act(initialGame(), check('security'))
+  const first = act(initialGame(), check('security'), ...interviews.slice(0, 2))
   assert.equal(gameReducer(first, check('security')), first)
   const offered = act(first, offer(100))
   assert.equal(gameReducer(offered, offer(100)), offered)
@@ -100,17 +100,24 @@ test('shared salary budget is enforced even after a candidate agrees', () => {
   const game = act(
     initialGame(),
     open(3),
+    ...interviews,
     offer(105),
     open(2),
     ...interviews,
     offer(120),
     decide('hire'),
     open(3),
-    ...interviews,
     check('clarify'),
   )
   assert.match(hireBlock(game), /remaining salary budget/)
   assert.equal(gameReducer(game, decide('hire')), game)
+})
+
+test('salary talk opens only after both interview rounds', () => {
+  const early = act(initialGame(), check('security'))
+  assert.equal(gameReducer(early, offer(100)), early)
+  const ready = act(early, check('technical'), check('project'), offer(100))
+  assert.deepEqual(ready.files[0].offers, [100])
 })
 
 test('exhausted checks leave free decisions available, with no negative budget', () => {

@@ -8,6 +8,8 @@ import {
   ShieldCheck,
   Paperclip,
   Send,
+  Lock,
+  DoorOpen,
 } from 'lucide-react'
 import {
   candidates,
@@ -19,11 +21,59 @@ import {
 import {
   canCheck,
   canOffer,
+  interviewed,
   revealed,
   salaryUsed,
   type Action,
   type Game,
 } from './game'
+
+export function VacancyBrief({ onStart }: { onStart: () => void }) {
+  return (
+    <section
+      className="hiring-paper hiring-vacancy hiring-brief"
+      aria-label="Your task today"
+    >
+      <div>
+        <small>YOUR TASK TODAY / VACANCY FS-03</small>
+        <h3 tabIndex={-1}>
+          Fill {vacancy.seats} seats: {vacancy.role}
+        </h3>
+        <div className="hiring-tags">
+          {vacancy.tags.map((tag) => (
+            <span className="hiring-tag" key={tag}>
+              {tag}
+            </span>
+          ))}
+        </div>
+        <p>
+          The team needs people with <strong>{vacancy.years}+ years</strong> of
+          production work who own features from the screen to the database.
+        </p>
+        <p>
+          Six people applied. Each one brings a resume to your desk. Ask
+          questions, check the documents, agree a salary, then hire or reject.
+        </p>
+      </div>
+      <div>
+        <dl className="hiring-facts">
+          <dt>Open seats</dt>
+          <dd>{vacancy.seats}</dd>
+          <dt>Salary ceiling</dt>
+          <dd>{vacancy.cap} credits each</dd>
+          <dt>Shared budget</dt>
+          <dd>{vacancy.budget} credits</dd>
+          <dt>Questions you can ask today</dt>
+          <dd>{vacancy.checks}</dd>
+        </dl>
+        <button className="hiring-next" onClick={onStart}>
+          <DoorOpen size={17} />
+          Call the first candidate
+        </button>
+      </div>
+    </section>
+  )
+}
 
 export function Vacancy() {
   return (
@@ -149,11 +199,41 @@ export function CandidateFile({
   )
 }
 
-const tools: { check: Check; label: string; icon: typeof MessagesSquare }[] = [
-  { check: 'technical', label: 'Interview · Stack', icon: MessagesSquare },
-  { check: 'project', label: 'Interview · Project', icon: FileSearch },
-  { check: 'security', label: 'Security check', icon: ShieldCheck },
-  { check: 'clarify', label: 'Request clarification', icon: Paperclip },
+const questions: {
+  check: Check
+  label: string
+  ask: string
+  reveals: string
+  icon: typeof MessagesSquare
+}[] = [
+  {
+    check: 'technical',
+    label: 'Round 1 · Stack',
+    ask: '“Walk me through a React form that saves to PostgreSQL. Where do the types and validation live?”',
+    reveals: 'Have they shipped this stack?',
+    icon: MessagesSquare,
+  },
+  {
+    check: 'project',
+    label: 'Round 2 · Project',
+    ask: '“In your recent project, which part did you build yourself?”',
+    reveals: 'Is the resume project really theirs?',
+    icon: FileSearch,
+  },
+  {
+    check: 'security',
+    label: 'Security check',
+    ask: 'Do identity, employers, and dates match the resume?',
+    reveals: 'Are the claimed years real?',
+    icon: ShieldCheck,
+  },
+  {
+    check: 'clarify',
+    label: 'Follow-up',
+    ask: '“Is there anything in your file you can clarify or document?”',
+    reveals: 'Can a flagged document be explained?',
+    icon: Paperclip,
+  },
 ]
 
 export function DeskTools({
@@ -173,80 +253,92 @@ export function DeskTools({
       className="hiring-paper hiring-tools"
       aria-label="Interview and offer tools"
     >
-      <small>YOUR DESK</small>
-      <h4>Ask for evidence</h4>
+      <small>YOUR DESK · 1 CHECK EACH</small>
+      <h4>Ask a question</h4>
       <div className="hiring-tools-list">
-        {tools.map(({ check, label, icon: Icon }) => {
+        {questions.map(({ check, label, ask, reveals, icon: Icon }) => {
           const seen = file.seen.includes(check)
           const prerequisite =
             check === 'project' && !file.seen.includes('technical')
-              ? 'After the stack interview'
+              ? 'After round 1'
               : check === 'clarify' && !file.seen.includes('security')
                 ? 'After the security check'
                 : null
           return (
             <button
               key={check}
-              className="hiring-tool"
+              className={`hiring-tool hiring-question${seen ? ' is-asked' : ''}`}
               onClick={() => dispatch({ type: 'check', check })}
               disabled={!canCheck(game, check)}
             >
-              {seen ? <CheckIcon size={17} /> : <Icon size={17} />}
-              <span>
+              <small>
+                {seen ? <CheckIcon size={13} /> : <Icon size={13} />}
                 {label}
-                <small>
-                  {seen ? 'Added to file' : (prerequisite ?? '1 check')}
-                </small>
-              </span>
+              </small>
+              <span>{ask}</span>
+              <small>
+                {seen
+                  ? 'Answer added to the file'
+                  : (prerequisite ?? `Finds out: ${reveals}`)}
+              </small>
             </button>
           )
         })}
       </div>
-      <div className="hiring-offer">
-        <div>
-          <h4>Talk salary</h4>
-          <label htmlFor="hiring-salary">Your offer per month</label>
-          <output htmlFor="hiring-salary">
-            {salary}
-            <small> credits</small>
-          </output>
-          <input
-            id="hiring-salary"
-            type="range"
-            min={80}
-            max={120}
-            step={5}
-            value={salary}
-            onChange={(event) => setSalary(Number(event.target.value))}
-            disabled={Boolean(file.decision) || file.agreed !== undefined}
-          />
-        </div>
-        <div>
-          <p className="hiring-meta">
-            {file.agreed !== undefined
-              ? `Agreed: ${file.agreed} credits`
-              : `${2 - file.offers.length} offers left · 1 check each`}
-          </p>
-          <button
-            className="hiring-tool"
-            disabled={!offerEnabled}
-            onClick={() => dispatch({ type: 'offer', salary })}
-          >
-            <Send size={16} />
-            Make offer
-          </button>
-          {salary > limit && (
+      {interviewed(file) ? (
+        <div className="hiring-offer">
+          <div>
+            <h4>Talk salary</h4>
+            <label htmlFor="hiring-salary">Your offer per month</label>
+            <output htmlFor="hiring-salary">
+              {salary}
+              <small> credits</small>
+            </output>
+            <input
+              id="hiring-salary"
+              type="range"
+              min={80}
+              max={120}
+              step={5}
+              value={salary}
+              onChange={(event) => setSalary(Number(event.target.value))}
+              disabled={Boolean(file.decision) || file.agreed !== undefined}
+            />
+          </div>
+          <div>
             <p className="hiring-meta">
-              {remaining} credits remain for both seats.
+              {file.agreed !== undefined
+                ? `Agreed: ${file.agreed} credits`
+                : `${2 - file.offers.length} offers left · 1 check each`}
             </p>
-          )}
-          {!game.checks && !file.agreed && (
-            <p className="hiring-meta">
-              No checks left. You can still close files.
-            </p>
-          )}
+            <button
+              className="hiring-tool"
+              disabled={!offerEnabled}
+              onClick={() => dispatch({ type: 'offer', salary })}
+            >
+              <Send size={16} />
+              Make offer
+            </button>
+            {salary > limit && (
+              <p className="hiring-meta">
+                {remaining} credits remain for both seats.
+              </p>
+            )}
+            {!game.checks && !file.agreed && (
+              <p className="hiring-meta">
+                No checks left. You can still close files.
+              </p>
+            )}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="hiring-offer is-locked">
+          <h4>
+            <Lock size={15} /> Talk salary
+          </h4>
+          <p className="hiring-meta">Opens after both interview rounds.</p>
+        </div>
+      )}
     </aside>
   )
 }
