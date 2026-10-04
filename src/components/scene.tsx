@@ -43,9 +43,11 @@ function CameraRail({ progress, selected, reduced }: SceneProps) {
       }
     entry.current.time = Math.min(1, entry.current.time + step / 1.1)
     const dive =
-      selected !== null && !reduced
-        ? Math.sin(entry.current.time * Math.PI) ** 2
-        : 0
+      selected === null
+        ? 0
+        : reduced
+          ? 1
+          : THREE.MathUtils.smootherstep(entry.current.time, 0, 1)
     const target = selected ?? progress.current
     if (reduced) {
       current.current.position = target
@@ -61,29 +63,26 @@ function CameraRail({ progress, selected, reduced }: SceneProps) {
     } else advanceRail(current.current, target, delta)
     const a = projectAngle(current.current.position)
     const mobile = size.width < 700
-    const distance =
-      selected !== null
-        ? (mobile ? 11 : 9.6) - dive * 2.2
-        : mobile
-          ? 14.8
-          : 11.8
-    const shift =
-      selected !== null
-        ? mobile
-          ? 0
-          : 3.6 * (1 - dive * 0.55)
-        : mobile
-          ? 0
-          : -1.8
-    const forward = 1.2 + dive * 2.6
+    const near = (from: number, to: number) =>
+      THREE.MathUtils.lerp(from, to, dive)
+    const open = selected !== null
+    const distance = open
+      ? near(mobile ? 11 : 9.6, mobile ? 8.8 : 8.8)
+      : mobile
+        ? 14.8
+        : 11.8
+    const shift = mobile ? 0 : open ? near(3.6, 4.6) : -1.8
+    const forward = open ? near(1.2, 0) : 1.2
+    const height = open ? near(2, 0.3) : 2.5
+    const lookY = open ? near(-0.2, -2.1) : -0.2
     const frame = framing.current
     const settle = (from: number, to: number) =>
       reduced ? to : THREE.MathUtils.damp(from, to, 3.5, step)
     frame.distance = settle(frame.distance, distance)
     frame.shift = settle(frame.shift, shift)
     frame.forward = settle(frame.forward, forward)
-    frame.height = settle(frame.height, selected !== null ? 2 - dive : 2.5)
-    frame.lookY = settle(frame.lookY, -0.2 - dive * 0.5)
+    frame.height = settle(frame.height, height)
+    frame.lookY = settle(frame.lookY, lookY)
     frame.parallax = settle(
       frame.parallax,
       !reduced && selected === null ? pointer.x * 0.1 : 0,
