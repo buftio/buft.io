@@ -415,10 +415,9 @@ export default function SperasoftStory({
 }
 
 function matchNews({ outcome, score: [home, away] }: SceneState) {
-  if (outcome === 'goal') return `Goal, ${home} to ${away}`
-  if (outcome === 'saved') return 'Saved'
-  if (outcome === 'opponent-windup') return 'Opponent shooting'
   if (outcome === 'won' || outcome === 'lost')
     return `Full time, ${home} to ${away}`
-  return ''
+  if (outcome === 'saved') return 'Saved'
+  if (outcome === 'opponent-windup') return 'Opponent shooting'
+  return home + away ? `Score ${home} to ${away}` : ''
 }
