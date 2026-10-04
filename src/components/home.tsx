@@ -141,6 +141,16 @@ export function Home({ initial = null }: { initial?: number | null }) {
     window.history.pushState(null, '', projectPath(index))
   }, [])
 
+  const switchProject = useCallback((index: number) => {
+    window.scrollTo({
+      top: (index + 1) * window.innerHeight,
+      behavior: 'instant',
+    })
+    setSelected(index)
+    window.history.pushState(null, '', projectPath(index))
+    dialog.current?.scrollTo({ top: 0 })
+  }, [])
+
   const closeProject = useCallback(() => {
     dialog.current?.close()
     setSelected(null)
@@ -209,8 +219,9 @@ export function Home({ initial = null }: { initial?: number | null }) {
     }
   }, [navigate])
 
+  const isOpen = selected !== null
   useEffect(() => {
-    if (selected === null) return
+    if (!isOpen) return
     const element = dialog.current
     const focus = previousFocus.current
     const oldOverflow = document.body.style.overflow
@@ -250,7 +261,7 @@ export function Home({ initial = null }: { initial?: number | null }) {
         if (focus?.isConnected) focus.focus({ preventScroll: true })
       })
     }
-  }, [selected, closeProject])
+  }, [isOpen, closeProject])
 
   return (
     <main className={`portfolio ${reduced ? 'reduced-motion' : ''}`}>
@@ -447,6 +458,20 @@ export function Home({ initial = null }: { initial?: number | null }) {
               </div>
             </article>
           )}
+          <nav className="dialog-nav" aria-label="Projects">
+            {projects.map((item, index) => (
+              <button
+                key={item.id}
+                onClick={() => switchProject(index)}
+                className={selected === index ? 'current' : ''}
+                aria-label={item.name}
+                aria-current={selected === index ? 'page' : undefined}
+              >
+                <ProjectMark project={item} />
+                <span className="dialog-nav-name">{item.name}</span>
+              </button>
+            ))}
+          </nav>
         </dialog>
       )}
     </main>

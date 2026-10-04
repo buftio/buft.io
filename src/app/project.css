@@ -15,7 +15,64 @@
   overflow: auto;
   overscroll-behavior: none;
   scrollbar-width: thin;
-  animation: window-in 0.75s 0.55s both cubic-bezier(0.2, 0.7, 0.1, 1);
+  animation: window-in 0.75s 0.55s backwards cubic-bezier(0.2, 0.7, 0.1, 1);
+}
+.dialog-nav {
+  position: fixed;
+  left: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  animation: dialog-nav-in 0.4s 1.3s backwards;
+}
+@keyframes dialog-nav-in {
+  from {
+    opacity: 0;
+  }
+}
+.dialog-nav button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+}
+.dialog-nav button.current {
+  background: #ffffff10;
+  box-shadow: inset 2px 0 #ff9a5d;
+}
+.dialog-nav-name {
+  position: absolute;
+  left: 52px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #181512e6;
+  color: #e8b291;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.dialog-nav button:hover .dialog-nav-name,
+.dialog-nav button:focus-visible .dialog-nav-name {
+  opacity: 1;
+}
+.dialog-nav button:hover .project-mark,
+.dialog-nav button:focus-visible .project-mark,
+.dialog-nav button.current .project-mark {
+  filter: none;
+  opacity: 1;
+}
+@media (max-width: 900px) {
+  .dialog-nav {
+    display: none;
+  }
 }
 .project-dialog::backdrop {
   background: #09070633;
