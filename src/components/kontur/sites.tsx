@@ -14,6 +14,7 @@ import { Lot } from './models/lot'
 import { RocketSite } from './models/rocket'
 import { Shop } from './models/shop'
 import { TaxOffice } from './models/tax'
+import { Workshop } from './models/workshop'
 
 function grid(tint: string) {
   const canvas = document.createElement('canvas')
@@ -103,6 +104,7 @@ export function Sites({
   game: RefObject<Game>
   state: {
     registered: boolean
+    minted: boolean
     banks: boolean
     rocket: number
     launched: boolean
@@ -125,6 +127,7 @@ export function Sites({
               <Lot game={game} />
             </group>
           )
+        if (name === 'workshop' && !state.minted) return null
         return (
           <group key={name} position={[x, 0, z]}>
             <Bounce game={game} site={name}>
@@ -138,6 +141,8 @@ export function Sites({
                 <Bank game={game} connected={state.banks} />
               ) : name === 'booth' ? (
                 <Customs game={game} />
+              ) : name === 'workshop' ? (
+                <Workshop game={game} />
               ) : (
                 <RocketSite key={stage} game={game} stage={stage} />
               )}

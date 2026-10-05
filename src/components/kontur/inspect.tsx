@@ -15,6 +15,7 @@ import { itemMaterial } from './models/kit'
 import { RocketSite } from './models/rocket'
 import { Shop } from './models/shop'
 import { TaxOffice } from './models/tax'
+import { Workshop } from './models/workshop'
 
 type Stage = 'plot' | 'factory' | 'launched'
 
@@ -40,6 +41,10 @@ const places: Record<Site, [string, string]> = {
     'Closed unless you pay. One gold coin buys six seconds of open border, and the officer logs every crate that rolls past, so when something goes wrong the log already knows.',
   ],
   rocket: ['', ''],
+  workshop: [
+    'Belt factory',
+    'One gold coin in, one belt tile out. Drag a tile to wherever it should go; it faces the way you carried it. Bring a belt back and the factory refunds the coin, no questions asked.',
+  ],
 }
 
 const rocket: Record<Stage, [string, string]> = {
@@ -145,6 +150,7 @@ function Model({
   if (site === 'bank')
     return <Bank game={game} connected={game.current.banks} />
   if (site === 'booth') return <Customs game={game} />
+  if (site === 'workshop') return <Workshop game={game} />
   return <RocketSite game={game} stage={stage} />
 }
 
@@ -169,6 +175,14 @@ export default function Inspect({
       : look.site === 'rocket'
         ? rocket[stage]
         : places[look.site]
+  const ready = useRef(false)
+  useEffect(() => {
+    const timer = window.setTimeout(() => (ready.current = true), 400)
+    return () => clearTimeout(timer)
+  }, [])
+  const dismiss = () => {
+    if (ready.current) onClose()
+  }
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return
@@ -184,10 +198,10 @@ export default function Inspect({
       <button
         className="k-inspect-back"
         aria-label="Close"
-        onClick={onClose}
+        onClick={dismiss}
         onContextMenu={(event) => {
           event.preventDefault()
-          onClose()
+          dismiss()
         }}
       />
       <dialog open aria-label={title}>

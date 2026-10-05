@@ -55,10 +55,6 @@
   touch-action: none;
   user-select: none;
 }
-.k-stage.is-belt,
-.k-stage.is-remove {
-  cursor: crosshair;
-}
 .k-stage figure {
   position: absolute;
   inset: 0;
@@ -228,28 +224,6 @@
 }
 .k-wallet svg {
   color: #c99712;
-}
-.k-tools {
-  padding: 3px;
-  gap: 2px;
-}
-.k-tools button {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 10px;
-  border: 0;
-  border-radius: 999px;
-  background: none;
-  font:
-    600 12px Manrope,
-    sans-serif;
-  color: var(--k-muted);
-  cursor: pointer;
-}
-.k-tools button[aria-pressed='true'] {
-  background: var(--k-ink);
-  color: #fff;
 }
 .k-buy {
   cursor: pointer;
@@ -456,14 +430,5 @@
   }
   100% {
     opacity: 0;
-  }
-}
-.k-tools .is-hint {
-  animation: k-pulse 1.2s ease-in-out infinite;
-}
-@keyframes k-pulse {
-  50% {
-    background: var(--k-gold);
-    color: var(--k-ink);
   }
 }

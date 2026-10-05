@@ -2,16 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useCallback, useRef, useState } from 'react'
-import {
-  Coins,
-  Hand,
-  Landmark,
-  Rocket,
-  RotateCcw,
-  Stamp,
-  Trash2,
-  Waypoints,
-} from 'lucide-react'
+import { Coins, Landmark, Rocket, RotateCcw, Stamp } from 'lucide-react'
 import { SceneBoundary } from '../scene-boundary'
 import { boop, fanfare, pickup, pop, squeak } from '../quantori/sound'
 import {
@@ -26,7 +17,7 @@ import {
 } from './factory'
 import { cheer, chink, gate, lift, thud } from './sound'
 import type { Look } from './input'
-import type { Signal, Tool } from './world'
+import type { Signal } from './world'
 
 const World = dynamic(() => import('./world'), { ssr: false })
 const Inspect = dynamic(() => import('./inspect'), { ssr: false })
@@ -78,12 +69,12 @@ function stepOf(s: Snapshot): [string, string] {
   if (!s.built)
     return [
       '02 · Pay a tax',
-      `Gold in the bank buys belts, ${BELT} a tile. Pick the belt tool and drag across the floor; things ride where the arrows point.`,
+      `A belt factory opened: ${BELT} gold a tile. Drag a tile out of it onto the floor; it faces the way you dragged. Tap a belt to turn it.`,
     ]
   if (!s.banks)
     return [
       '02 · Pay a tax',
-      `Automate the chores: goods into the shop, coins and papers into the tax office, gold into the bank. At ${BANKS} gold, connect the banks.`,
+      `Automate the chores: goods into the shop, coins and papers into the tax office, gold into the bank. Drag a misplaced belt back into the factory for a refund. At ${BANKS} gold, connect the banks.`,
     ]
   if (!s.opened)
     return [
@@ -119,7 +110,6 @@ export default function KonturStory({
 }) {
   const game = useRef(newGame())
   const [state, setState] = useState(() => snap(newGame()))
-  const [tool, setTool] = useState<Tool>('hand')
   const [failed, setFailed] = useState(false)
   const [round, setRound] = useState(0)
 
@@ -142,7 +132,6 @@ export default function KonturStory({
   const restart = () => {
     game.current = newGame()
     setState(snap(game.current))
-    setTool('hand')
     setBroke(0)
     setLook(null)
     setStamped(false)
@@ -164,7 +153,7 @@ export default function KonturStory({
       {failed ? (
         <p className="k-fallback">{line}</p>
       ) : (
-        <div className={`k-stage is-${tool}`}>
+        <div className="k-stage">
           <figure aria-label="A small clay factory: a shop, a tax office, a border with customs, and a rocket site">
             <SceneBoundary
               compact
@@ -176,7 +165,6 @@ export default function KonturStory({
               <World
                 key={round}
                 game={game}
-                tool={tool}
                 onChange={onChange}
                 onSignal={onSignal}
                 onInspect={setLook}
@@ -241,33 +229,6 @@ export default function KonturStory({
                 <Coins size={15} /> {state.wallet}
                 {broke > 0 && <em>Bank more gold</em>}
               </span>
-              {state.minted && (
-                <span className="k-tools" aria-label="Tool">
-                  {(
-                    [
-                      ['hand', Hand, 'Carry'],
-                      ['belt', Waypoints, `Belt · ${BELT}`],
-                      ['remove', Trash2, 'Remove'],
-                    ] as const
-                  ).map(([id, Icon, label]) => (
-                    <button
-                      key={id}
-                      aria-pressed={tool === id}
-                      className={
-                        id === 'belt' &&
-                        tool !== 'belt' &&
-                        !state.built &&
-                        state.wallet >= BELT
-                          ? 'is-hint'
-                          : undefined
-                      }
-                      onClick={() => setTool(id)}
-                    >
-                      <Icon size={14} /> {label}
-                    </button>
-                  ))}
-                </span>
-              )}
               {state.built > 0 && !state.banks && (
                 <button
                   className="k-buy"

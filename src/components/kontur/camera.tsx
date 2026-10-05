@@ -36,7 +36,7 @@ export function Rig({ game }: { game: RefObject<Game> }) {
     const half = Math.tan((20 * Math.PI) / 180)
     const tall = aspect < 0.8
     const [across, along] = tall ? [H, W] : [W, H]
-    const fitWidth = (across / 2 + 0.6) / (half * aspect)
+    const fitWidth = (across / 2 + 1.1) / (half * aspect)
     const fitHeight = (along / 2 + 1.4) / half
     const distance = Math.max(fitWidth, fitHeight * (tall ? 0.95 : 0.8))
     const focus = focusOf(game.current, tall)

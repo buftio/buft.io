@@ -171,6 +171,26 @@ let belt: MeshStandardMaterial | undefined
 const beltMaterial = () =>
   (belt ??= new MeshStandardMaterial({ map: arrows(), roughness: 0.9 }))
 
+export const turnOf = (dir: Dir) => -(dir - 3) * (Math.PI / 2)
+
+export function BeltTile({
+  material = beltMaterial(),
+  lifted = false,
+}: {
+  material?: MeshStandardMaterial
+  lifted?: boolean
+}) {
+  return (
+    <mesh
+      geometry={geo.slab}
+      material={material}
+      scale={[0.94, 0.1, 0.94]}
+      castShadow={lifted}
+      receiveShadow
+    />
+  )
+}
+
 export function Belts({ belts }: { belts: [number, Dir][] }) {
   const material = beltMaterial()
   useFrame((_, dt) => {
@@ -184,14 +204,9 @@ export function Belts({ belts }: { belts: [number, Dir][] }) {
           <group
             key={at}
             position={[x, 0.05, z]}
-            rotation={[0, -(dir - 3) * (Math.PI / 2), 0]}
+            rotation={[0, turnOf(dir), 0]}
           >
-            <mesh
-              geometry={geo.slab}
-              material={material}
-              scale={[0.94, 0.1, 0.94]}
-              receiveShadow
-            />
+            <BeltTile material={material} />
           </group>
         )
       })}

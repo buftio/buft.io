@@ -66,6 +66,7 @@ export type Game = {
     passed: number
     opened: number
     launched: number
+    bought: number
   }
   openings: number
   hit: Partial<Record<Site, number>>
@@ -109,6 +110,7 @@ export function newGame(): Game {
       passed: -10,
       opened: -10,
       launched: -10,
+      bought: -10,
     },
     openings: 0,
     hit: {},

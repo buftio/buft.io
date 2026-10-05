@@ -11,7 +11,6 @@ import { Mood, Scenery } from './models/scenery'
 import type { Dir } from './map'
 import { Floor, Sites } from './sites'
 
-export type Tool = 'hand' | 'belt' | 'remove'
 export type Signal =
   | 'sold'
   | 'denied'
@@ -23,7 +22,6 @@ export type Signal =
 
 type Props = {
   game: RefObject<Game>
-  tool: Tool
   onChange: () => void
   onSignal: (signal: Signal) => void
   onInspect: (look: Look) => void
@@ -34,12 +32,13 @@ const layoutOf = (game: Game) => ({
   version: game.version,
   belts: [...game.belts].map(([at, belt]): [number, Dir] => [at, belt.dir]),
   registered: game.registered,
+  minted: game.minted,
   banks: game.banks,
   rocket: game.rocket,
   launched: game.launched,
 })
 
-function Scene({ game, tool, onChange, onSignal, onInspect, onReady }: Props) {
+function Scene({ game, onChange, onSignal, onInspect, onReady }: Props) {
   const [layout, setLayout] = useState(() => layoutOf(game.current))
   const tick = useRef(0)
   useEffect(onReady, [onReady])
@@ -62,12 +61,7 @@ function Scene({ game, tool, onChange, onSignal, onInspect, onReady }: Props) {
       <Floor />
       <Belts belts={layout.belts} />
       <Sites game={game} state={layout} />
-      <Input
-        game={game}
-        tool={tool}
-        onSignal={onSignal}
-        onInspect={onInspect}
-      />
+      <Input game={game} onSignal={onSignal} onInspect={onInspect} />
       {layout.launched && <Flood game={game} />}
     </>
   )
