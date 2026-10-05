@@ -10,7 +10,6 @@ import {
   Coin,
   Columns,
   Goods,
-  Pediment,
   Plinth,
   Slim,
   palette,
@@ -43,7 +42,36 @@ export function Bank({ game, connected }: ModelProps & { connected: boolean }) {
           position={[0, 0.74, -0.27]}
         />
         <Columns color="#fff5de" z={0.4} />
-        <Pediment color="#b6a5ca" />
+        <Clay
+          color="#75529d"
+          size={[1.72, 0.12, 0.96]}
+          position={[0, 1.39, -0.32]}
+        />
+        <Clay
+          color="#75529d"
+          size={[1.68, 0.1, 0.13]}
+          position={[0, 1.39, 0.4]}
+        />
+        <Clay
+          shape="sphere"
+          color="#9877bc"
+          size={[1.12, 0.68, 0.9]}
+          position={[-0.12, 1.43, -0.23]}
+        />
+        <Coin
+          position={[-0.12, 1.78, -0.23]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          scale={2.55}
+        />
+        {[0, 1, 2, 3].map((i) => (
+          <Clay
+            key={i}
+            shape="cylinder"
+            color={i % 2 ? '#ffe29a' : '#e9b735'}
+            size={[0.29, 0.09, 0.29]}
+            position={[0.59, 1.5 + i * 0.09, -0.48]}
+          />
+        ))}
         <Clay
           color="#ded2e9"
           size={[1.65, 0.1, 0.53]}
@@ -99,13 +127,14 @@ export function Bank({ game, connected }: ModelProps & { connected: boolean }) {
             <Goods kind="gold" key={y} position={[0, y, 0]} scale={0.85} />
           ))}
         </group>
-        <Coin position={[0, 1.57, 0.505]} scale={0.6} />
       </Bake>
       {connected && (
         <Bake>
-          <BankLink />
+          <group position={[0, -0.05, -0.42]}>
+            <BankLink />
+          </group>
           {[-0.5, 0, 0.5].map((x, i) => (
-            <group key={x} position={[x, 1.51, -0.34]}>
+            <group key={x} position={[x, 1.51, -0.72]}>
               <Clay
                 color={['#86d2bb', '#9ebce8', '#e8bf80'][i]}
                 size={[0.28, 0.24, 0.24]}

@@ -6,7 +6,6 @@ import type { Group } from 'three'
 import {
   Bake,
   Clay,
-  Coin,
   Goods,
   Plinth,
   Slim,
@@ -44,16 +43,46 @@ export function Shop({ game }: ModelProps) {
           />
         ))}
         <Clay
-          color={palette.teal}
-          size={[1.8, 0.16, 1.15]}
-          position={[0, 1.42, -0.29]}
+          color="#167d78"
+          size={[1.8, 0.13, 0.95]}
+          position={[0, 1.4, -0.39]}
         />
-        <Clay
-          color="#fff9ef"
-          size={[1.35, 0.3, 0.09]}
-          position={[0, 1.59, 0.61]}
-        />
-        <Coin position={[0, 1.6, 0.68]} scale={0.75} />
+        <group position={[0, 1.5, -0.38]} rotation={[0, -0.12, 0]}>
+          <Clay color="#b8763b" size={[1.04, 0.25, 0.64]} />
+          <Clay
+            color="#69482e"
+            size={[0.86, 0.05, 0.49]}
+            position={[0, 0.13, 0]}
+          />
+          {[-0.46, 0.46].map((x) => (
+            <Clay
+              key={x}
+              color="#f1d393"
+              size={[0.09, 0.34, 0.65]}
+              position={[x, 0.045, 0]}
+            />
+          ))}
+          {[-0.24, 0.24].map((x) => (
+            <group key={x} position={[x, 0.25, 0]}>
+              <Clay
+                shape="sphere"
+                color={x < 0 ? '#ea6945' : '#f3c346'}
+                size={[0.4, 0.34, 0.4]}
+              />
+              <Clay
+                color="#416b40"
+                size={[0.15, 0.045, 0.12]}
+                position={[0.04, 0.16, 0]}
+                rotation={[0, 0, 0.3]}
+              />
+            </group>
+          ))}
+          <Clay
+            color="#f1d393"
+            size={[1.1, 0.08, 0.08]}
+            position={[0, 0.15, 0.31]}
+          />
+        </group>
         <Clay
           color={palette.wood}
           size={[0.44, 0.82, 0.065]}

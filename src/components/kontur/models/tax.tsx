@@ -10,7 +10,6 @@ import {
   Coin,
   Columns,
   Goods,
-  Pediment,
   Plinth,
   Slim,
   palette,
@@ -69,13 +68,65 @@ export function TaxOffice({ game, banks }: ModelProps & { banks: boolean }) {
           position={[0, 0.13, 0.7]}
         />
         <Columns />
-        <Pediment />
-        <Goods
-          kind="paper"
-          position={[0, 1.59, 0.505]}
-          rotation={[Math.PI / 2, 0, 0]}
-          scale={0.55}
+        <Clay
+          color="#b44a43"
+          size={[1.68, 0.12, 0.8]}
+          position={[0, 1.4, -0.37]}
         />
+        <Clay
+          color="#b44a43"
+          size={[1.68, 0.1, 0.14]}
+          position={[0, 1.39, 0.42]}
+        />
+        {[-0.64, 0.64].map((x) => (
+          <Clay
+            key={x}
+            color="#b44a43"
+            size={[0.16, 0.1, 0.5]}
+            position={[x, 1.39, 0.18]}
+          />
+        ))}
+        <group position={[0, 1.5, -0.34]} rotation={[0, -0.16, 0]}>
+          <Clay color="#fff7df" size={[0.98, 0.065, 0.62]} />
+          {[-0.19, -0.04, 0.11].map((z) => (
+            <Clay
+              key={z}
+              color="#7a93ac"
+              size={[0.3, 0.015, 0.04]}
+              position={[-0.23, 0.04, z]}
+            />
+          ))}
+          <Clay
+            shape="cylinder"
+            color="#da7559"
+            size={[0.43, 0.08, 0.43]}
+            position={[0.24, 0.08, 0.03]}
+          />
+          <Clay
+            shape="torus"
+            color="#fff0c9"
+            size={0.32}
+            position={[0.24, 0.125, 0.03]}
+            rotation={[-Math.PI / 2, 0, 0]}
+          />
+          <Clay
+            color="#743c3b"
+            size={[0.42, 0.09, 0.32]}
+            position={[-0.03, 0.14, -0.07]}
+          />
+          <Clay
+            shape="cylinder"
+            color="#743c3b"
+            size={[0.14, 0.24, 0.14]}
+            position={[-0.03, 0.29, -0.07]}
+          />
+          <Clay
+            shape="sphere"
+            color="#da7559"
+            size={[0.41, 0.2, 0.28]}
+            position={[-0.03, 0.42, -0.07]}
+          />
+        </group>
         {[-0.4, 0, 0.4].map((x, i) => (
           <group key={x} position={[x, 0.31, 0.68]}>
             <Clay
@@ -155,12 +206,14 @@ export function TaxOffice({ game, banks }: ModelProps & { banks: boolean }) {
       </Bake>
       {banks && (
         <Bake>
-          <BankLink />
+          <group position={[0, -0.06, -0.36]}>
+            <BankLink />
+          </group>
           <Clay
             shape="sphere"
             color="#a5edbd"
             size={0.13}
-            position={[0, 1.98, -0.31]}
+            position={[0, 1.92, -0.67]}
           />
           <pointLight
             color="#7fffd0"

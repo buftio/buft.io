@@ -19,7 +19,6 @@ import {
 } from './map'
 
 export const SPEED = 1.8
-export const GAP = 0.32
 export const BELT = 1
 export const BANKS = 6
 export const FACTORY = 5
@@ -131,8 +130,11 @@ const make = (game: Game, kind: Kind, n = 1): Item => ({
   n,
 })
 
-const roomAt = (belt: Belt, p: number) =>
-  belt.items.every((item) => Math.abs(item.p - p) >= GAP)
+const size = (kind: Kind) =>
+  native.includes(kind) || foreign.includes(kind) ? 0.62 : 0.34
+const space = (a: Kind, b: Kind) => Math.max(size(a), size(b))
+const roomAt = (belt: Belt, p: number, kind: Kind) =>
+  belt.items.every((item) => Math.abs(item.p - p) >= space(item.kind, kind))
 
 function emit(game: Game, site: Site, item: Item) {
   const piles = sites[site].ports
@@ -220,7 +222,8 @@ function handOff(game: Game, from: Cell, dir: Dir, item: Item, over: number) {
   if (gate && !isOpen(game)) return false
   const next = game.belts.get(key(x, y))
   if (next) {
-    if ((next.dir + 2) % 4 === dir || !roomAt(next, over)) return false
+    if ((next.dir + 2) % 4 === dir || !roomAt(next, over, item.kind))
+      return false
     next.items.push({ ...item, p: over })
     if (gate) game.at.passed = game.time
     return true
@@ -231,9 +234,10 @@ function handOff(game: Game, from: Cell, dir: Dir, item: Item, over: number) {
 
 function move(game: Game, at: number, belt: Belt, dt: number) {
   const cell = cellOf(at)
-  let limit = Infinity
+  let ahead: Item | null = null
   for (let i = 0; i < belt.items.length; i++) {
     const item = belt.items[i]
+    const limit = ahead ? ahead.p - space(ahead.kind, item.kind) : Infinity
     const target = Math.min(item.p + SPEED * dt, limit)
     if (target >= 1 && handOff(game, cell, belt.dir, item, target - 1)) {
       belt.items.shift()
@@ -241,7 +245,7 @@ function move(game: Game, at: number, belt: Belt, dt: number) {
       continue
     }
     item.p = Math.max(item.p, Math.min(target, 1))
-    limit = item.p - GAP
+    ahead = item
   }
 }
 
@@ -249,8 +253,9 @@ function spawn(game: Game, source: 'native' | 'foreign', every: number) {
   if (game.time < game.next[source]) return
   const line = given.find((item) => item.source === source)!
   const belt = game.belts.get(key(...line.cells[0]))!
-  if (!roomAt(belt, 0)) return
-  belt.items.push(make(game, random(source === 'native' ? native : foreign)))
+  const kind = random(source === 'native' ? native : foreign)
+  if (!roomAt(belt, 0, kind)) return
+  belt.items.push(make(game, kind))
   game.next[source] = game.time + every
 }
 
@@ -285,7 +290,8 @@ export function step(game: Game, dt: number) {
 function moveAll(game: Game, dt: number) {
   for (const [at, pile] of game.piles) {
     const belt = game.belts.get(at)
-    if (belt && pile.length && roomAt(belt, 0)) belt.items.push(pile.shift()!)
+    if (belt && pile.length && roomAt(belt, 0, pile[0].kind))
+      belt.items.push(pile.shift()!)
   }
   for (const [at, belt] of game.belts) move(game, at, belt, dt)
 }
@@ -364,7 +370,8 @@ export function grab(game: Game, id: number) {
 function putBack(game: Game, held: Held) {
   const at = key(...held.from)
   const belt = game.belts.get(at)
-  if (!belt || !roomAt(belt, held.item.p)) return drop(game, at, [held.item])
+  if (!belt || !roomAt(belt, held.item.p, held.item.kind))
+    return drop(game, at, [held.item])
   belt.items.push(held.item)
   belt.items.sort((a, b) => b.p - a.p)
 }
@@ -384,7 +391,7 @@ export function release(game: Game, x: number, y: number): Drop {
   const site = inside(x, y) ? siteAt(x, y) : null
   if (site && offer(game, site, held.item)) return 'taken'
   const belt = game.belts.get(key(x, y))
-  if (inside(x, y) && belt && roomAt(belt, 0.5)) {
+  if (inside(x, y) && belt && roomAt(belt, 0.5, held.item.kind)) {
     belt.items.push({ ...held.item, p: 0.5 })
     belt.items.sort((a, b) => b.p - a.p)
     return 'taken'

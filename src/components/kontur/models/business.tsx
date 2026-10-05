@@ -44,21 +44,39 @@ export function Business({ game }: ModelProps) {
           />
         ))}
         <Clay
-          color="#718faf"
-          size={[1.8, 0.17, 0.98]}
-          position={[0, 1.37, -0.32]}
+          color="#2866a4"
+          size={[1.8, 0.13, 0.76]}
+          position={[0, 1.34, -0.44]}
         />
-        <Clay
-          color="#fff9ef"
-          size={[0.75, 0.34, 0.06]}
-          position={[0, 1.38, 0.21]}
-        />
-        <Goods
-          kind="paper"
-          position={[0, 1.38, 0.25]}
-          rotation={[Math.PI / 2, 0, 0]}
-          scale={0.75}
-        />
+        <group position={[0, 1.55, -0.43]} rotation={[-0.28, 0, 0]}>
+          <Clay color="#e6ac4f" size={[1.02, 0.35, 0.55]} />
+          <Clay
+            color="#805538"
+            size={[0.91, 0.035, 0.56]}
+            position={[0, 0.03, 0]}
+          />
+          {[-0.17, 0.17].map((x) => (
+            <Clay
+              key={x}
+              color="#fff4d7"
+              size={[0.065, 0.065, 0.19]}
+              position={[x, 0.21, 0]}
+            />
+          ))}
+          <Clay
+            color="#fff4d7"
+            size={[0.4, 0.065, 0.065]}
+            position={[0, 0.21, -0.09]}
+          />
+          {[-0.3, 0.3].map((x) => (
+            <Clay
+              key={x}
+              color="#fff4d7"
+              size={[0.085, 0.1, 0.045]}
+              position={[x, 0.055, 0.29]}
+            />
+          ))}
+        </group>
         <Clay
           color={palette.glass}
           size={[0.9, 0.49, 0.04]}

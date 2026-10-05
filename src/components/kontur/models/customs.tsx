@@ -104,10 +104,33 @@ export function Customs({ game }: ModelProps) {
           position={[0, 0.71, 0.376]}
         />
         <Clay
-          color={palette.terracotta}
+          color="#f3e4bd"
           size={[0.86, 0.13, 0.8]}
           position={[0, 1.05, 0]}
         />
+        {[-0.3, 0, 0.3].map((x) => (
+          <Clay
+            key={x}
+            color="#33485a"
+            size={[0.14, 0.018, 0.8]}
+            position={[x, 1.122, 0]}
+          />
+        ))}
+        <group position={[-0.29, 1.43, -0.23]}>
+          <Clay shape="cylinder" color="#33485a" size={[0.045, 0.61, 0.045]} />
+          <Clay
+            color="#d85c46"
+            size={[0.46, 0.24, 0.035]}
+            position={[0.22, 0.19, 0]}
+            rotation={[-0.65, 0, 0]}
+          />
+          <Clay
+            color="#fff2d1"
+            size={[0.46, 0.07, 0.039]}
+            position={[0.22, 0.19, 0]}
+            rotation={[-0.65, 0, 0]}
+          />
+        </group>
         <Clay
           shape="cylinder"
           color={palette.steel}
