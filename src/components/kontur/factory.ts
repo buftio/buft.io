@@ -24,6 +24,7 @@ export const BELT = 1
 export const BANKS = 6
 export const FACTORY = 5
 export const ROCKET = 1000
+export const FLOOD = 2400
 const NATIVE_EVERY = 1.3
 const FOREIGN_EVERY = 0.16
 const PAPER_EVERY = 2
@@ -66,7 +67,10 @@ export type Game = {
     passed: number
     launched: number
   }
+  hit: Partial<Record<Site, number>>
+  flood: number[]
   next: { native: number; foreign: number; paper: number }
+  turn: Partial<Record<Site, number>>
   held: Held | null
   version: number
 }
@@ -104,7 +108,10 @@ export function newGame(): Game {
       passed: -10,
       launched: -10,
     },
+    hit: {},
+    flood: [],
     next: { native: 0, foreign: 0, paper: 0 },
+    turn: {},
     held: null,
     version: 0,
   }
@@ -128,14 +135,21 @@ function emit(game: Game, site: Site, item: Item) {
     .filter((port) => port.kind === item.kind)
     .map((port) => game.piles.get(key(port.x, port.y))!)
     .filter((pile) => pile.length < (PILE[item.kind] ?? 6))
-    .sort((a, b) => a.length - b.length)
   if (!piles.length) return false
-  piles[0].push(item)
+  const turn = (game.turn[site] ?? 0) + 1
+  game.turn[site] = turn
+  piles[turn % piles.length].push(item)
   return true
 }
 
 /** Hands an item to a building; false when it doesn't take that item right now. */
 export function offer(game: Game, site: Site, item: Item): boolean {
+  const taken = accept(game, site, item)
+  if (taken) game.hit[site] = game.time
+  return taken
+}
+
+function accept(game: Game, site: Site, item: Item): boolean {
   if (site === 'shop') {
     if (native.includes(item.kind)) {
       if (!emit(game, 'shop', make(game, 'gray'))) return false
@@ -171,7 +185,13 @@ export function offer(game: Game, site: Site, item: Item): boolean {
     return true
   }
   if (site === 'rocket') {
-    if (item.kind !== 'diamond' || game.launched) return false
+    if (item.kind !== 'diamond') return false
+    if (game.launched) {
+      if (game.flood.length >= FLOOD) return false
+      for (let i = 0; i < item.n && game.flood.length < FLOOD; i++)
+        game.flood.push(game.time + i * 0.07)
+      return true
+    }
     const before = game.rocket
     game.rocket = Math.min(ROCKET, game.rocket + item.n)
     if (before !== game.rocket) bump(game)

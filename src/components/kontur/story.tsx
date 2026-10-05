@@ -23,6 +23,7 @@ import {
   register,
   type Game,
 } from './factory'
+import { chink, lift } from './sound'
 import type { Signal, Tool } from './world'
 
 const World = dynamic(() => import('./world'), { ssr: false })
@@ -100,7 +101,9 @@ const sounds: Record<Signal, () => void> = {
   denied: boop,
   back: () => {},
   built: squeak,
-  coin: pickup,
+  coin: chink,
+  broke: boop,
+  lift,
 }
 
 export default function KonturStory({
@@ -122,11 +125,16 @@ export default function KonturStory({
       return JSON.stringify(old) === JSON.stringify(next) ? old : next
     })
   }, [])
-  const onSignal = useCallback((signal: Signal) => sounds[signal](), [])
+  const [broke, setBroke] = useState(0)
+  const onSignal = useCallback((signal: Signal) => {
+    sounds[signal]()
+    if (signal === 'broke') setBroke((n) => n + 1)
+  }, [])
   const restart = () => {
     game.current = newGame()
     setState(snap(game.current))
     setTool('hand')
+    setBroke(0)
     setRound((n) => n + 1)
   }
 
@@ -164,9 +172,25 @@ export default function KonturStory({
               />
             </SceneBoundary>
           </figure>
-          <div className="k-step" aria-live="polite">
-            <span>{eyebrow}</span>
-            <p>{line}</p>
+          <div
+            className={state.launched ? 'k-step is-done' : 'k-step'}
+            aria-live="polite"
+          >
+            <span>{state.launched ? 'Liftoff' : eyebrow}</span>
+            {state.launched ? (
+              <>
+                <strong>Everything runs</strong>
+                <p>
+                  Useful software disappears into the task it helps you finish.
+                  The factory keeps going without you.
+                </p>
+                <button onClick={restart}>
+                  <RotateCcw size={14} /> Play again
+                </button>
+              </>
+            ) : (
+              <p>{line}</p>
+            )}
             {!state.registered && (
               <button
                 onClick={() => {
@@ -181,8 +205,13 @@ export default function KonturStory({
           </div>
           {state.registered && (
             <div className="k-hud">
-              <span className="k-wallet" aria-label={`${state.wallet} gold`}>
+              <span
+                key={broke}
+                className={broke ? 'k-wallet is-broke' : 'k-wallet'}
+                aria-label={`${state.wallet} gold`}
+              >
                 <Coins size={15} /> {state.wallet}
+                {broke > 0 && <em>Bank more gold</em>}
               </span>
               {state.minted && (
                 <span className="k-tools" aria-label="Tool">
@@ -196,6 +225,14 @@ export default function KonturStory({
                     <button
                       key={id}
                       aria-pressed={tool === id}
+                      className={
+                        id === 'belt' &&
+                        tool !== 'belt' &&
+                        !state.built &&
+                        state.wallet >= BELT
+                          ? 'is-hint'
+                          : undefined
+                      }
                       onClick={() => setTool(id)}
                     >
                       <Icon size={14} /> {label}
@@ -226,20 +263,6 @@ export default function KonturStory({
                   <Rocket size={14} /> {state.rocket}/{ROCKET}
                 </span>
               )}
-            </div>
-          )}
-          {state.launched && (
-            <div className="k-card">
-              <div>
-                <span>Liftoff</span>
-                <strong>Everything runs</strong>
-                <p>
-                  Useful software disappears into the task it helps you finish.
-                </p>
-              </div>
-              <button onClick={restart}>
-                <RotateCcw size={14} /> Play again
-              </button>
             </div>
           )}
         </div>

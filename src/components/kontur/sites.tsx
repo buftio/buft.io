@@ -104,6 +104,35 @@ export function Border({ game }: { game: RefObject<Game> }) {
   )
 }
 
+const back = (x: number) => 1 + 2.7 * (x - 1) ** 3 + 1.7 * (x - 1) ** 2
+
+function Bounce({
+  game,
+  site,
+  children,
+}: {
+  game: RefObject<Game>
+  site: Site
+  children: React.ReactNode
+}) {
+  const group = useRef<Group>(null)
+  const born = useRef<number | null>(null)
+  useFrame(({ clock }) => {
+    const g = group.current
+    if (!g) return
+    born.current ??= clock.elapsedTime
+    const grow = back(Math.min(1, (clock.elapsedTime - born.current) / 0.5))
+    const since = game.current.time - (game.current.hit[site] ?? -9)
+    const squash = since < 0.3 ? Math.sin((since / 0.3) * Math.PI) * 0.1 : 0
+    g.scale.set(
+      grow * (1 + squash * 0.6),
+      grow * (1 - squash),
+      grow * (1 + squash * 0.6),
+    )
+  })
+  return <group ref={group}>{children}</group>
+}
+
 function Label({ children, y = 1 }: { children: React.ReactNode; y?: number }) {
   return (
     <Html position={[0, y, 0]} center zIndexRange={[1, 0]}>
@@ -113,8 +142,10 @@ function Label({ children, y = 1 }: { children: React.ReactNode; y?: number }) {
 }
 
 export function Sites({
+  game,
   state,
 }: {
+  game: RefObject<Game>
   state: { registered: boolean; banks: boolean; rocket: number }
 }) {
   return (
@@ -126,11 +157,13 @@ export function Sites({
         const tall = name === 'rocket' ? 0.08 : name === 'booth' ? 0.7 : 0.9
         return (
           <group key={name} position={[x, 0, z]}>
-            <Clay
-              color={colors[name]}
-              size={[s.w - 0.2, tall, s.h - 0.2]}
-              position={[0, tall / 2, 0]}
-            />
+            <Bounce game={game} site={name}>
+              <Clay
+                color={colors[name]}
+                size={[s.w - 0.2, tall, s.h - 0.2]}
+                position={[0, tall / 2, 0]}
+              />
+            </Bounce>
             {name === 'rocket' && state.rocket >= FACTORY && (
               <Clay
                 shape="cylinder"

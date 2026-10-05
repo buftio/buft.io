@@ -95,9 +95,11 @@ const dummy = new Object3D()
 export function Items({
   game,
   hand,
+  lit,
 }: {
   game: RefObject<Game>
   hand: RefObject<{ x: number; z: number } | null>
+  lit: RefObject<number | null>
 }) {
   const meshes = useRef<Partial<Record<Kind, InstancedMesh | null>>>({})
   const counts = useRef<Partial<Record<Kind, number>>>({})
@@ -109,8 +111,15 @@ export function Items({
       const n = counts.current[item.kind]!
       if (!mesh || n >= CAP) return
       const look = looks[item.kind]
-      const grow = item.kind === 'diamond' ? 0.7 + item.n * 0.12 : 1
-      dummy.position.set(x, y * (item.kind === 'diamond' ? grow : 1), z)
+      const held = game.current.held?.item === item
+      const glow =
+        item.id === lit.current ? 1.3 + Math.sin(t * 12) * 0.05 : held ? 1.2 : 1
+      const grow = (item.kind === 'diamond' ? 0.7 + item.n * 0.12 : 1) * glow
+      dummy.position.set(
+        x,
+        y * (item.kind === 'diamond' ? grow : 1) + (glow > 1 ? 0.08 : 0),
+        z,
+      )
       dummy.rotation.set(
         0,
         item.kind === 'diamond' ? t * 2 + item.id : item.id * 1.7,

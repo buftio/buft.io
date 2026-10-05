@@ -4,6 +4,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { Plane, Raycaster, Vector2, Vector3, type Mesh } from 'three'
 import {
+  BELT,
   build,
   canBuild,
   grab,
@@ -12,12 +13,20 @@ import {
   step,
   type Game,
 } from './factory'
+import { Flood } from './flood'
 import { Belts, Items, eachItem } from './items'
-import { H, W, inside, type Cell, type Dir } from './map'
+import { H, W, inside, siteAt, type Cell, type Dir } from './map'
 import { Border, Floor, Sites } from './sites'
 
 export type Tool = 'hand' | 'belt' | 'remove'
-export type Signal = 'sold' | 'denied' | 'back' | 'built' | 'coin'
+export type Signal =
+  | 'sold'
+  | 'denied'
+  | 'back'
+  | 'built'
+  | 'coin'
+  | 'broke'
+  | 'lift'
 
 type Props = {
   game: RefObject<Game>
@@ -65,6 +74,7 @@ function Input({ game, tool, onSignal }: Omit<Props, 'onChange' | 'onReady'>) {
   const camera = useThree((state) => state.camera)
   const canvas = useThree((state) => state.gl.domElement)
   const hand = useRef<{ x: number; z: number } | null>(null)
+  const lit = useRef<number | null>(null)
   const cursor = useRef<Mesh>(null)
   const [hover, setHover] = useState<Cell | null>(null)
 
@@ -72,6 +82,15 @@ function Input({ game, tool, onSignal }: Omit<Props, 'onChange' | 'onReady'>) {
     const state = game.current
     let down: { x: number; y: number; cell: Cell; moved: boolean } | null = null
     let last: Cell | null = null
+    let broke = false
+    const place = (cell: Cell, dir: Dir) => {
+      if (build(state, cell[0], cell[1], dir)) return true
+      if (!broke && canBuild(state, ...cell) && state.wallet < BELT) {
+        broke = true
+        onSignal('broke')
+      }
+      return false
+    }
     const pick = (event: PointerEvent) => {
       const rect = canvas.getBoundingClientRect()
       ndc.set(
@@ -81,10 +100,11 @@ function Input({ game, tool, onSignal }: Omit<Props, 'onChange' | 'onReady'>) {
       ray.setFromCamera(ndc, camera)
       return ray.ray.intersectPlane(ground, hit) ? hit.clone() : null
     }
+    const aim = (cursor: string) => canvas.style.setProperty('cursor', cursor)
     const nearest = (event: PointerEvent) => {
       const rect = canvas.getBoundingClientRect()
       let best: { id: number; d: number } | null = null
-      eachItem(game.current, 0, null, ({ item, x, y, z }) => {
+      eachItem(state, 0, null, ({ item, x, y, z }) => {
         seen.set(x, y, z).project(camera)
         const sx = rect.left + ((seen.x + 1) / 2) * rect.width
         const sy = rect.top + ((1 - seen.y) / 2) * rect.height
@@ -102,8 +122,8 @@ function Input({ game, tool, onSignal }: Omit<Props, 'onChange' | 'onReady'>) {
           at[0] + [1, 0, -1, 0][dir],
           at[1] + [0, 1, 0, -1][dir],
         ]
-        build(game.current, at[0], at[1], dir)
-        if (build(game.current, next[0], next[1], dir)) onSignal('built')
+        build(state, at[0], at[1], dir)
+        if (place(next, dir)) onSignal('built')
         at = next
       }
       last = cell
@@ -114,10 +134,15 @@ function Input({ game, tool, onSignal }: Omit<Props, 'onChange' | 'onReady'>) {
       if (!point) return
       const cell = toCell(point)
       down = { x: event.clientX, y: event.clientY, cell, moved: false }
+      broke = false
       if (tool === 'hand') {
         const found = nearest(event)
-        if (found && grab(game.current, found.id))
+        if (found && grab(state, found.id)) {
           hand.current = { x: point.x, z: point.z }
+          lit.current = null
+          aim('grabbing')
+          onSignal('lift')
+        }
       } else if (tool === 'belt') last = cell
       else if (remove(game.current, ...cell)) onSignal('built')
       canvas.setPointerCapture(event.pointerId)
@@ -125,6 +150,11 @@ function Input({ game, tool, onSignal }: Omit<Props, 'onChange' | 'onReady'>) {
     const onMove = (event: PointerEvent) => {
       const point = pick(event)
       const cell = point ? toCell(point) : null
+      if (tool === 'hand') {
+        const found = state.held ? null : nearest(event)
+        lit.current = found?.id ?? null
+        aim(state.held ? 'grabbing' : found ? 'grab' : '')
+      }
       setHover((old) =>
         cell && inside(...cell)
           ? old && old[0] === cell[0] && old[1] === cell[1]
@@ -150,14 +180,21 @@ function Input({ game, tool, onSignal }: Omit<Props, 'onChange' | 'onReady'>) {
       const point = pick(event)
       const cell = point ? toCell(point) : down.cell
       if (tool === 'hand' && game.current.held) {
-        const result = release(game.current, ...cell)
-        onSignal(result === 'taken' ? 'sold' : result)
+        const result = release(state, ...cell)
+        onSignal(
+          result !== 'taken'
+            ? result
+            : siteAt(...cell) === 'bank'
+              ? 'coin'
+              : 'sold',
+        )
         hand.current = null
+        aim('')
       }
       if (tool === 'belt' && !down.moved) {
         const belt = game.current.belts.get(cell[1] * W + cell[0])
         const dir = belt ? (((belt.dir + 1) % 4) as Dir) : 0
-        if (build(game.current, cell[0], cell[1], dir)) onSignal('built')
+        if (place(cell, dir)) onSignal('built')
       }
       down = null
       last = null
@@ -172,6 +209,8 @@ function Input({ game, tool, onSignal }: Omit<Props, 'onChange' | 'onReady'>) {
       window.removeEventListener('pointerup', onUp)
       window.removeEventListener('pointercancel', onUp)
       if (state.held) release(state, -1, -1)
+      lit.current = null
+      aim('')
     }
   }, [camera, canvas, game, tool, onSignal])
 
@@ -182,7 +221,7 @@ function Input({ game, tool, onSignal }: Omit<Props, 'onChange' | 'onReady'>) {
       : canBuild(game.current, ...hover))
   return (
     <>
-      <Items game={game} hand={hand} />
+      <Items game={game} hand={hand} lit={lit} />
       {hover && tool !== 'hand' && (
         <mesh
           ref={cursor}
@@ -208,6 +247,7 @@ const layoutOf = (game: Game) => ({
   registered: game.registered,
   banks: game.banks,
   rocket: game.rocket,
+  launched: game.launched,
 })
 
 function Scene({ game, tool, onChange, onSignal, onReady }: Props) {
@@ -244,8 +284,9 @@ function Scene({ game, tool, onChange, onSignal, onReady }: Props) {
       <Floor />
       <Border game={game} />
       <Belts belts={layout.belts} />
-      <Sites state={layout} />
+      <Sites game={game} state={layout} />
       <Input game={game} tool={tool} onSignal={onSignal} />
+      {layout.launched && <Flood game={game} />}
     </>
   )
 }

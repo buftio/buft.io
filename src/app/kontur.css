@@ -87,8 +87,7 @@
   font-size: 14px;
   line-height: 1.45;
 }
-.k-step button,
-.k-card button {
+.k-step button {
   margin-top: 10px;
   padding: 9px 16px;
   border: 0;
@@ -101,8 +100,7 @@
   cursor: pointer;
   box-shadow: 0 4px 0 #2a4274;
 }
-.k-step button:active,
-.k-card button:active {
+.k-step button:active {
   translate: 0 2px;
   box-shadow: 0 2px 0 #2a4274;
 }
@@ -185,38 +183,21 @@
   pointer-events: none;
 }
 
-.k-card {
-  position: absolute;
-  left: 50%;
-  bottom: 22px;
-  translate: -50% 0;
-  display: flex;
-  align-items: center;
-  gap: 22px;
-  padding: 16px 20px;
-  border-radius: 16px;
-  background: #fff;
-  box-shadow:
-    0 0 0 3px #4fd18b55,
-    0 16px 40px #1f2a3d40;
-  z-index: 3;
+.k-step.is-done {
+  box-shadow: 0 0 0 3px #4fd18b55;
 }
-.k-card span {
-  font:
-    600 11px 'DM Mono',
-    monospace;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+.k-step.is-done span {
   color: #2f9e64;
 }
-.k-card strong {
+.k-step strong {
   display: block;
+  margin-top: 2px;
   font-size: 22px;
 }
-.k-card p {
-  margin: 2px 0 0;
-  color: var(--k-muted);
-  font-size: 13px;
+.k-step button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 .k-fallback {
   margin-top: 18px;
@@ -244,5 +225,62 @@
     max-width: none;
     left: var(--k-gutter);
     justify-content: center;
+  }
+}
+
+.k-wallet {
+  position: relative;
+}
+.k-wallet.is-broke {
+  animation: k-shake 0.4s ease;
+}
+.k-wallet em {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  padding: 4px 9px;
+  border-radius: 8px;
+  background: #e8574a;
+  color: #fff;
+  font:
+    600 12px Manrope,
+    sans-serif;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: k-fade 1.8s ease forwards;
+}
+@keyframes k-shake {
+  0%,
+  100% {
+    translate: 0;
+    background: #ffffffe0;
+  }
+  20%,
+  60% {
+    translate: -5px 0;
+    background: #ffd9d4;
+  }
+  40%,
+  80% {
+    translate: 5px 0;
+    background: #ffd9d4;
+  }
+}
+@keyframes k-fade {
+  0%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.k-tools .is-hint {
+  animation: k-pulse 1.2s ease-in-out infinite;
+}
+@keyframes k-pulse {
+  50% {
+    background: var(--k-gold);
+    color: var(--k-ink);
   }
 }
