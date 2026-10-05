@@ -15,8 +15,9 @@ import {
 } from './factory'
 import { Flood } from './flood'
 import { Belts, Items, eachItem } from './items'
+import { itemHeight } from './models/items'
 import { H, W, inside, siteAt, type Cell, type Dir } from './map'
-import { Border, Floor, Sites } from './sites'
+import { Floor, Sites } from './sites'
 
 export type Tool = 'hand' | 'belt' | 'remove'
 export type Signal =
@@ -105,7 +106,7 @@ function Input({ game, tool, onSignal }: Omit<Props, 'onChange' | 'onReady'>) {
       const rect = canvas.getBoundingClientRect()
       let best: { id: number; d: number } | null = null
       eachItem(state, 0, null, ({ item, x, y, z }) => {
-        seen.set(x, y, z).project(camera)
+        seen.set(x, y + itemHeight[item.kind] / 2, z).project(camera)
         const sx = rect.left + ((seen.x + 1) / 2) * rect.width
         const sy = rect.top + ((1 - seen.y) / 2) * rect.height
         const d = Math.hypot(sx - event.clientX, sy - event.clientY)
@@ -282,7 +283,6 @@ function Scene({ game, tool, onChange, onSignal, onReady }: Props) {
         />
       </directionalLight>
       <Floor />
-      <Border game={game} />
       <Belts belts={layout.belts} />
       <Sites game={game} state={layout} />
       <Input game={game} tool={tool} onSignal={onSignal} />

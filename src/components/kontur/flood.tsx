@@ -2,12 +2,12 @@
 
 import { useFrame } from '@react-three/fiber'
 import { useRef, type RefObject } from 'react'
-import { InstancedMesh, Object3D, OctahedronGeometry } from 'three'
-import { clay } from '../marketdata/models/clay'
+import { InstancedMesh, Object3D } from 'three'
 import { FLOOD, type Game } from './factory'
 import { H, W, sites, toWorld } from './map'
+import { itemGeometry } from './models/items'
+import { itemMaterial } from './models/kit'
 
-const gem = new OctahedronGeometry(0.5)
 const dummy = new Object3D()
 const rand = (i: number, salt: number) => {
   const v = Math.sin(i * 127.1 + salt * 311.7) * 43758.5453
@@ -31,14 +31,14 @@ export function Flood({ game }: { game: RefObject<Game> }) {
       const f = Math.min(1, age / FLIGHT)
       const tx = (rand(i, 1) - 0.5) * (W - 0.6)
       const tz = (rand(i, 2) - 0.5) * (H - 0.6)
-      const rest = 0.12 + (i / FLOOD) * 0.55 + rand(i, 3) * 0.12
+      const rest = 0.02 + (i / FLOOD) * 0.55 + rand(i, 3) * 0.12
       dummy.position.set(
         ox + (tx - ox) * f,
         1.4 * (1 - f) + rest * f + 4 * f * (1 - f) * (2 + rand(i, 4)),
         oz + (tz - oz) * f,
       )
       dummy.rotation.set(rand(i, 5) * 3, age * (f < 1 ? 8 : 0) + i, 0)
-      dummy.scale.set(0.22, 0.28, 0.22)
+      dummy.scale.setScalar(0.8)
       dummy.updateMatrix()
       m.setMatrixAt(n++, dummy.matrix)
     }
@@ -48,7 +48,7 @@ export function Flood({ game }: { game: RefObject<Game> }) {
   return (
     <instancedMesh
       ref={mesh}
-      args={[gem, clay('#7fe3ff'), FLOOD]}
+      args={[itemGeometry('diamond'), itemMaterial, FLOOD]}
       castShadow
       frustumCulled={false}
     />
