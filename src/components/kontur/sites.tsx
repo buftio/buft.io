@@ -98,7 +98,13 @@ function Bounce({
 
 function Label({ children, y = 1 }: { children: React.ReactNode; y?: number }) {
   return (
-    <Html position={[0, y, 0]} center zIndexRange={[1, 0]}>
+    <Html
+      position={[0, y, 0]}
+      center
+      zIndexRange={[1, 0]}
+      pointerEvents="none"
+      style={{ pointerEvents: 'none' }}
+    >
       <span className="k-label">{children}</span>
     </Html>
   )
