@@ -3,8 +3,8 @@ export type Dir = 0 | 1 | 2 | 3
 
 export const W = 20
 export const H = 9
-export const BORDER = 13
-export const GATE: Cell = [13, 4]
+export const BORDER = 16
+export const GATE: Cell = [16, 4]
 export const DIRS: Cell[] = [
   [1, 0],
   [0, 1],
@@ -71,7 +71,7 @@ export const sites: Record<
     ],
   },
   bank: { x: 8, y: 7, w: 2, h: 2, ports: [] },
-  booth: { x: 12, y: 5, w: 1, h: 1, ports: [] },
+  booth: { x: 15, y: 5, w: 1, h: 1, ports: [] },
   rocket: { x: 8, y: 3, w: 3, h: 3, ports: [] },
   workshop: { x: 1, y: 7, w: 2, h: 2, ports: [] },
 }
@@ -92,10 +92,10 @@ export const given: {
   },
   {
     cells: [
-      [17, 0],
-      [17, 1],
-      [17, 2],
-      [17, 3],
+      [18, 0],
+      [18, 1],
+      [18, 2],
+      [18, 3],
     ],
     dir: 1,
     source: 'foreign',
