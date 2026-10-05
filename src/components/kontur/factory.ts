@@ -217,7 +217,8 @@ function accept(game: Game, site: Site, item: Item): boolean {
       return true
     }
     const before = game.rocket
-    game.rocket = Math.min(ROCKET, game.rocket + item.n)
+    const gain = game.rocket < FACTORY ? 1 : item.n
+    game.rocket = Math.min(ROCKET, game.rocket + gain)
     if (before !== game.rocket) bump(game)
     if (game.rocket >= ROCKET) {
       game.launched = true
