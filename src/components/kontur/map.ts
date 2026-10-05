@@ -73,7 +73,7 @@ export const sites: Record<
   bank: { x: 8, y: 7, w: 2, h: 2, ports: [] },
   booth: { x: 15, y: 5, w: 1, h: 1, ports: [] },
   rocket: { x: 8, y: 3, w: 3, h: 3, ports: [] },
-  workshop: { x: 1, y: 7, w: 2, h: 2, ports: [] },
+  workshop: { x: 12, y: 0, w: 2, h: 2, ports: [] },
 }
 
 export const given: {
