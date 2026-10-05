@@ -1,7 +1,7 @@
 'use client'
 
 import { useFrame } from '@react-three/fiber'
-import { useRef, type RefObject } from 'react'
+import { useLayoutEffect, useRef, type RefObject } from 'react'
 import {
   CanvasTexture,
   InstancedMesh,
@@ -191,25 +191,33 @@ export function BeltTile({
   )
 }
 
+const BELTS = 200
+
 export function Belts({ belts }: { belts: [number, Dir][] }) {
-  const material = beltMaterial()
+  const mesh = useRef<InstancedMesh>(null)
   useFrame((_, dt) => {
     beltMaterial().map!.offset.y -= dt * SPEED
   })
+  useLayoutEffect(() => {
+    const instances = mesh.current
+    if (!instances) return
+    belts.slice(0, BELTS).forEach(([at, dir], i) => {
+      const [x, z] = toWorld(...cellOf(at))
+      dummy.position.set(x, 0.05, z)
+      dummy.rotation.set(0, turnOf(dir), 0)
+      dummy.scale.set(0.94, 0.1, 0.94)
+      dummy.updateMatrix()
+      instances.setMatrixAt(i, dummy.matrix)
+    })
+    instances.count = Math.min(belts.length, BELTS)
+    instances.instanceMatrix.needsUpdate = true
+  }, [belts])
   return (
-    <>
-      {belts.map(([at, dir]) => {
-        const [x, z] = toWorld(...cellOf(at))
-        return (
-          <group
-            key={at}
-            position={[x, 0.05, z]}
-            rotation={[0, turnOf(dir), 0]}
-          >
-            <BeltTile material={material} />
-          </group>
-        )
-      })}
-    </>
+    <instancedMesh
+      ref={mesh}
+      args={[geo.slab, beltMaterial(), BELTS]}
+      receiveShadow
+      frustumCulled={false}
+    />
   )
 }

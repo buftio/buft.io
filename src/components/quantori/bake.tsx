@@ -2,8 +2,10 @@
 
 import { useLayoutEffect, useRef, type ReactNode } from 'react'
 import {
+  BufferAttribute,
   Matrix4,
   Mesh,
+  MeshStandardMaterial,
   type BufferGeometry,
   type Group,
   type Material,
@@ -53,8 +55,31 @@ const radius = (mesh: Mesh, matrix: Matrix4) => {
   )
 }
 
-/** Merges the clay pieces inside into one mesh per material, so a model built from dozens of parts costs a few draw calls. Groups marked `userData.live` keep moving and carry their own merged pieces. */
-export function Bake({ children }: { children: ReactNode }) {
+const plain = (material: Material): material is MeshStandardMaterial =>
+  material instanceof MeshStandardMaterial &&
+  !material.map &&
+  !material.transparent &&
+  !material.vertexColors &&
+  material.roughness === 0.92 &&
+  material.metalness === 0 &&
+  material.emissive.getHex() === 0
+
+const paint = (part: BufferGeometry, material: MeshStandardMaterial) => {
+  const { r, g, b } = material.color
+  const count = part.attributes.position.count
+  const colors = new Float32Array(count * 3)
+  for (let i = 0; i < count; i++) colors.set([r, g, b], i * 3)
+  part.setAttribute('color', new BufferAttribute(colors, 3))
+}
+
+/** Merges the clay pieces inside into one mesh per material, so a model built from dozens of parts costs a few draw calls. Groups marked `userData.live` keep moving and carry their own merged pieces. With `tint`, plain clay of every color folds into one mesh that carries its colors per vertex. */
+export function Bake({
+  children,
+  tint,
+}: {
+  children: ReactNode
+  tint?: MeshStandardMaterial
+}) {
   const root = useRef<Group>(null)
   useLayoutEffect(() => {
     const group = root.current
@@ -77,7 +102,10 @@ export function Bake({ children }: { children: ReactNode }) {
           part.deleteAttribute(name)
       part.applyMatrix4(local)
       const byMaterial = buckets.get(anchor) ?? new Map()
-      const material = mesh.material as Material
+      const own = mesh.material as Material
+      const folded = !!tint && plain(own)
+      if (folded) paint(part, own)
+      const material = folded ? tint : own
       const bucket = byMaterial.get(material) ?? { parts: [], shadow: false }
       bucket.parts.push(part)
       bucket.shadow ||= mesh.castShadow && radius(mesh, local) >= SMALL
@@ -105,7 +133,7 @@ export function Bake({ children }: { children: ReactNode }) {
       })
       sources.forEach((mesh) => (mesh.visible = true))
     }
-  }, [])
+  }, [tint])
   return <group ref={root}>{children}</group>
 }
 

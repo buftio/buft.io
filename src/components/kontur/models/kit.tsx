@@ -8,15 +8,19 @@ import {
   palette,
   type GroupProps,
 } from '../../marketdata/models/clay'
-import { Bake, Slim } from '../../quantori/bake'
+import { Bake as Merge, Slim } from '../../quantori/bake'
 import type { Game } from '../factory'
 import type { Kind } from '../map'
 import { itemGeometry } from './items'
 
-export { Clay, palette, Bake, Slim }
+export { Clay, palette, Slim }
 export type ModelProps = { game: RefObject<Game> }
 export const itemMaterial = clay('#ffffff', 'kontur-vertex')
 itemMaterial.vertexColors = true
+
+export const Bake = ({ children }: { children: ReactNode }) => (
+  <Merge tint={itemMaterial}>{children}</Merge>
+)
 export function Goods({ kind, ...props }: GroupProps & { kind: Kind }) {
   const mesh = useRef<InstancedMesh>(null)
   useEffect(() => {
