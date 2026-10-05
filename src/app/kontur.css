@@ -86,13 +86,13 @@
   flex: 1;
   min-height: 260px;
   overflow: hidden;
-  touch-action: none;
   user-select: none;
 }
 .k-stage figure {
   position: absolute;
   inset: 0;
   margin: 0;
+  touch-action: none;
 }
 .k-step {
   position: absolute;
