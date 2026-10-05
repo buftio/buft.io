@@ -42,8 +42,8 @@ export function Rig({ game }: { game: RefObject<Game> }) {
     const focus = focusOf(game.current, tall)
     const d = distance * focus.zoom
     const base = focus.zoom === 1 ? [0, 0] : [focus.x, focus.z]
-    if (tall) goal.set(base[0] + d * 0.73, d * 0.68, base[1])
-    else goal.set(base[0], d * 0.68, base[1] + d * 0.73)
+    if (tall) goal.set(base[0] + d * 0.574, d * 0.819, base[1])
+    else goal.set(base[0], d * 0.819, base[1] + d * 0.574)
     target.set(focus.x, 0, focus.z)
     if (!look.current) {
       look.current = target.clone()
