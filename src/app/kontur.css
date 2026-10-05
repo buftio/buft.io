@@ -3,6 +3,11 @@
   background: #e6edf7;
   border-color: #8fa6c9;
   color-scheme: light;
+  height: auto;
+}
+.kontur-dialog[open] {
+  display: flex;
+  flex-direction: column;
 }
 .kontur-dialog .project-window-bar {
   background: #1d2a44;
@@ -18,6 +23,10 @@
   color: var(--k-ink);
   padding: 30px 36px 0;
   font-family: Manrope, sans-serif;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 .k-story :is(button, a):focus-visible {
   outline: 2px solid var(--k-blue);
@@ -74,7 +83,8 @@
   --k-gutter: 36px;
   position: relative;
   margin: 10px calc(var(--k-gutter) * -1) 0;
-  aspect-ratio: 16 / 10;
+  flex: 1;
+  min-height: 260px;
   overflow: hidden;
   touch-action: none;
   user-select: none;
@@ -372,11 +382,14 @@
     flex-direction: column;
     gap: 8px;
   }
+  .k-story,
+  .k-stage {
+    flex: none;
+  }
   .k-stage {
     --k-gutter: 18px;
     display: flex;
     flex-direction: column;
-    aspect-ratio: auto;
   }
   .k-stage figure {
     position: relative;
