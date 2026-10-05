@@ -68,12 +68,109 @@
   position: absolute;
   left: var(--k-gutter);
   top: 18px;
+  translate: 0 0;
   max-width: min(420px, 46%);
   padding: 12px 14px;
   border-radius: 12px;
   background: #ffffffe0;
   backdrop-filter: blur(6px);
   z-index: 2;
+  transition:
+    left 0.8s cubic-bezier(0.6, 0, 0.2, 1),
+    top 0.8s cubic-bezier(0.6, 0, 0.2, 1),
+    translate 0.8s cubic-bezier(0.6, 0, 0.2, 1),
+    max-width 0.8s cubic-bezier(0.6, 0, 0.2, 1),
+    padding 0.8s ease;
+}
+.k-step.is-intro {
+  left: 50%;
+  top: 30%;
+  translate: -50% -50%;
+  max-width: min(520px, 70%);
+  padding: 22px 26px 24px;
+  border-radius: 18px;
+  box-shadow: 0 18px 50px #1f2a3d22;
+}
+.k-step.is-intro p {
+  font-size: 17px;
+}
+.k-step.is-stamped {
+  animation: k-slam 0.35s 0.25s ease-out;
+}
+.k-step button.k-stamp {
+  margin-top: 16px;
+  padding: 12px 22px 12px 18px;
+  border: 2px dashed #ffffff88;
+  border-radius: 12px;
+  outline: 3px solid #c63d32;
+  outline-offset: 0;
+  background: radial-gradient(circle at 30% 20%, #e8574a, #c63d32);
+  font-size: 16px;
+  letter-spacing: 0.01em;
+  box-shadow: 0 6px 0 #8f2a22;
+  rotate: -2deg;
+  transition:
+    rotate 0.2s,
+    translate 0.2s,
+    box-shadow 0.2s;
+}
+.k-step button.k-stamp:hover {
+  rotate: 0deg;
+  translate: 0 -2px;
+  box-shadow: 0 8px 0 #8f2a22;
+}
+.k-step button.k-stamp:disabled {
+  cursor: default;
+  animation: k-press 0.5s ease-in-out forwards;
+}
+.k-approved {
+  position: absolute;
+  right: 22px;
+  bottom: 18px;
+  padding: 6px 14px;
+  border: 4px double #c63d32;
+  border-radius: 8px;
+  color: #c63d32;
+  font:
+    800 26px 'DM Mono',
+    monospace;
+  font-style: normal;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  animation: k-imprint 0.35s 0.2s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+@keyframes k-press {
+  40% {
+    translate: 0 6px;
+    scale: 0.94;
+    box-shadow: 0 0 0 #8f2a22;
+  }
+  100% {
+    translate: 0 0;
+    opacity: 0.35;
+  }
+}
+@keyframes k-imprint {
+  from {
+    opacity: 0;
+    scale: 2.6;
+    rotate: -24deg;
+  }
+  to {
+    opacity: 0.92;
+    scale: 1;
+    rotate: -9deg;
+  }
+}
+@keyframes k-slam {
+  30% {
+    scale: 0.985;
+  }
+  55% {
+    scale: 1.01;
+  }
 }
 .k-step span {
   font-family: 'DM Mono', monospace;
@@ -170,17 +267,80 @@
   background: #ffd9d4;
 }
 
-.k-label {
-  display: block;
-  padding: 2px 7px;
-  border-radius: 6px;
-  background: #ffffffd0;
-  font:
-    600 11px Manrope,
-    sans-serif;
+.k-inspect {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  background: #1f2a3d33;
+  backdrop-filter: blur(5px);
+  animation: k-dim 0.25s ease both;
+}
+.k-inspect-back {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-out;
+}
+.k-inspect dialog {
+  position: relative;
+  margin: 0;
+  border: 0;
+  color: inherit;
+  display: grid;
+  grid-template-columns: minmax(0, 340px) minmax(0, 280px);
+  align-items: center;
+  gap: 8px 24px;
+  width: min(680px, 92%);
+  padding: 18px 26px 18px 18px;
+  border-radius: 20px;
+  background: #fbfcfe;
+  box-shadow: 0 24px 60px #1f2a3d40;
+  animation: k-grow 0.4s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+}
+.k-inspect-view {
+  aspect-ratio: 1;
+  border-radius: 14px;
+  background: radial-gradient(circle at 50% 40%, #ffffff, #e3eaf5);
+}
+.k-inspect h3 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.k-inspect p {
+  margin: 8px 0 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--k-muted);
+}
+.k-inspect-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 999px;
+  background: #eef2f8;
   color: var(--k-ink);
-  white-space: nowrap;
-  pointer-events: none;
+  cursor: pointer;
+}
+@keyframes k-dim {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes k-grow {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
 }
 
 .k-step.is-done {
@@ -222,11 +382,18 @@
     order: 2;
     height: min(140vw, 600px);
   }
-  .k-step {
-    position: static;
+  .k-step,
+  .k-step.is-intro {
+    position: relative;
+    left: auto;
+    top: auto;
+    translate: none;
     max-width: none;
     margin: 0 var(--k-gutter);
     order: 1;
+  }
+  .k-inspect dialog {
+    grid-template-columns: 1fr;
   }
   .k-hud {
     position: static;

@@ -49,7 +49,7 @@ export const sites: Record<
     h: 2,
     ports: [
       { kind: 'gray', x: 5, y: 3 },
-      { kind: 'diamond', x: 6, y: 0 },
+      { kind: 'diamond', x: 6, y: 3 },
     ],
   },
   business: { x: 1, y: 5, w: 2, h: 2, ports: [{ kind: 'paper', x: 3, y: 6 }] },
@@ -59,13 +59,13 @@ export const sites: Record<
     w: 2,
     h: 2,
     ports: [
-      { kind: 'gold', x: 7, y: 5 },
       { kind: 'gold', x: 7, y: 6 },
+      { kind: 'gold', x: 6, y: 7 },
     ],
   },
-  bank: { x: 8, y: 6, w: 2, h: 2, ports: [] },
+  bank: { x: 8, y: 7, w: 2, h: 2, ports: [] },
   booth: { x: 12, y: 5, w: 1, h: 1, ports: [] },
-  rocket: { x: 8, y: 0, w: 3, h: 3, ports: [] },
+  rocket: { x: 8, y: 3, w: 3, h: 3, ports: [] },
 }
 
 export const given: {

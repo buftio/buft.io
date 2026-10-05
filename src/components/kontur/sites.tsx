@@ -1,16 +1,16 @@
 'use client'
 
-import { Html } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useMemo, useRef, type RefObject } from 'react'
 import { CanvasTexture, RepeatWrapping, type Group } from 'three'
-import { FACTORY, ROCKET, type Game } from './factory'
+import { FACTORY, type Game } from './factory'
 import { BORDER, H, W, sites, toWorld, type Site } from './map'
 import { tints } from './items'
 import { Bank } from './models/bank'
 import { Border } from './models/border'
 import { Business } from './models/business'
 import { Customs } from './models/customs'
+import { Lot } from './models/lot'
 import { RocketSite } from './models/rocket'
 import { Shop } from './models/shop'
 import { TaxOffice } from './models/tax'
@@ -61,7 +61,7 @@ export function Floor() {
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]}>
         <planeGeometry args={[80, 60]} />
-        <meshStandardMaterial color="#dfe8f5" roughness={1} />
+        <meshStandardMaterial color="#e8e5d8" roughness={1} />
       </mesh>
     </>
   )
@@ -96,29 +96,6 @@ function Bounce({
   return <group ref={group}>{children}</group>
 }
 
-function Label({ children, y = 1 }: { children: React.ReactNode; y?: number }) {
-  return (
-    <Html
-      position={[0, y, 0]}
-      center
-      zIndexRange={[1, 0]}
-      pointerEvents="none"
-      style={{ pointerEvents: 'none' }}
-    >
-      <span className="k-label">{children}</span>
-    </Html>
-  )
-}
-
-const heights: Record<Site, number> = {
-  shop: 1.85,
-  business: 1.7,
-  tax: 2.05,
-  bank: 2.05,
-  booth: 1.65,
-  rocket: 0.5,
-}
-
 export function Sites({
   game,
   state,
@@ -141,8 +118,13 @@ export function Sites({
       <Border game={game} />
       {(Object.keys(sites) as Site[]).map((name) => {
         const s = sites[name]
-        if (name === 'business' && !state.registered) return null
         const [x, z] = toWorld(s.x + (s.w - 1) / 2, s.y + (s.h - 1) / 2)
+        if (name === 'business' && !state.registered)
+          return (
+            <group key="lot" position={[x, 0, z]}>
+              <Lot game={game} />
+            </group>
+          )
         return (
           <group key={name} position={[x, 0, z]}>
             <Bounce game={game} site={name}>
@@ -160,23 +142,6 @@ export function Sites({
                 <RocketSite key={stage} game={game} stage={stage} />
               )}
             </Bounce>
-            <Label
-              y={heights[name] + (name === 'tax' && state.banks ? 0.3 : 0)}
-            >
-              {name === 'shop'
-                ? 'Shop'
-                : name === 'business'
-                  ? 'Your business'
-                  : name === 'tax'
-                    ? `Tax office${state.banks ? ' + banks' : ''}`
-                    : name === 'bank'
-                      ? 'Bank'
-                      : name === 'booth'
-                        ? 'Customs'
-                        : state.rocket < FACTORY
-                          ? `Rocket site · ${state.rocket}/${FACTORY} 💎`
-                          : `Rocket · ${state.rocket}/${ROCKET} 💎`}
-            </Label>
           </group>
         )
       })}

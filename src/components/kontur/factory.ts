@@ -65,8 +65,10 @@ export type Game = {
     minted: number
     deposited: number
     passed: number
+    opened: number
     launched: number
   }
+  openings: number
   hit: Partial<Record<Site, number>>
   flood: number[]
   next: { native: number; foreign: number; paper: number }
@@ -106,8 +108,10 @@ export function newGame(): Game {
       minted: -10,
       deposited: -10,
       passed: -10,
+      opened: -10,
       launched: -10,
     },
+    openings: 0,
     hit: {},
     flood: [],
     next: { native: 0, foreign: 0, paper: 0 },
@@ -179,6 +183,10 @@ function accept(game: Game, site: Site, item: Item): boolean {
   }
   if (site === 'booth') {
     if (item.kind !== 'gold' || game.gate - game.time > GATE_MAX) return false
+    if (!isOpen(game)) {
+      game.at.opened = game.time
+      game.openings++
+    }
     game.gate = Math.max(game.time, game.gate) + GATE_TIME
     if (!game.opened) bump(game)
     game.opened = true

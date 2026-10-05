@@ -30,6 +30,9 @@ export const tints: Record<Kind, string> = {
   diamond: '#7fe3ff',
 }
 const kinds = Object.keys(tints) as Kind[]
+const money: Kind[] = ['paper', 'gray', 'gold', 'diamond']
+export const itemScale = (kind: Kind) => (money.includes(kind) ? 1.25 : 1.5)
+export const heightOf = (kind: Kind) => itemHeight[kind] * itemScale(kind)
 const CAP = 320
 
 export type Placed = {
@@ -77,7 +80,7 @@ export function eachItem(
           item,
           x: cx + ((i % 3) - 1) * 0.12,
           z: cz + (Math.floor(i / 3) % 2) * 0.12 - 0.06,
-          y: 0.02 + itemHeight[item.kind] * Math.floor(i / 6),
+          y: 0.02 + heightOf(item.kind) * Math.floor(i / 6),
           yaw: item.id * 1.7,
         })
     })
@@ -110,7 +113,7 @@ export function Items({
       const glow =
         item.id === lit.current ? 1.3 + Math.sin(t * 12) * 0.05 : held ? 1.2 : 1
       const gem = item.kind === 'diamond'
-      const grow = (gem ? 0.7 + item.n * 0.12 : 1) * glow
+      const grow = (gem ? 0.7 + item.n * 0.12 : 1) * glow * itemScale(item.kind)
       dummy.position.set(x, y + (glow > 1 ? 0.08 : 0), z)
       dummy.rotation.set(0, gem ? t * 2 + item.id : yaw, 0)
       dummy.scale.setScalar(grow)

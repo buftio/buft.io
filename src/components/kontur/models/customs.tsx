@@ -19,17 +19,43 @@ export function Customs({ game }: ModelProps) {
   const logged = useRef(0)
   useFrame((_, dt) => {
     const g = game.current,
-      denied = g.time - g.denied >= 0 && g.time - g.denied < 1.2,
+      open = isOpen(g),
+      age = g.time - g.at.opened,
+      celebrating = open && age >= 0 && age < (g.openings === 1 ? 3 : 1.4),
+      denied = !open && g.time - g.denied >= 0 && g.time - g.denied < 1.2,
       passing = g.time - g.at.passed >= 0 && g.time - g.at.passed < 0.6
-    if (officer.current) officer.current.rotation.x = denied ? 0.22 : 0
-    if (right.current) right.current.rotation.z = denied ? 2.5 : 0.2
+    if (officer.current) {
+      officer.current.rotation.x = denied ? 0.22 : 0
+      officer.current.position.y =
+        0.03 +
+        (celebrating && g.openings === 1
+          ? Math.abs(Math.sin(age * 9)) * 0.1
+          : 0)
+      officer.current.position.z +=
+        ((celebrating ? 0.55 : -0.58) - officer.current.position.z) *
+        (1 - Math.exp(-dt * 9))
+      officer.current.rotation.y = celebrating ? Math.sin(age * 7) * 0.12 : 0
+    }
+    if (right.current) {
+      right.current.rotation.z = denied
+        ? 2.5
+        : celebrating
+          ? -2.7 + Math.sin(age * 18) * 0.3
+          : 0.2
+      right.current.rotation.x = celebrating ? -0.5 : -0.35
+    }
     if (left.current)
       left.current.rotation.x = passing
         ? -1.45 + Math.sin(g.time * 35) * 0.12
         : -0.65
     if (stop.current) stop.current.visible = denied
     if (red.current) red.current.visible = !isOpen(g)
-    if (green.current) green.current.visible = isOpen(g)
+    if (green.current) {
+      green.current.visible = open
+      green.current.scale.setScalar(
+        celebrating ? 1 + Math.max(0, Math.sin(age * 22)) * 0.4 : 1,
+      )
+    }
     if (passing) logged.current = Math.min(1, logged.current + dt * 0.7)
     const length = 0.12 + logged.current * 0.49
     if (tape.current) {

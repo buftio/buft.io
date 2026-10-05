@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
 import type { Group } from 'three'
 import { ROCKET } from '../factory'
+import { DiamondTank } from './diamond-tank'
 import {
   Bake,
   Clay,
@@ -322,6 +323,9 @@ export function RocketSite({
           </>
         )}
       </Bake>
+      {stage !== 'plot' && (
+        <DiamondTank game={game} launched={stage === 'launched'} />
+      )}
     </Slim>
   )
 }
