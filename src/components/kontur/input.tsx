@@ -39,6 +39,8 @@ type Props = {
 }
 
 const ground = new Plane(new Vector3(0, 1, 0), 0)
+const lift = new Plane(new Vector3(0, 1, 0), 0)
+const ROOFS = [1.2, 0.9, 0.6, 0.3]
 const ray = new Raycaster()
 const ndc = new Vector2()
 const hit = new Vector3()
@@ -117,6 +119,16 @@ export function Input({ game, tool, onSignal, onInspect }: Props) {
       ray.setFromCamera(ndc, camera)
       return ray.ray.intersectPlane(ground, hit) ? hit.clone() : null
     }
+    const under = (event: { clientX: number; clientY: number }) => {
+      const point = pick(event)
+      for (const h of ROOFS) {
+        lift.constant = -h
+        if (!ray.ray.intersectPlane(lift, hit)) continue
+        const cell = toCell(hit.x, hit.z)
+        if (siteAt(...cell)) return cell
+      }
+      return point ? toCell(point.x, point.z) : null
+    }
     const aim = (cursor: string) => canvas.style.setProperty('cursor', cursor)
     const nearest = (event: { clientX: number; clientY: number }) => {
       const rect = canvas.getBoundingClientRect()
@@ -133,8 +145,8 @@ export function Input({ game, tool, onSignal, onInspect }: Props) {
     }
     const inspect = (event: { clientX: number; clientY: number }) => {
       const found = nearest(event)
-      const point = pick(event)
-      const site = point ? siteAt(...toCell(point.x, point.z)) : null
+      const cell = under(event)
+      const site = cell ? siteAt(...cell) : null
       if (found) onInspect({ item: found.kind })
       else if (site) onInspect({ site })
     }
@@ -240,11 +252,15 @@ export function Input({ game, tool, onSignal, onInspect }: Props) {
       if (!down || down.id !== event.pointerId) return
       clearTimeout(press)
       const point = pick(event)
-      const cell = hand.current
-        ? toCell(hand.current.x, hand.current.z)
-        : point
-          ? toCell(point.x, point.z)
-          : down.cell
+      const aimed = under(event)
+      const cell =
+        hand.current && !bumped && aimed && siteAt(...aimed)
+          ? aimed
+          : hand.current
+            ? toCell(hand.current.x, hand.current.z)
+            : point
+              ? toCell(point.x, point.z)
+              : down.cell
       if (tool === 'hand' && state.held) {
         const result = release(state, ...cell)
         onSignal(
