@@ -219,15 +219,29 @@ function Input({ game, tool, onSignal }: Omit<Props, 'onChange' | 'onReady'>) {
       down = null
       last = null
     }
+    const cancel = (id?: number) => {
+      if (!down || (id !== undefined && down.id !== id)) return
+      if (state.held) release(state, -1, -1)
+      hand.current = null
+      aim('')
+      down = null
+      last = null
+    }
+    const onCancel = (event: PointerEvent) => cancel(event.pointerId)
+    const onBlur = () => cancel()
     canvas.addEventListener('pointerdown', onDown)
+    canvas.addEventListener('lostpointercapture', onCancel)
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
-    window.addEventListener('pointercancel', onUp)
+    window.addEventListener('pointercancel', onCancel)
+    window.addEventListener('blur', onBlur)
     return () => {
       canvas.removeEventListener('pointerdown', onDown)
+      canvas.removeEventListener('lostpointercapture', onCancel)
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
-      window.removeEventListener('pointercancel', onUp)
+      window.removeEventListener('pointercancel', onCancel)
+      window.removeEventListener('blur', onBlur)
       if (state.held) release(state, -1, -1)
       lit.current = null
       aim('')
