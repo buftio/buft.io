@@ -43,7 +43,7 @@ const places: Record<Site, [string, string]> = {
   rocket: ['', ''],
   workshop: [
     'Belt factory',
-    'One gold coin in, one belt tile out. Drag a tile to wherever it should go; it faces the way you carried it. Bring a belt back and the factory refunds the coin, no questions asked.',
+    'Drop a gold coin in and it presses a belt tile. Drag the tile wherever it should go; it faces the way you carried it. Drag a belt back in and the tile goes back on the shelf.',
   ],
 }
 

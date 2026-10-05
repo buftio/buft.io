@@ -23,6 +23,7 @@ export function Workshop({ game }: ModelProps) {
       pop = pulse(since - 0.18, 0.42)
     if (press.current) press.current.position.y = 0.66 - stamp * 0.17
     if (tile.current) {
+      tile.current.visible = game.current.tiles > 0
       tile.current.position.y = 0.39 + pop * 0.16
       tile.current.position.z = 0.64 + pop * 0.09
       tile.current.rotation.x = -pop * 0.18

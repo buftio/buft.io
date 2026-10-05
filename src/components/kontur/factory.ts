@@ -19,7 +19,6 @@ import {
 } from './map'
 
 export const SPEED = 1.8
-export const BELT = 1
 export const BANKS = 6
 export const FACTORY = 5
 export const ROCKET = 1000
@@ -45,6 +44,7 @@ export type Game = {
   time: number
   ids: number
   wallet: number
+  tiles: number
   belts: Map<number, Belt>
   piles: Map<number, Item[]>
   registered: boolean
@@ -89,6 +89,7 @@ export function newGame(): Game {
     time: 0,
     ids: 1,
     wallet: 0,
+    tiles: 0,
     belts,
     piles,
     registered: false,
@@ -176,6 +177,13 @@ function accept(game: Game, site: Site, item: Item): boolean {
     if (item.kind !== 'gold') return false
     game.wallet++
     game.at.deposited = game.time
+    bump(game)
+    return true
+  }
+  if (site === 'workshop') {
+    if (item.kind !== 'gold') return false
+    game.tiles++
+    game.at.bought = game.time
     bump(game)
     return true
   }
@@ -305,7 +313,7 @@ export const canBuild = (game: Game, x: number, y: number) =>
   !game.belts.get(key(x, y))?.fixed &&
   (x < BORDER || isOpen(game))
 
-/** Lays or turns a belt. Turning is free; a new tile costs gold. */
+/** Lays or turns a belt. Turning is free; a new one uses a tile from the factory's stock. */
 export function build(game: Game, x: number, y: number, dir: Dir) {
   if (!canBuild(game, x, y)) return false
   const belt = game.belts.get(key(x, y))
@@ -314,8 +322,8 @@ export function build(game: Game, x: number, y: number, dir: Dir) {
     belt.dir = dir
     return true
   }
-  if (game.wallet < BELT) return false
-  game.wallet -= BELT
+  if (game.tiles < 1) return false
+  game.tiles--
   game.built++
   game.belts.set(key(x, y), { dir, items: [], fixed: false })
   bump(game)
@@ -329,13 +337,13 @@ function drop(game: Game, at: number, items: Item[]) {
   game.piles.set(at, pile)
 }
 
-/** Takes a belt up for a refund; whatever rode on it is left on the floor to carry by hand. */
+/** Takes a belt up and returns the tile to stock; whatever rode on it is left on the floor to carry by hand. */
 export function remove(game: Game, x: number, y: number) {
   const belt = inside(x, y) ? game.belts.get(key(x, y)) : undefined
   if (!belt || belt.fixed) return false
   game.belts.delete(key(x, y))
   drop(game, key(x, y), belt.items)
-  game.wallet += BELT
+  game.tiles++
   bump(game)
   return true
 }
@@ -376,6 +384,13 @@ function putBack(game: Game, held: Held) {
     return drop(game, at, [held.item])
   belt.items.push(held.item)
   belt.items.sort((a, b) => b.p - a.p)
+}
+
+/** Puts the carried item back where it was picked up. */
+export function unhold(game: Game) {
+  if (!game.held) return
+  putBack(game, game.held)
+  game.held = null
 }
 
 export type Drop = 'taken' | 'denied' | 'back'

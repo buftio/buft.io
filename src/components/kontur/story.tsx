@@ -2,12 +2,18 @@
 
 import dynamic from 'next/dynamic'
 import { useCallback, useRef, useState } from 'react'
-import { Coins, Landmark, Rocket, RotateCcw, Stamp } from 'lucide-react'
+import {
+  Coins,
+  Landmark,
+  Rocket,
+  RotateCcw,
+  SquareChevronUp,
+  Stamp,
+} from 'lucide-react'
 import { SceneBoundary } from '../scene-boundary'
 import { boop, fanfare, pickup, pop, squeak } from '../quantori/sound'
 import {
   BANKS,
-  BELT,
   FACTORY,
   ROCKET,
   connectBanks,
@@ -24,6 +30,7 @@ const Inspect = dynamic(() => import('./inspect'), { ssr: false })
 
 type Snapshot = {
   wallet: number
+  tiles: number
   registered: boolean
   sold: boolean
   minted: boolean
@@ -38,6 +45,7 @@ type Snapshot = {
 
 const snap = (game: Game): Snapshot => ({
   wallet: game.wallet,
+  tiles: game.tiles,
   registered: game.registered,
   sold: game.sold,
   minted: game.minted,
@@ -64,17 +72,17 @@ function stepOf(s: Snapshot): [string, string] {
   if (!s.minted)
     return [
       '02 · Pay a tax',
-      'Money from hand sales is gray. Carry a paper and two gray coins to the tax office: it turns them into one gold coin. Carry the gold into the bank.',
+      'Money from hand sales is gray. Carry a paper and two gray coins to the tax office: it turns them into one gold coin.',
     ]
   if (!s.built)
     return [
       '02 · Pay a tax',
-      `A belt factory opened: ${BELT} gold a tile. Drag a tile out of it onto the floor; it faces the way you dragged. Tap a belt to turn it.`,
+      'A belt factory opened. Drop the gold coin into it to press a belt tile, then drag the tile out onto the floor; it faces the way you dragged. Tap a belt to turn it.',
     ]
   if (!s.banks)
     return [
       '02 · Pay a tax',
-      `Automate the chores: goods into the shop, coins and papers into the tax office, gold into the bank. Drag a misplaced belt back into the factory for a refund. At ${BANKS} gold, connect the banks.`,
+      `Automate the chores: goods into the shop, coins and papers into the tax office. Gold makes more belts at the factory, or goes to the bank: at ${BANKS} banked gold, connect the banks.`,
     ]
   if (!s.opened)
     return [
@@ -221,14 +229,23 @@ export default function KonturStory({
           {look && <Inspect game={game} look={look} onClose={close} />}
           {state.registered && (
             <div className="k-hud">
-              <span
-                key={broke}
-                className={broke ? 'k-wallet is-broke' : 'k-wallet'}
-                aria-label={`${state.wallet} gold`}
-              >
+              <span className="k-wallet" aria-label={`${state.wallet} gold`}>
                 <Coins size={15} /> {state.wallet}
-                {broke > 0 && <em>Bank more gold</em>}
               </span>
+              {state.minted && (
+                <span
+                  key={broke}
+                  className={
+                    broke ? 'k-wallet k-tiles is-broke' : 'k-wallet k-tiles'
+                  }
+                  aria-label={`${state.tiles} belt tiles`}
+                >
+                  <SquareChevronUp size={15} /> {state.tiles}
+                  {broke > 0 && !state.tiles && (
+                    <em>Drop gold into the factory</em>
+                  )}
+                </span>
+              )}
               {state.built > 0 && !state.banks && (
                 <button
                   className="k-buy"

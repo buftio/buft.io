@@ -225,6 +225,9 @@
 .k-wallet svg {
   color: #c99712;
 }
+.k-tiles svg {
+  color: #4a5366;
+}
 .k-buy {
   cursor: pointer;
   background: var(--k-gold) !important;

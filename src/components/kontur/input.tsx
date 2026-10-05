@@ -4,13 +4,13 @@ import { useThree } from '@react-three/fiber'
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { Plane, Raycaster, Vector2, Vector3 } from 'three'
 import {
-  BELT,
   build,
   canBuild,
   grab,
   isOpen,
   release,
   remove,
+  unhold,
   type Game,
 } from './factory'
 import { BeltTile, Items, eachItem, heightOf, turnOf } from './items'
@@ -178,7 +178,7 @@ export function Input({ game, onSignal, onInspect }: Props) {
     }
     const take = (from: 'workshop' | 'belt', cell: Cell) => {
       if (from === 'workshop') {
-        if (state.wallet < BELT) return onSignal('broke')
+        if (state.tiles < 1) return onSignal('broke')
         state.at.bought = state.time
         state.hit.workshop = state.time
         tile = { at: cell, dir: 0, from: null }
@@ -200,7 +200,7 @@ export function Input({ game, onSignal, onInspect }: Props) {
     const cancel = (id?: number) => {
       clearTimeout(press)
       if (!down || (id !== undefined && down.id !== id)) return
-      if (state.held) release(state, -1, -1)
+      unhold(state)
       if (tile?.from) build(state, ...tile.from.cell, tile.from.dir)
       tile = null
       show()
@@ -272,10 +272,20 @@ export function Input({ game, onSignal, onInspect }: Props) {
       tile.at = target
       show()
     }
+    const turn = (cell: Cell) => {
+      const belt = state.belts.get(at(cell))
+      if (belt && build(state, ...cell, ((belt.dir + 1) % 4) as Dir))
+        onSignal('built')
+    }
     const onUp = (event: PointerEvent) => {
       if (!down || down.id !== event.pointerId) return
       clearTimeout(press)
-      if (state.held) {
+      const tapped = state.held?.from ?? down.cell
+      const turns = !down.moved && state.belts.get(at(tapped))?.fixed === false
+      if (state.held && turns) {
+        unhold(state)
+        turn(tapped)
+      } else if (state.held) {
         const point = pick(event)
         const aimed = under(event)
         const cell =
@@ -290,16 +300,12 @@ export function Input({ game, onSignal, onInspect }: Props) {
         onSignal(
           result !== 'taken'
             ? result
-            : siteAt(...cell) === 'bank'
+            : siteAt(...cell) === 'bank' || siteAt(...cell) === 'workshop'
               ? 'coin'
               : 'sold',
         )
       } else if (tile) put(tile)
-      else if (down.from === 'belt' && !down.moved) {
-        const belt = state.belts.get(at(down.cell))
-        if (belt && build(state, ...down.cell, ((belt.dir + 1) % 4) as Dir))
-          onSignal('built')
-      }
+      else if (turns) turn(down.cell)
       tile = null
       show()
       hand.current = null
@@ -329,7 +335,7 @@ export function Input({ game, onSignal, onInspect }: Props) {
       window.removeEventListener('pointerup', onUp)
       window.removeEventListener('pointercancel', onCancel)
       window.removeEventListener('blur', onBlur)
-      if (state.held) release(state, -1, -1)
+      unhold(state)
       if (tile?.from) build(state, ...tile.from.cell, tile.from.dir)
       lit.current = null
       aim('')
