@@ -1,0 +1,248 @@
+.kontur-dialog {
+  width: min(1080px, 84vw);
+  background: #e6edf7;
+  border-color: #8fa6c9;
+  color-scheme: light;
+}
+.kontur-dialog .project-window-bar {
+  background: #1d2a44;
+  color: #d6e1f2;
+  border-color: #3d4d6b;
+}
+
+.k-story {
+  --k-ink: #1f2a3d;
+  --k-muted: #5d6b84;
+  --k-blue: #3f5f9e;
+  --k-gold: #f2bf3a;
+  color: var(--k-ink);
+  padding: 30px 36px 32px;
+  font-family: Manrope, sans-serif;
+}
+.k-story :is(button, a):focus-visible {
+  outline: 2px solid var(--k-blue);
+  outline-offset: 3px;
+}
+.k-intro {
+  display: flex;
+  align-items: baseline;
+  gap: 26px;
+  max-width: 920px;
+}
+.k-intro h2 {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+}
+.k-intro p,
+.k-outro p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--k-muted);
+}
+.k-outro {
+  margin-top: 18px;
+}
+
+.k-stage {
+  --k-gutter: 36px;
+  position: relative;
+  margin: 10px calc(var(--k-gutter) * -1) 0;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+}
+.k-stage.is-belt,
+.k-stage.is-remove {
+  cursor: crosshair;
+}
+.k-stage figure {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+}
+.k-step {
+  position: absolute;
+  left: var(--k-gutter);
+  top: 18px;
+  max-width: min(420px, 46%);
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #ffffffe0;
+  backdrop-filter: blur(6px);
+  z-index: 2;
+}
+.k-step span {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--k-muted);
+}
+.k-step p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.k-step button,
+.k-card button {
+  margin-top: 10px;
+  padding: 9px 16px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--k-blue);
+  color: #fff;
+  font:
+    700 14px Manrope,
+    sans-serif;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #2a4274;
+}
+.k-step button:active,
+.k-card button:active {
+  translate: 0 2px;
+  box-shadow: 0 2px 0 #2a4274;
+}
+
+.k-hud {
+  position: absolute;
+  right: var(--k-gutter);
+  top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: 50%;
+  z-index: 2;
+}
+.k-hud > * {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  border: 0;
+  background: #ffffffe0;
+  font:
+    600 13px 'DM Mono',
+    monospace;
+  color: var(--k-ink);
+}
+.k-wallet svg {
+  color: #c99712;
+}
+.k-tools {
+  padding: 3px;
+  gap: 2px;
+}
+.k-tools button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  font:
+    600 12px Manrope,
+    sans-serif;
+  color: var(--k-muted);
+  cursor: pointer;
+}
+.k-tools button[aria-pressed='true'] {
+  background: var(--k-ink);
+  color: #fff;
+}
+.k-buy {
+  cursor: pointer;
+  background: var(--k-gold) !important;
+}
+.k-buy:disabled {
+  cursor: default;
+  background: #ffffffe0 !important;
+  color: var(--k-muted);
+}
+.k-hud .is-open {
+  background: #4fd18b;
+}
+.k-hud .is-closed {
+  background: #ffd9d4;
+}
+
+.k-label {
+  display: block;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: #ffffffd0;
+  font:
+    600 11px Manrope,
+    sans-serif;
+  color: var(--k-ink);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.k-card {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 16px 20px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow:
+    0 0 0 3px #4fd18b55,
+    0 16px 40px #1f2a3d40;
+  z-index: 3;
+}
+.k-card span {
+  font:
+    600 11px 'DM Mono',
+    monospace;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #2f9e64;
+}
+.k-card strong {
+  display: block;
+  font-size: 22px;
+}
+.k-card p {
+  margin: 2px 0 0;
+  color: var(--k-muted);
+  font-size: 13px;
+}
+.k-fallback {
+  margin-top: 18px;
+}
+
+@media (max-width: 560px) {
+  .k-story {
+    padding: 22px 18px 24px;
+  }
+  .k-intro {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .k-stage {
+    --k-gutter: 18px;
+    aspect-ratio: 3 / 4;
+  }
+  .k-step {
+    max-width: none;
+    right: var(--k-gutter);
+  }
+  .k-hud {
+    top: auto;
+    bottom: 14px;
+    max-width: none;
+    left: var(--k-gutter);
+    justify-content: center;
+  }
+}
