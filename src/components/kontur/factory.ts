@@ -55,6 +55,7 @@ export type Game = {
   tax: { paper: number; gray: number; until: number }
   gate: number
   opened: boolean
+  imported: boolean
   rocket: number
   launched: boolean
   denied: number
@@ -100,6 +101,7 @@ export function newGame(): Game {
     tax: { paper: 0, gray: 0, until: -1 },
     gate: 0,
     opened: false,
+    imported: false,
     rocket: 0,
     launched: false,
     denied: -10,
@@ -171,6 +173,8 @@ function accept(game: Game, site: Site, item: Item): boolean {
     if (!emit(game, 'shop', make(game, 'diamond', worth[item.kind])))
       return false
     game.at.sold = game.time
+    if (!game.imported) bump(game)
+    game.imported = true
     return true
   }
   if (site === 'bank') {

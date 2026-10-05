@@ -16,7 +16,7 @@
   --k-blue: #3f5f9e;
   --k-gold: #f2bf3a;
   color: var(--k-ink);
-  padding: 30px 36px 32px;
+  padding: 30px 36px 0;
   font-family: Manrope, sans-serif;
 }
 .k-story :is(button, a):focus-visible {
@@ -35,15 +35,39 @@
   font-weight: 800;
   letter-spacing: -0.05em;
 }
-.k-intro p,
-.k-outro p {
+.k-intro p {
   margin: 0;
   font-size: 15px;
   line-height: 1.55;
   color: var(--k-muted);
 }
-.k-outro {
-  margin-top: 18px;
+.k-note {
+  position: absolute;
+  left: var(--k-gutter);
+  bottom: 16px;
+  max-width: min(420px, 60%);
+  margin: 0;
+  padding: 9px 13px;
+  border-radius: 10px;
+  background: #ffffffd0;
+  backdrop-filter: blur(6px);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--k-muted);
+  z-index: 2;
+  pointer-events: none;
+  animation: k-note 0.6s ease both;
+}
+@keyframes k-note {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+@keyframes k-note-out {
+  to {
+    opacity: 0;
+  }
 }
 
 .k-stage {
@@ -342,7 +366,7 @@
 
 @media (max-width: 560px) {
   .k-story {
-    padding: 22px 18px 24px;
+    padding: 22px 18px 0;
   }
   .k-intro {
     flex-direction: column;
@@ -376,7 +400,7 @@
     position: static;
     order: 3;
     max-width: none;
-    margin: 10px var(--k-gutter) 0;
+    margin: 10px var(--k-gutter) 16px;
     justify-content: center;
   }
   .k-hud > * {
@@ -385,6 +409,13 @@
   .k-hud .k-wallet em {
     right: auto;
     left: 0;
+  }
+  .k-note {
+    bottom: 66px;
+    max-width: calc(100% - var(--k-gutter) * 2);
+    animation:
+      k-note 0.6s ease both,
+      k-note-out 0.6s 12s ease forwards;
   }
 }
 

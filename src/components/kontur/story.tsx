@@ -38,6 +38,7 @@ type Snapshot = {
   banks: boolean
   gate: number
   opened: boolean
+  imported: boolean
   openings: number
   rocket: number
   launched: boolean
@@ -53,6 +54,7 @@ const snap = (game: Game): Snapshot => ({
   banks: game.banks,
   gate: Math.max(0, Math.ceil(game.gate - game.time)),
   opened: game.opened,
+  imported: game.imported,
   openings: game.openings,
   rocket: game.rocket,
   launched: game.launched,
@@ -226,6 +228,12 @@ export default function KonturStory({
               </>
             )}
           </div>
+          {state.imported && (
+            <p className="k-note">
+              The shop, the goods and the rocket are made up. The registration
+              service, the bank API and the customs logs were real.
+            </p>
+          )}
           {look && <Inspect game={game} look={look} onClose={close} />}
           {state.registered && (
             <div className="k-hud">
@@ -273,12 +281,6 @@ export default function KonturStory({
           )}
         </div>
       )}
-      <footer className="k-outro">
-        <p>
-          The shop, the goods and the rocket are made up. The registration
-          service, the bank API and the customs logs were real.
-        </p>
-      </footer>
     </article>
   )
 }
