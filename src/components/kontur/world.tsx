@@ -7,7 +7,6 @@ import {
   build,
   canBuild,
   grab,
-  pocket,
   release,
   remove,
   step,
@@ -151,11 +150,8 @@ function Input({ game, tool, onSignal }: Omit<Props, 'onChange' | 'onReady'>) {
       const point = pick(event)
       const cell = point ? toCell(point) : down.cell
       if (tool === 'hand' && game.current.held) {
-        if (!down.moved && pocket(game.current)) onSignal('coin')
-        else {
-          const result = release(game.current, ...cell)
-          onSignal(result === 'taken' ? 'sold' : result)
-        }
+        const result = release(game.current, ...cell)
+        onSignal(result === 'taken' ? 'sold' : result)
         hand.current = null
       }
       if (tool === 'belt' && !down.moved) {

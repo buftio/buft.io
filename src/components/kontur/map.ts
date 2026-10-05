@@ -35,7 +35,7 @@ export const worth: Partial<Record<Kind, number>> = {
   car: 8,
 }
 
-export type Site = 'shop' | 'business' | 'tax' | 'booth' | 'rocket'
+export type Site = 'shop' | 'business' | 'tax' | 'bank' | 'booth' | 'rocket'
 export type Port = { kind: Kind; x: number; y: number }
 
 export const sites: Record<
@@ -53,8 +53,18 @@ export const sites: Record<
     ],
   },
   business: { x: 1, y: 5, w: 2, h: 2, ports: [{ kind: 'paper', x: 3, y: 6 }] },
-  tax: { x: 5, y: 5, w: 2, h: 2, ports: [{ kind: 'gold', x: 7, y: 6 }] },
-  booth: { x: 12, y: 6, w: 1, h: 1, ports: [] },
+  tax: {
+    x: 5,
+    y: 5,
+    w: 2,
+    h: 2,
+    ports: [
+      { kind: 'gold', x: 7, y: 5 },
+      { kind: 'gold', x: 7, y: 6 },
+    ],
+  },
+  bank: { x: 8, y: 6, w: 2, h: 2, ports: [] },
+  booth: { x: 12, y: 5, w: 1, h: 1, ports: [] },
   rocket: { x: 8, y: 0, w: 3, h: 3, ports: [] },
 }
 

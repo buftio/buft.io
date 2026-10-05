@@ -58,6 +58,14 @@ export type Game = {
   rocket: number
   launched: boolean
   denied: number
+  at: {
+    sold: number
+    paper: number
+    minted: number
+    deposited: number
+    passed: number
+    launched: number
+  }
   next: { native: number; foreign: number; paper: number }
   held: Held | null
   version: number
@@ -88,6 +96,14 @@ export function newGame(): Game {
     rocket: 0,
     launched: false,
     denied: -10,
+    at: {
+      sold: -10,
+      paper: -10,
+      minted: -10,
+      deposited: -10,
+      passed: -10,
+      launched: -10,
+    },
     next: { native: 0, foreign: 0, paper: 0 },
     held: null,
     version: 0,
@@ -107,15 +123,14 @@ const make = (game: Game, kind: Kind, n = 1): Item => ({
 const roomAt = (belt: Belt, p: number) =>
   belt.items.every((item) => Math.abs(item.p - p) >= GAP)
 
-function portOf(site: Site, kind: Kind) {
-  const port = sites[site].ports.find((item) => item.kind === kind)
-  return port ? key(port.x, port.y) : -1
-}
-
 function emit(game: Game, site: Site, item: Item) {
-  const pile = game.piles.get(portOf(site, item.kind))
-  if (!pile || pile.length >= (PILE[item.kind] ?? 6)) return false
-  pile.push(item)
+  const piles = sites[site].ports
+    .filter((port) => port.kind === item.kind)
+    .map((port) => game.piles.get(key(port.x, port.y))!)
+    .filter((pile) => pile.length < (PILE[item.kind] ?? 6))
+    .sort((a, b) => a.length - b.length)
+  if (!piles.length) return false
+  piles[0].push(item)
   return true
 }
 
@@ -124,13 +139,23 @@ export function offer(game: Game, site: Site, item: Item): boolean {
   if (site === 'shop') {
     if (native.includes(item.kind)) {
       if (!emit(game, 'shop', make(game, 'gray'))) return false
+      game.at.sold = game.time
       if (!game.sold) bump(game)
       game.sold = true
       return true
     }
-    if (foreign.includes(item.kind))
-      return emit(game, 'shop', make(game, 'diamond', worth[item.kind]))
-    return false
+    if (!foreign.includes(item.kind)) return false
+    if (!emit(game, 'shop', make(game, 'diamond', worth[item.kind])))
+      return false
+    game.at.sold = game.time
+    return true
+  }
+  if (site === 'bank') {
+    if (item.kind !== 'gold') return false
+    game.wallet++
+    game.at.deposited = game.time
+    bump(game)
+    return true
   }
   if (site === 'tax') {
     const tax = game.tax
@@ -152,6 +177,7 @@ export function offer(game: Game, site: Site, item: Item): boolean {
     if (before !== game.rocket) bump(game)
     if (game.rocket >= ROCKET) {
       game.launched = true
+      game.at.launched = game.time
       bump(game)
     }
     return true
@@ -162,11 +188,13 @@ export function offer(game: Game, site: Site, item: Item): boolean {
 function handOff(game: Game, from: Cell, dir: Dir, item: Item, over: number) {
   const [x, y] = [from[0] + DIRS[dir][0], from[1] + DIRS[dir][1]]
   if (!inside(x, y)) return false
-  if (x === GATE[0] && y === GATE[1] && !isOpen(game)) return false
+  const gate = x === GATE[0] && y === GATE[1]
+  if (gate && !isOpen(game)) return false
   const next = game.belts.get(key(x, y))
   if (next) {
     if ((next.dir + 2) % 4 === dir || !roomAt(next, over)) return false
     next.items.push({ ...item, p: over })
+    if (gate) game.at.passed = game.time
     return true
   }
   const site = siteAt(x, y)
@@ -204,8 +232,10 @@ export function step(game: Game, dt: number) {
   spawn(game, 'native', NATIVE_EVERY)
   spawn(game, 'foreign', FOREIGN_EVERY)
   if (game.registered && game.time >= game.next.paper) {
-    if (emit(game, 'business', make(game, 'paper')))
+    if (emit(game, 'business', make(game, 'paper'))) {
       game.next.paper = game.time + PAPER_EVERY
+      game.at.paper = game.time
+    }
   }
   const tax = game.tax
   if (tax.until < 0 && tax.paper >= 1 && tax.gray >= 2) {
@@ -214,12 +244,17 @@ export function step(game: Game, dt: number) {
     tax.until = game.time + (game.banks ? TAX_TIME / 3 : TAX_TIME)
   }
   if (tax.until >= 0 && game.time >= tax.until) {
-    if (!emit(game, 'tax', make(game, 'gold'))) game.wallet++
+    if (!emit(game, 'tax', make(game, 'gold'))) return moveAll(game, dt)
     tax.until = -1
+    game.at.minted = game.time
     if (!game.minted) bump(game)
     game.minted = true
     bump(game)
   }
+  moveAll(game, dt)
+}
+
+function moveAll(game: Game, dt: number) {
   for (const [at, pile] of game.piles) {
     const belt = game.belts.get(at)
     if (belt && pile.length && roomAt(belt, 0)) belt.items.push(pile.shift()!)
@@ -272,25 +307,6 @@ export function connectBanks(game: Game) {
   game.wallet -= BANKS
   game.banks = true
   bump(game)
-}
-
-export function collect(game: Game) {
-  const pile = game.piles.get(portOf('tax', 'gold'))!
-  if (!pile.length) return false
-  game.wallet += pile.length
-  pile.length = 0
-  bump(game)
-  return true
-}
-
-/** Puts the carried gold coin, and the whole gold pile, into the wallet. */
-export function pocket(game: Game) {
-  if (game.held?.item.kind !== 'gold') return false
-  game.held = null
-  game.wallet++
-  collect(game)
-  bump(game)
-  return true
 }
 
 /** Lifts an item off a belt or a pile so the player can carry it. */

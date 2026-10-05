@@ -67,17 +67,17 @@ function stepOf(s: Snapshot): [string, string] {
   if (!s.minted)
     return [
       '02 · Pay a tax',
-      'Money from hand sales is gray. Carry a paper and two gray coins to the tax office: it turns them into one gold coin.',
+      'Money from hand sales is gray. Carry a paper and two gray coins to the tax office: it turns them into one gold coin. Carry the gold into the bank.',
     ]
   if (!s.built)
     return [
       '02 · Pay a tax',
-      `Gold buys belts, ${BELT} a tile. Pick the belt tool and drag across the floor; things ride where the arrows point.`,
+      `Gold in the bank buys belts, ${BELT} a tile. Pick the belt tool and drag across the floor; things ride where the arrows point.`,
     ]
   if (!s.banks)
     return [
       '02 · Pay a tax',
-      `Automate the chores: goods into the shop, coins and papers into the tax office. Tap gold coins to pocket them. At ${BANKS} gold, connect the banks.`,
+      `Automate the chores: goods into the shop, coins and papers into the tax office, gold into the bank. At ${BANKS} gold, connect the banks.`,
     ]
   if (!s.opened)
     return [

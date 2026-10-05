@@ -13,6 +13,7 @@ const colors: Record<Site, string> = {
   shop: '#f28c6b',
   business: '#7fb0e8',
   tax: '#d8c17f',
+  bank: '#9cc7a4',
   booth: '#5d6b84',
   rocket: '#c9d3e3',
 }
@@ -145,11 +146,13 @@ export function Sites({
                   ? 'Your business'
                   : name === 'tax'
                     ? `Tax office${state.banks ? ' + banks' : ''}`
-                    : name === 'booth'
-                      ? 'Customs'
-                      : state.rocket < FACTORY
-                        ? `Rocket site · ${state.rocket}/${FACTORY} 💎`
-                        : `Rocket · ${state.rocket}/${ROCKET} 💎`}
+                    : name === 'bank'
+                      ? 'Bank'
+                      : name === 'booth'
+                        ? 'Customs'
+                        : state.rocket < FACTORY
+                          ? `Rocket site · ${state.rocket}/${FACTORY} 💎`
+                          : `Rocket · ${state.rocket}/${ROCKET} 💎`}
             </Label>
           </group>
         )
