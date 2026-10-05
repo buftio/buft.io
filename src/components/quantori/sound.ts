@@ -1,6 +1,6 @@
 let context: AudioContext | undefined
 
-function tone(
+export function tone(
   points: [number, number][],
   type: OscillatorType,
   volume: number,

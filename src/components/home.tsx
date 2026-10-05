@@ -32,6 +32,7 @@ const YandexStory = dynamic(() => import('./yandex/story'))
 const SperasoftStory = dynamic(() => import('./sperasoft/story'))
 const LumiprobeStory = dynamic(() => import('./lumiprobe/story'))
 const QuantoriStory = dynamic(() => import('./quantori/story'))
+const KonturStory = dynamic(() => import('./kontur/story'))
 const preloadVignette = () => import('./three/project-vignette')
 const projectPath = (index: number) => `/p/${projects[index].slug}`
 const HOME_TITLE = 'Igor Ostanin · buft.io'
@@ -417,7 +418,7 @@ export function Home({ initial = null }: { initial?: number | null }) {
       </div>
       {opened && (
         <dialog
-          className={`project-dialog ${opened.id === 'glite' ? 'glite-dialog' : opened.id === 'akts' ? 'market-dialog' : opened.id === 'yandex' ? 'yandex-dialog' : opened.id === 'sperasoft' ? 'spera-dialog' : opened.id === 'lumiprobe' ? 'lumiprobe-dialog' : opened.id === 'quantori' ? 'quantori-dialog' : ''}`}
+          className={`project-dialog ${opened.id === 'glite' ? 'glite-dialog' : opened.id === 'akts' ? 'market-dialog' : opened.id === 'yandex' ? 'yandex-dialog' : opened.id === 'sperasoft' ? 'spera-dialog' : opened.id === 'lumiprobe' ? 'lumiprobe-dialog' : opened.id === 'quantori' ? 'quantori-dialog' : opened.id === 'kontur' ? 'kontur-dialog' : ''}`}
           ref={dialog}
           onCancel={closeProject}
           aria-labelledby="project-heading"
@@ -431,7 +432,8 @@ export function Home({ initial = null }: { initial?: number | null }) {
                   : opened.id === 'akts' ||
                       opened.id === 'yandex' ||
                       opened.id === 'sperasoft' ||
-                      opened.id === 'quantori'
+                      opened.id === 'quantori' ||
+                      opened.id === 'kontur'
                     ? `${opened.name} · ${opened.period}`
                     : `${opened.name.toLowerCase()} / a closer look`}
             </span>
@@ -463,6 +465,11 @@ export function Home({ initial = null }: { initial?: number | null }) {
             />
           ) : opened.id === 'quantori' ? (
             <QuantoriStory
+              reduced={reduced}
+              onReady={() => setWorldReady(true)}
+            />
+          ) : opened.id === 'kontur' ? (
+            <KonturStory
               reduced={reduced}
               onReady={() => setWorldReady(true)}
             />
