@@ -230,6 +230,8 @@ function accept(game: Game, site: Site, item: Item): boolean {
   return false
 }
 
+const handed = new Set<Item>()
+
 function handOff(game: Game, from: Cell, dir: Dir, item: Item, over: number) {
   const [x, y] = [from[0] + DIRS[dir][0], from[1] + DIRS[dir][1]]
   if (!inside(x, y)) return false
@@ -239,7 +241,9 @@ function handOff(game: Game, from: Cell, dir: Dir, item: Item, over: number) {
   if (next) {
     if ((next.dir + 2) % 4 === dir || !roomAt(next, over, item.kind))
       return false
-    next.items.push({ ...item, p: over })
+    const moved = { ...item, p: over }
+    next.items.push(moved)
+    handed.add(moved)
     if (gate) game.at.passed = game.time
     return true
   }
@@ -252,6 +256,10 @@ function move(game: Game, at: number, belt: Belt, dt: number) {
   let ahead: Item | null = null
   for (let i = 0; i < belt.items.length; i++) {
     const item = belt.items[i]
+    if (handed.has(item)) {
+      ahead = item
+      continue
+    }
     const limit = ahead ? ahead.p - space(ahead.kind, item.kind) : Infinity
     const target = Math.min(item.p + SPEED * dt, limit)
     if (target >= 1 && handOff(game, cell, belt.dir, item, target - 1)) {
@@ -309,6 +317,7 @@ function moveAll(game: Game, dt: number) {
       belt.items.push(pile.shift()!)
   }
   for (const [at, belt] of game.belts) move(game, at, belt, dt)
+  handed.clear()
 }
 
 export const canBuild = (game: Game, x: number, y: number) =>

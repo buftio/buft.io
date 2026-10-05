@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   Coins,
   Landmark,
@@ -113,6 +113,7 @@ const sounds: Record<Signal, () => void> = {
 }
 
 export default function KonturStory({
+  reduced,
   onReady,
 }: {
   reduced: boolean
@@ -122,6 +123,8 @@ export default function KonturStory({
   const [state, setState] = useState(() => snap(newGame()))
   const [failed, setFailed] = useState(false)
   const [round, setRound] = useState(0)
+  const timers = useRef<number[]>([])
+  useEffect(() => () => timers.current.forEach(clearTimeout), [])
 
   const onChange = useCallback(() => {
     const next = snap(game.current)
@@ -179,6 +182,7 @@ export default function KonturStory({
                 onSignal={onSignal}
                 onInspect={setLook}
                 onReady={onReady}
+                reduced={reduced}
               />
             </SceneBoundary>
           </figure>
@@ -214,12 +218,14 @@ export default function KonturStory({
                   disabled={stamped}
                   onClick={() => {
                     setStamped(true)
-                    window.setTimeout(thud, 260)
-                    window.setTimeout(() => {
-                      register(game.current)
-                      pickup()
-                      onChange()
-                    }, 1100)
+                    timers.current = [
+                      window.setTimeout(thud, 260),
+                      window.setTimeout(() => {
+                        register(game.current)
+                        pickup()
+                        onChange()
+                      }, 1100),
+                    ]
                   }}
                 >
                   <Stamp size={18} /> Register business
@@ -234,7 +240,14 @@ export default function KonturStory({
               service, the bank API and the customs logs were real.
             </p>
           )}
-          {look && <Inspect game={game} look={look} onClose={close} />}
+          {look && (
+            <Inspect
+              game={game}
+              look={look}
+              reduced={reduced}
+              onClose={close}
+            />
+          )}
           {state.registered && (
             <div className="k-hud">
               <span className="k-wallet" aria-label={`${state.wallet} gold`}>

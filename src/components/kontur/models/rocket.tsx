@@ -43,7 +43,8 @@ export function RocketSite({
     if (rocket.current) {
       rocket.current.visible = !launch || age < 4
       rocket.current.position.y =
-        0.26 + (launch && age >= 0 ? Math.max(0, age - 0.15) ** 2 * 2 : 0)
+        0.26 +
+        (launch && age >= 0 && age < 4 ? Math.max(0, age - 0.15) ** 2 * 2 : 0)
       rocket.current.rotation.z =
         launch && age < 0.6 ? Math.sin(g.time * 60) * 0.012 : 0
     }

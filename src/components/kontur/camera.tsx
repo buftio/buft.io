@@ -29,7 +29,13 @@ function focusOf(game: Game, tall: boolean): Focus {
 }
 
 /** Frames the board; leans in on the empty lot before registration and on the gate the first time it opens. */
-export function Rig({ game }: { game: RefObject<Game> }) {
+export function Rig({
+  game,
+  reduced,
+}: {
+  game: RefObject<Game>
+  reduced: boolean
+}) {
   const look = useRef<Vector3 | null>(null)
   useFrame(({ camera, size }, dt) => {
     const aspect = size.width / Math.max(1, size.height)
@@ -49,7 +55,7 @@ export function Rig({ game }: { game: RefObject<Game> }) {
       look.current = target.clone()
       camera.position.copy(goal)
     }
-    const k = 1 - Math.exp(-Math.min(dt, 0.05) * focus.speed)
+    const k = reduced ? 1 : 1 - Math.exp(-Math.min(dt, 0.05) * focus.speed)
     camera.position.lerp(goal, k)
     look.current.lerp(target, k)
     camera.lookAt(look.current)

@@ -97,9 +97,11 @@ const size = new Vector3()
 const view = new Vector3(3, 2.4, 4).normalize()
 
 function Turntable({
+  reduced,
   margin,
   children,
 }: {
+  reduced: boolean
   margin: number
   children: React.ReactNode
 }) {
@@ -108,7 +110,7 @@ function Turntable({
   useFrame(({ camera }, dt) => {
     const g = group.current
     if (!g) return
-    g.rotation.y += dt * 0.5
+    if (!reduced) g.rotation.y += dt * 0.5
     if (framed.current++ > 3) return
     box.setFromObject(g).getSize(size)
     const radius = Math.hypot(size.x, size.z) / 2
@@ -157,10 +159,12 @@ function Model({
 export default function Inspect({
   game,
   look,
+  reduced,
   onClose,
 }: {
   game: RefObject<Game>
   look: Look
+  reduced: boolean
   onClose: () => void
 }) {
   const state = game.current
@@ -214,7 +218,7 @@ export default function Inspect({
           >
             <hemisphereLight args={['#fff7ec', '#b9c4d8', 1.8]} />
             <directionalLight position={[4, 8, 5]} intensity={1.4} castShadow />
-            <Turntable margin={'item' in look ? 1.3 : 1.05}>
+            <Turntable reduced={reduced} margin={'item' in look ? 1.3 : 1.05}>
               <Model game={game} look={look} stage={stage} />
             </Turntable>
           </Canvas>
@@ -226,6 +230,7 @@ export default function Inspect({
         <button
           className="k-inspect-close"
           aria-label="Close"
+          autoFocus
           onClick={onClose}
         >
           <X size={16} />

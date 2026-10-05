@@ -49,7 +49,6 @@ export function Flood({ game }: { game: RefObject<Game> }) {
     <instancedMesh
       ref={mesh}
       args={[itemGeometry('diamond'), itemMaterial, FLOOD]}
-      castShadow
       frustumCulled={false}
     />
   )

@@ -26,6 +26,7 @@ type Props = {
   onSignal: (signal: Signal) => void
   onInspect: (look: Look) => void
   onReady: () => void
+  reduced: boolean
 }
 
 const layoutOf = (game: Game) => ({
@@ -38,7 +39,14 @@ const layoutOf = (game: Game) => ({
   launched: game.launched,
 })
 
-function Scene({ game, onChange, onSignal, onInspect, onReady }: Props) {
+function Scene({
+  game,
+  onChange,
+  onSignal,
+  onInspect,
+  onReady,
+  reduced,
+}: Props) {
   const [layout, setLayout] = useState(() => layoutOf(game.current))
   const tick = useRef(0)
   useEffect(onReady, [onReady])
@@ -55,7 +63,7 @@ function Scene({ game, onChange, onSignal, onInspect, onReady }: Props) {
   })
   return (
     <>
-      <Rig game={game} />
+      <Rig game={game} reduced={reduced} />
       <Mood />
       <Scenery />
       <Floor />
