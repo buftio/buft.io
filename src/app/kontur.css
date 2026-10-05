@@ -213,18 +213,34 @@
   }
   .k-stage {
     --k-gutter: 18px;
-    aspect-ratio: 3 / 4;
+    display: flex;
+    flex-direction: column;
+    aspect-ratio: auto;
+  }
+  .k-stage figure {
+    position: relative;
+    order: 2;
+    height: min(140vw, 600px);
   }
   .k-step {
+    position: static;
     max-width: none;
-    right: var(--k-gutter);
+    margin: 0 var(--k-gutter);
+    order: 1;
   }
   .k-hud {
-    top: auto;
-    bottom: 14px;
+    position: static;
+    order: 3;
     max-width: none;
-    left: var(--k-gutter);
+    margin: 10px var(--k-gutter) 0;
     justify-content: center;
+  }
+  .k-hud > * {
+    background: #fff;
+  }
+  .k-hud .k-wallet em {
+    right: auto;
+    left: 0;
   }
 }
 

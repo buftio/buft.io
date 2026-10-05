@@ -306,10 +306,19 @@ export function build(game: Game, x: number, y: number, dir: Dir) {
   return true
 }
 
+function drop(game: Game, at: number, items: Item[]) {
+  if (!items.length) return
+  const pile = game.piles.get(at) ?? []
+  for (const item of items) pile.push({ ...item, p: 0 })
+  game.piles.set(at, pile)
+}
+
+/** Takes a belt up for a refund; whatever rode on it is left on the floor to carry by hand. */
 export function remove(game: Game, x: number, y: number) {
-  const belt = game.belts.get(key(x, y))
+  const belt = inside(x, y) ? game.belts.get(key(x, y)) : undefined
   if (!belt || belt.fixed) return false
   game.belts.delete(key(x, y))
+  drop(game, key(x, y), belt.items)
   game.wallet += BELT
   bump(game)
   return true
@@ -347,10 +356,9 @@ export function grab(game: Game, id: number) {
 function putBack(game: Game, held: Held) {
   const at = key(...held.from)
   const belt = game.belts.get(at)
-  const list = belt ? belt.items : game.piles.get(at)
-  if (!list) return
-  list.push(held.item)
-  list.sort((a, b) => b.p - a.p)
+  if (!belt || !roomAt(belt, held.item.p)) return drop(game, at, [held.item])
+  belt.items.push(held.item)
+  belt.items.sort((a, b) => b.p - a.p)
 }
 
 export type Drop = 'taken' | 'denied' | 'back'

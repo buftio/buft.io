@@ -50,11 +50,18 @@ function Rig() {
   )
   useEffect(() => {
     const half = Math.tan((20 * Math.PI) / 180)
-    const fitWidth = (W / 2 + 0.6) / (half * aspect)
-    const fitHeight = (H / 2 + 1.4) / half
-    const distance = Math.max(fitWidth, fitHeight * 0.8)
-    camera.position.set(0, distance * 0.82, distance * 0.58)
-    camera.lookAt(0, 0, 0.4)
+    const tall = aspect < 0.8
+    const [across, along] = tall ? [H, W] : [W, H]
+    const fitWidth = (across / 2 + 0.6) / (half * aspect)
+    const fitHeight = (along / 2 + 1.4) / half
+    const distance = Math.max(fitWidth, fitHeight * (tall ? 0.95 : 0.8))
+    if (tall) {
+      camera.position.set(distance * 0.58, distance * 0.82, 0)
+      camera.lookAt(1.2, 0, 0)
+    } else {
+      camera.position.set(0, distance * 0.82, distance * 0.58)
+      camera.lookAt(0, 0, 0.4)
+    }
   }, [camera, aspect])
   return null
 }
@@ -81,7 +88,13 @@ function Input({ game, tool, onSignal }: Omit<Props, 'onChange' | 'onReady'>) {
 
   useEffect(() => {
     const state = game.current
-    let down: { x: number; y: number; cell: Cell; moved: boolean } | null = null
+    let down: {
+      id: number
+      x: number
+      y: number
+      cell: Cell
+      moved: boolean
+    } | null = null
     let last: Cell | null = null
     let broke = false
     const place = (cell: Cell, dir: Dir) => {
@@ -130,11 +143,17 @@ function Input({ game, tool, onSignal }: Omit<Props, 'onChange' | 'onReady'>) {
       last = cell
     }
     const onDown = (event: PointerEvent) => {
-      if (event.button > 0) return
+      if (event.button > 0 || down) return
       const point = pick(event)
       if (!point) return
       const cell = toCell(point)
-      down = { x: event.clientX, y: event.clientY, cell, moved: false }
+      down = {
+        id: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+        cell,
+        moved: false,
+      }
       broke = false
       if (tool === 'hand') {
         const found = nearest(event)
@@ -145,7 +164,7 @@ function Input({ game, tool, onSignal }: Omit<Props, 'onChange' | 'onReady'>) {
           onSignal('lift')
         }
       } else if (tool === 'belt') last = cell
-      else if (remove(game.current, ...cell)) onSignal('built')
+      else if (remove(state, ...cell)) onSignal('built')
       canvas.setPointerCapture(event.pointerId)
     }
     const onMove = (event: PointerEvent) => {
@@ -163,7 +182,7 @@ function Input({ game, tool, onSignal }: Omit<Props, 'onChange' | 'onReady'>) {
             : cell
           : null,
       )
-      if (!down || !point || !cell) return
+      if (!down || down.id !== event.pointerId || !point || !cell) return
       if (Math.hypot(event.clientX - down.x, event.clientY - down.y) > 6)
         down.moved = true
       if (tool === 'hand' && hand.current)
@@ -174,10 +193,10 @@ function Input({ game, tool, onSignal }: Omit<Props, 'onChange' | 'onReady'>) {
         (cell[0] !== last[0] || cell[1] !== last[1])
       )
         lay(cell)
-      if (tool === 'remove' && remove(game.current, ...cell)) onSignal('built')
+      if (tool === 'remove' && remove(state, ...cell)) onSignal('built')
     }
     const onUp = (event: PointerEvent) => {
-      if (!down) return
+      if (!down || down.id !== event.pointerId) return
       const point = pick(event)
       const cell = point ? toCell(point) : down.cell
       if (tool === 'hand' && game.current.held) {
