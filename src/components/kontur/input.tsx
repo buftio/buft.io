@@ -62,22 +62,27 @@ function dirTo(from: Cell, to: Cell): Dir {
   return dy > 0 ? 1 : 3
 }
 
-/** Moves a carried item toward the cursor; the border stops it unless it lines up with an open gate. */
+/** Moves a carried item toward the cursor; the border stops it unless it crosses in line with an open gate. */
 function slide(
   from: { x: number; z: number },
   to: { x: number; z: number },
   open: boolean,
 ) {
-  if (Math.abs(from.x - WALL) < REACH)
+  const side = Math.sign(from.x - WALL) || -1
+  const gap = Math.abs(from.x - WALL)
+  const door = (z: number) => open && Math.abs(z - DOOR) <= SLACK
+  if (gap < REACH && door(from.z))
     return {
       x: to.x,
       z: Math.min(DOOR + SLACK, Math.max(DOOR - SLACK, to.z)),
       blocked: false,
     }
-  const side = Math.sign(from.x - WALL)
-  const face = WALL + side * REACH
-  if ((to.x - face) * side >= 0) return { ...to, blocked: false }
-  if (open && Math.abs(to.z - DOOR) <= SLACK) return { ...to, blocked: false }
+  const limit = Math.min(REACH, gap)
+  if ((to.x - WALL) * side >= limit) return { ...to, blocked: false }
+  const face = WALL + side * limit
+  const t = to.x === from.x ? 0 : (face - from.x) / (to.x - from.x)
+  if (door(from.z + (to.z - from.z) * Math.max(0, Math.min(1, t))))
+    return { ...to, blocked: false }
   return { x: face, z: to.z, blocked: true }
 }
 
@@ -97,6 +102,7 @@ export function Input({ game, tool, onSignal, onInspect }: Props) {
       y: number
       cell: Cell
       moved: boolean
+      touch: boolean
     } | null = null
     let last: Cell | null = null
     let broke = false
@@ -196,10 +202,11 @@ export function Input({ game, tool, onSignal, onInspect }: Props) {
         y: event.clientY,
         cell,
         moved: false,
+        touch: event.pointerType === 'touch',
       }
       broke = false
       bumped = false
-      if (event.pointerType === 'touch') {
+      if (down.touch) {
         const at = { clientX: event.clientX, clientY: event.clientY }
         press = window.setTimeout(() => {
           if (!down || down.moved) return
@@ -216,7 +223,7 @@ export function Input({ game, tool, onSignal, onInspect }: Props) {
           onSignal('lift')
         }
       } else if (tool === 'belt') last = cell
-      else if (remove(state, ...cell)) onSignal('built')
+      else if (!down.touch && remove(state, ...cell)) onSignal('built')
       canvas.setPointerCapture(event.pointerId)
     }
     const onMove = (event: PointerEvent) => {
@@ -246,7 +253,12 @@ export function Input({ game, tool, onSignal, onInspect }: Props) {
         (cell[0] !== last[0] || cell[1] !== last[1])
       )
         lay(cell)
-      if (tool === 'remove' && remove(state, ...cell)) onSignal('built')
+      if (
+        tool === 'remove' &&
+        (!down.touch || down.moved) &&
+        remove(state, ...cell)
+      )
+        onSignal('built')
     }
     const onUp = (event: PointerEvent) => {
       if (!down || down.id !== event.pointerId) return
@@ -273,6 +285,13 @@ export function Input({ game, tool, onSignal, onInspect }: Props) {
         hand.current = null
         aim('')
       }
+      if (
+        tool === 'remove' &&
+        down.touch &&
+        !down.moved &&
+        remove(state, ...down.cell)
+      )
+        onSignal('built')
       if (tool === 'belt' && !down.moved) {
         const belt = state.belts.get(cell[1] * W + cell[0])
         const dir = belt ? (((belt.dir + 1) % 4) as Dir) : 0
