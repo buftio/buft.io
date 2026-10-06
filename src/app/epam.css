@@ -494,8 +494,17 @@
     margin-top: 6px;
     font-size: 14px;
   }
-  .e-story[data-playing] .e-intro p {
+  .e-story[data-playing] {
+    padding-top: 0;
+  }
+  .e-story[data-playing] .e-intro {
     display: none;
+  }
+  .e-story[data-playing] .e-stage {
+    margin-top: 0;
+  }
+  .e-story[data-playing] .e-stage figure {
+    mask-image: none;
   }
   .e-stage {
     --e-gutter: 16px;
