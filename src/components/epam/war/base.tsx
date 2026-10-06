@@ -3,15 +3,13 @@
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, type RefObject } from 'react'
 import * as THREE from 'three'
-import { capitalGeometry } from './capital'
 import { animated, state, tick } from './fortress-shade'
-import { keepGeometry } from './keeps'
 import { CELL, type Point, type War } from './sim'
 import { CASTLES, siteAt } from './sites'
+import { castleShape, CROWN } from './warm'
 
 const CASTLE = 900
 const CAPITAL = 1250
-const CROWN = 'dawnhold'
 const PITCH = new THREE.Quaternion().setFromEuler(
   new THREE.Euler((50 * Math.PI) / 180, 0, 0),
 )
@@ -62,7 +60,7 @@ export function Base({
     () =>
       war.castles.map((c) => {
         const id = siteAt(CASTLES, c)?.id ?? ''
-        const shape = id === CROWN ? capitalGeometry() : keepGeometry(id)
+        const shape = castleShape(id)
         shape.setAttribute('aState', state(1, [1, 1, 0]))
         return { shape, size: id === CROWN ? CAPITAL : CASTLE }
       }),

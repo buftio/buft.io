@@ -11,6 +11,7 @@ import { Tumors } from './tumors'
 import { landOf } from './war/land'
 import type { Terrain } from './war/terrain'
 import { War, type Status, type Tap } from './war/war'
+import { warmUp } from './war/warm'
 
 const GRAB_PX = 24
 
@@ -47,6 +48,9 @@ export default function World({
     )
     return () => stop.abort()
   }, [meta])
+  useEffect(() => {
+    if (land && !playing) warmUp(meta, land)
+  }, [meta, land, playing])
 
   const onTap = useCallback(
     (x: number, y: number, scale: number) => {

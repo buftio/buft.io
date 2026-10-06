@@ -8,13 +8,23 @@ import { tileExists, tileUrl, type SlideMeta } from './slide-data'
 import { fog, fogged } from './war/fog'
 
 type Entry = {
-  state: 'loading' | 'ready' | 'missing'
+  key: string
+  z: number
+  x: number
+  y: number
+  state: 'queued' | 'loading' | 'ready' | 'missing'
   mesh?: THREE.Mesh
   used: number
+  tries: number
+  wait: number
+  stop?: AbortController
 }
 
 const CACHE_LIMIT = 260
 const PRELOAD = 2
+const LIVE = 16
+const STALE = 60
+const TRIES = 4
 
 export function Tiles({
   meta,
@@ -28,6 +38,8 @@ export function Tiles({
   const plane = useMemo(() => new THREE.PlaneGeometry(1, 1), [])
   const seen = useRef(new Set<string>())
   const bytes = useRef(0)
+  const frame = useRef(0)
+  const era = useRef({ n: 0 })
   const invalidate = useThree((state) => state.invalidate)
   const gl = useThree((state) => state.gl)
   const stage = useMemo(() => new THREE.Scene(), [])
@@ -44,9 +56,28 @@ export function Tiles({
       hit.used = frame
       return hit
     }
-    const entry: Entry = { state: 'loading', used: frame }
+    const entry: Entry = {
+      key,
+      z,
+      x,
+      y,
+      state: 'queued',
+      used: frame,
+      tries: 0,
+      wait: 0,
+    }
     cache.current.set(key, entry)
-    fetch(tileUrl(meta, z, x, y))
+    return entry
+  }
+
+  const load = (entry: Entry) => {
+    const { key, z, x, y } = entry
+    const stop = new AbortController()
+    const at = era.current.n
+    const next = () => era.current.n === at && pump(frame.current)
+    entry.state = 'loading'
+    entry.stop = stop
+    fetch(tileUrl(meta, z, x, y), { signal: stop.signal })
       .then((response) => {
         if (!response.ok) throw new Error(`${response.status}`)
         return response.blob()
@@ -55,12 +86,12 @@ export function Tiles({
         const bitmap = await createImageBitmap(blob, {
           imageOrientation: 'flipY',
         })
+        if (cache.current.get(key) !== entry) return bitmap.close()
         if (!seen.current.has(key)) {
           seen.current.add(key)
           bytes.current += blob.size
           onLoaded(seen.current.size, bytes.current)
         }
-        if (cache.current.get(key) !== entry) return bitmap.close()
         const texture = new THREE.Texture(bitmap)
         texture.flipY = false
         texture.needsUpdate = true
@@ -91,10 +122,43 @@ export function Tiles({
         group.current?.add(mesh)
         invalidate()
       })
-      .catch(() => {
-        entry.state = 'missing'
+      .catch((error: Error) => {
+        if (stop.signal.aborted) return
+        entry.tries++
+        if (/^4\d\d$/.test(error.message) || entry.tries >= TRIES) {
+          entry.state = 'missing'
+          return
+        }
+        const delay = 500 * 2 ** entry.tries
+        entry.state = 'queued'
+        entry.wait = performance.now() + delay
+        setTimeout(() => {
+          entry.wait = 0
+          next()
+        }, delay)
       })
-    return entry
+      .finally(next)
+  }
+
+  const pump = (now: number) => {
+    let live = 0
+    const queued: Entry[] = []
+    for (const entry of cache.current.values()) {
+      const fresh = entry.used >= now - STALE
+      if (entry.state === 'queued' && fresh) queued.push(entry)
+      if (entry.state !== 'loading') continue
+      if (fresh) live++
+      else {
+        entry.stop?.abort()
+        cache.current.delete(entry.key)
+      }
+    }
+    if (live >= LIVE || !queued.length) return
+    queued
+      .filter((entry) => !entry.wait)
+      .sort((a, b) => b.used - a.used || a.z - b.z)
+      .slice(0, LIVE - live)
+      .forEach(load)
   }
 
   useEffect(() => {
@@ -104,15 +168,17 @@ export function Tiles({
         for (let x = 0; x < Math.ceil(meta.width / s); x++)
           request(z, x, y, Number.MAX_SAFE_INTEGER)
     }
+    pump(frame.current)
     const entries = cache.current
+    const epoch = era.current
     return () => {
+      epoch.n++
       for (const entry of entries.values()) dispose(entry)
       entries.clear()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [meta])
 
-  const frame = useRef(0)
   const drawn = useRef('')
   useFrame((state, delta) => {
     const camera = state.camera as THREE.OrthographicCamera
@@ -167,6 +233,7 @@ export function Tiles({
         fading = true
       }
     }
+    pump(now)
     if (fading) state.invalidate()
     if (cache.current.size > CACHE_LIMIT) evict(cache.current, now)
     if (!relief) return
@@ -214,6 +281,7 @@ export function Tiles({
 }
 
 function dispose(entry: Entry) {
+  entry.stop?.abort()
   if (!entry.mesh) return
   const material = entry.mesh.material as THREE.MeshBasicMaterial
   const image = material.map?.image as ImageBitmap | undefined

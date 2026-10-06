@@ -6,9 +6,10 @@ import * as THREE from 'three'
 import { SPOT } from './build'
 import { fogged } from './fog'
 import { animated, seepMaterial, state, tick } from './fortress-shade'
-import { PROP, seepGeometry } from './seeps'
+import { PROP } from './seeps'
 import type { War } from './sim'
 import { DEPOSITS, siteAt } from './sites'
+import { seepShape } from './warm'
 
 const PITCH = new THREE.Quaternion().setFromEuler(
   new THREE.Euler((50 * Math.PI) / 180, 0, 0),
@@ -53,7 +54,7 @@ export function Deposits({
     () =>
       war.deposits.map((d) => {
         const site = siteAt(DEPOSITS, d)
-        const shape = site && seepGeometry(site.id)
+        const shape = site && seepShape(site.id)
         shape?.setAttribute('aState', state(1, [1, 1, 0]))
         return shape ?? null
       }),
