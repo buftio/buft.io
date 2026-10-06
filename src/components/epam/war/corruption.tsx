@@ -3,15 +3,9 @@
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, type RefObject } from 'react'
 import * as THREE from 'three'
-import {
-  createGoo,
-  gridTexture,
-  noiseTexture,
-  softTexture,
-  stir,
-  type Goo,
-} from './goo-field'
+import { gridTexture, noiseTexture, softTexture } from './goo-field'
 import { gooFragment, gooVertex } from './goo-shader'
+import { gooThread } from './goo-thread'
 import { CELL, type War } from './sim'
 
 const FRONT_PX = 3
@@ -56,7 +50,7 @@ export function Corruption({
   const aux = useMemo(() => gridTexture(war), [war])
   const soft = useMemo(() => softTexture(war), [war])
   const noise = useMemo(() => noiseTexture(), [])
-  const goo = useRef<Goo | null>(null)
+  const goo = useRef<ReturnType<typeof gooThread> | null>(null)
   const material = useMemo(
     () =>
       new THREE.ShaderMaterial({
@@ -83,6 +77,16 @@ export function Corruption({
   )
   const mesh = useRef<THREE.Mesh>(null)
   const painted = useRef(-1)
+  const stirred = useRef(-1)
+
+  useEffect(() => {
+    const thread = gooThread(aux, soft)
+    goo.current = thread
+    return () => {
+      thread.stop()
+      goo.current = null
+    }
+  }, [aux, soft])
 
   useEffect(
     () => () => {
@@ -102,25 +106,14 @@ export function Corruption({
     if (!reduced) u.uTime.value = state.clock.elapsedTime
     u.uZoom.value = state.camera.zoom
     u.uReach.value = Math.max(CELL * 0.35, FRONT_PX / state.camera.zoom)
-    if (painted.current === version.current) return
-    painted.current = version.current
-    const field = u.uField.value as THREE.DataTexture
-    paint(war, field.image.data as Uint8Array)
-    field.needsUpdate = true
-    goo.current ??= createGoo(war)
-    const stirred = u.uAux.value as THREE.DataTexture
-    const softened = u.uSoft.value as THREE.DataTexture
-    if (
-      !stir(
-        war,
-        goo.current,
-        stirred.image.data as Uint8Array,
-        softened.image.data as Uint8Array,
-      )
-    )
-      return
-    stirred.needsUpdate = true
-    softened.needsUpdate = true
+    if (painted.current !== version.current) {
+      painted.current = version.current
+      const field = u.uField.value as THREE.DataTexture
+      paint(war, field.image.data as Uint8Array)
+      field.needsUpdate = true
+    }
+    if (stirred.current !== version.current && goo.current?.stir(war))
+      stirred.current = version.current
   })
 
   const width = war.cols * CELL

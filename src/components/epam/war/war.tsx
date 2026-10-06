@@ -15,7 +15,8 @@ import { Buildings, type Ghost } from './buildings'
 import { Deposits } from './deposits'
 import { createCrowd, headcount, syncCrowd } from './crowd'
 import type { Terrain } from './terrain'
-import { CELL, createWar, reveal, step, warriors } from './sim'
+import { CELL, reveal, step, warriors } from './sim'
+import { warOf } from './warm'
 import { Network } from './network'
 import { Villagers } from './villagers'
 import { Warriors } from './warriors'
@@ -57,7 +58,7 @@ export function War({
   reduced: boolean
   onStatus: (status: Status) => void
 }) {
-  const [war] = useState(() => createWar(meta, meta.tumors, land))
+  const [war] = useState(() => warOf(meta, land))
   const [crowd] = useState(() => createCrowd())
   const texture = useMemo(() => fieldTexture(war), [war])
   const light = useMemo(() => fogTexture(war), [war])
