@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { RotateCcw, ScanSearch } from 'lucide-react'
+import { ScanSearch } from 'lucide-react'
 import { SceneBoundary } from '../scene-boundary'
 import {
   loadSlide,
@@ -13,6 +13,7 @@ import {
 } from './slide-data'
 import { MINE, POST, SCAN } from './war/build'
 import type { Status } from './war/war'
+import { Victory } from './victory'
 
 const COOLDOWN = 2
 const clock = (seconds: number) =>
@@ -132,15 +133,12 @@ export default function EpamStory({
               : 'Scroll or pinch to zoom. Drag to move.'}
           </p>
           {status?.won != null && (
-            <output className="e-won">
-              <span>
-                All {status.tumors} tumors contained in {clock(status.won)}.
-              </span>
-              <button type="button" onClick={onReplay}>
-                <RotateCcw size={15} aria-hidden />
-                Play again
-              </button>
-            </output>
+            <Victory
+              key={round}
+              status={status}
+              time={clock(status.won)}
+              onReplay={onReplay}
+            />
           )}
           {meta && (
             <p className="e-stats" aria-live="off">

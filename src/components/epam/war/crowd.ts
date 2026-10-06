@@ -9,6 +9,8 @@ export const CAPACITY = 8192
 const RUN = 3400
 const LOOK = 0.6
 const FIGHTERS = 0.75
+const IDLE = 10
+const DOOR = 40
 
 export type Agent = {
   squad: number
@@ -23,6 +25,7 @@ export type Agent = {
   ring: number
   look: number
   face: number
+  inside: boolean
 }
 
 export type Crowd = {
@@ -30,13 +33,21 @@ export type Crowd = {
   ready: boolean
   fallen: number
   eaten: number
+  cheer: boolean
   next: () => number
 }
 
 export function createCrowd(seed = 3): Crowd {
   let a = seed
   const next = () => ((a = (a * 16807) % 2147483647) - 1) / 2147483646
-  return { agents: [], ready: false, fallen: 0, eaten: 0, next }
+  return {
+    agents: [],
+    ready: false,
+    fallen: 0,
+    eaten: 0,
+    cheer: false,
+    next,
+  }
 }
 
 export const alive = (a: Agent) => a.state < FALLEN
@@ -79,6 +90,7 @@ function spawn(crowd: Crowd, s: Squad) {
     ring,
     look: 0,
     face: 0,
+    inside: false,
   })
 }
 
@@ -115,6 +127,14 @@ function enemy(war: War, s: Squad, a: Agent) {
 
 function steer(war: War, s: Squad, a: Agent, dt: number, next: () => number) {
   a.look -= dt
+  const out = s.fighting || war.won !== null || a.seed < IDLE / s.crew
+  if (out) a.inside = false
+  else if (a.inside) return
+  else if (Math.hypot(s.x - a.x, s.y - a.y) < DOOR) {
+    a.inside = true
+    a.state = PATROL
+    return
+  }
   const fighter = s.fighting && a.seed < FIGHTERS
   if (fighter && a.look <= 0) {
     a.look = LOOK * (0.5 + next())
@@ -128,7 +148,10 @@ function steer(war: War, s: Squad, a: Agent, dt: number, next: () => number) {
   if (!fighter) a.state = PATROL
   let tx = a.tx
   let ty = a.ty
-  if (a.state === FIGHT) {
+  if (!out) {
+    tx = s.x
+    ty = s.y
+  } else if (a.state === FIGHT) {
     const jab = Math.sin(a.age * 9 + a.seed * 40) * CELL * 0.18
     const d = Math.hypot(tx - a.x, ty - a.y) || 1
     tx += ((tx - a.x) / d) * jab
@@ -178,6 +201,7 @@ export function syncCrowd(crowd: Crowd, war: War, dt: number) {
       spawn(crowd, s)
   }
   crowd.ready = true
+  crowd.cheer = war.won !== null
   for (const a of crowd.agents) {
     const s = squads.get(a.squad)
     if (s && alive(a)) steer(war, s, a, dt, crowd.next)

@@ -3,7 +3,7 @@
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, type RefObject } from 'react'
 import * as THREE from 'three'
-import { CAPACITY, type Crowd } from './crowd'
+import { alive, CAPACITY, type Agent, type Crowd } from './crowd'
 import { warriorGeometry } from './warrior-model'
 import { warriorFragment, warriorVertex } from './warrior-shader'
 import { sprite } from './warrior-sprite'
@@ -13,6 +13,7 @@ export const BODY = 0.95
 const SOLID_PX = [5, 7]
 export const FINE_PX = 26
 const LIFT = 24
+const HOP = 0.6
 
 const calm = () =>
   typeof matchMedia !== 'undefined' &&
@@ -107,7 +108,8 @@ export function Warriors({
       }),
     [],
   )
-  const troops = useMemo(() => army(CAPACITY, LIFT, !calm()), [])
+  const still = useMemo(() => calm(), [])
+  const troops = useMemo(() => army(CAPACITY, LIFT, !still), [still])
   useEffect(
     () => () => {
       for (const g of [geometry, troops.fine, troops.rough]) g.dispose()
@@ -140,18 +142,24 @@ export function Warriors({
     shaded.uniforms.uDawn.value = dawn.current
     shaded.uniforms.uFade.value = 1 - solid
     sprites.visible = solid < 1
+    const hop = (a: Agent) =>
+      crowd.cheer && !still && alive(a)
+        ? Math.abs(Math.sin(a.age * 7 + a.seed * 40)) * cell * HOP
+        : 0
     if (sprites.visible) {
       const { geometry: shape } = sprites
       const position = shape.getAttribute('position') as THREE.BufferAttribute
       const look = shape.getAttribute('aLook') as THREE.BufferAttribute
-      for (let k = 0; k < agents.length; k++) {
-        const a = agents[k]
-        position.setXYZ(k, a.x, -a.y, 0)
+      let k = 0
+      for (const a of agents) {
+        if (a.inside) continue
+        position.setXYZ(k, a.x, hop(a) - a.y, 0)
         look.setXYZW(k, a.state, a.age, a.seed, a.face)
+        k++
       }
-      upload(position, agents.length)
-      upload(look, agents.length)
-      shape.setDrawRange(0, agents.length)
+      upload(position, k)
+      upload(look, k)
+      shape.setDrawRange(0, k)
     }
     let n = 0
     if (solid > 0) {
@@ -170,10 +178,15 @@ export function Warriors({
       const s = spot.array as Float32Array
       const l = look.array as Float32Array
       for (const a of agents) {
-        if (a.x > edge || a.x < cx - halfW || Math.abs(a.y - cy) > halfH)
+        if (
+          a.inside ||
+          a.x > edge ||
+          a.x < cx - halfW ||
+          Math.abs(a.y - cy) > halfH
+        )
           continue
         s[n * 2] = a.x
-        s[n * 2 + 1] = a.y
+        s[n * 2 + 1] = a.y - hop(a)
         l[n * 4] = a.state
         l[n * 4 + 1] = a.age
         l[n * 4 + 2] = a.seed

@@ -216,14 +216,83 @@
   display: grid;
   justify-items: center;
   gap: 12px;
-  padding: 18px 22px;
+  padding: 22px 30px 20px;
   border-radius: 16px;
   background: rgb(43 31 51 / 0.9);
   color: #fff;
   text-align: center;
+  box-shadow: 0 0 0 2px rgb(255 209 102 / 0.6), 0 0 60px rgb(255 209 102 / 0.35);
+  animation: e-won-in 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) both;
 }
-.e-won span {
+.e-won strong {
+  font: 800 40px/1 Manrope, sans-serif;
+  letter-spacing: -0.02em;
+  color: #ffd166;
+  text-shadow: 0 0 24px rgb(255 209 102 / 0.6);
+  animation: e-won-glow 1.6s ease-in-out infinite alternate;
+}
+.e-won > span:not([class]) {
   font: 800 18px Manrope, sans-serif;
+}
+.e-won small {
+  font: 600 13px Manrope, sans-serif;
+  opacity: 0.8;
+}
+.e-won-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.e-won .e-explore {
+  background: rgb(255 255 255 / 0.12);
+  color: #fff;
+}
+.e-won .e-confetti {
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 30%;
+  pointer-events: none;
+}
+.e-confetti i {
+  position: absolute;
+  width: 8px;
+  height: 12px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: e-confetti 1.8s cubic-bezier(0.1, 0.8, 0.3, 1) var(--d) both;
+}
+@keyframes e-won-in {
+  from {
+    scale: 0.4;
+    opacity: 0;
+  }
+}
+@keyframes e-won-glow {
+  to {
+    text-shadow: 0 0 40px rgb(255 209 102 / 0.95);
+  }
+}
+@keyframes e-confetti {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--x), calc(var(--y) + 120px)) rotate(var(--r));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .e-won,
+  .e-won strong,
+  .e-confetti i {
+    animation: none;
+  }
 }
 .e-won button {
   display: inline-flex;
