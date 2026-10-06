@@ -211,7 +211,7 @@ export default function Inspect({
       <dialog open aria-label={title}>
         <div className="k-inspect-view">
           <Canvas
-            shadows
+            shadows="percentage"
             dpr={[1, 2]}
             resize={{ offsetSize: true, debounce: 0 }}
             camera={{ fov: 30, position: [3, 2.6, 4] }}

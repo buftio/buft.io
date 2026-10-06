@@ -358,7 +358,7 @@ export default function HiringOffice(props: Props) {
   return (
     <Canvas
       orthographic
-      shadows="soft"
+      shadows="percentage"
       resize={{ offsetSize: true, debounce: 0 }}
       camera={{ position: [0, 3.5, 9], zoom: 70, near: 0.1, far: 60 }}
       dpr={[1, 1.5]}
