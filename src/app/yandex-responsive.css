@@ -24,10 +24,6 @@
   }
 }
 @media (max-width: 600px) {
-  .yandex-dialog {
-    width: 94vw;
-    inset: 12% 3% 3%;
-  }
   .hiring-intro {
     padding: 20px;
   }
@@ -99,6 +95,50 @@
   }
   .hiring-outro {
     padding: 20px;
+  }
+}
+.hiring-answer {
+  display: none;
+}
+@media (max-width: 700px), (max-height: 500px) {
+  .hiring-office {
+    scroll-margin-top: 49px;
+  }
+  .hiring-bubble {
+    display: none;
+  }
+  .hiring-tools .hiring-answer {
+    display: block;
+    grid-column: 1 / -1;
+    margin: 0 0 8px;
+    padding: 9px 12px;
+    border-radius: 12px;
+    background: #fffaea;
+    box-shadow: 0 6px 18px #2d3d3330;
+    font-size: 13px;
+    line-height: 1.45;
+    animation: hiring-bubble-in 260ms ease-out;
+  }
+  .hiring-daybar {
+    padding: 6px 14px;
+    gap: 2px 14px;
+    font-size: 11px;
+  }
+  .hiring-daybar > strong {
+    flex-basis: auto;
+  }
+  .hiring-decisions {
+    padding: 8px 10px;
+    gap: 6px 10px;
+  }
+  .hiring-decision-note {
+    font-size: 12px;
+    line-height: 1.35;
+  }
+  .hiring-stamp {
+    min-width: 110px;
+    padding: 4px 12px;
+    font-size: 15px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

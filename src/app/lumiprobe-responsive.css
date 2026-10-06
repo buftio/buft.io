@@ -18,11 +18,6 @@
   }
 }
 @media (max-width: 650px) {
-  .lumiprobe-dialog {
-    width: 94vw;
-    inset: 12% 3% 3%;
-    max-height: 85dvh;
-  }
   .lumi-story {
     padding: 22px 16px 28px;
   }
@@ -53,6 +48,25 @@
 @media (max-width: 370px) {
   .lumi-stage.is-stacked {
     height: 660px;
+  }
+}
+@media (max-height: 500px) {
+  .lumi-stage {
+    height: calc(100dvh - 49px);
+  }
+}
+@media (max-width: 700px), (max-height: 500px) {
+  .lumi-full {
+    display: grid;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 5;
+    color: var(--lumi-plum);
+  }
+  .lumi-stage[data-full] {
+    height: auto;
+    background: linear-gradient(180deg, #ece5f2, #f3ede9 60%, #eee7ef);
   }
 }
 @media (prefers-reduced-motion: reduce) {

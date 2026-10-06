@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type Dispatch } from 'react'
+import { Fragment, useState, type Dispatch } from 'react'
 import {
   Check as CheckIcon,
   MessagesSquare,
@@ -238,11 +238,14 @@ const questions: {
 
 export function DeskTools({
   game,
+  said,
   dispatch,
 }: {
   game: Game
+  said: Evidence | null
   dispatch: Dispatch<Action>
 }) {
+  const candidate = candidates[game.current]
   const file = game.files[game.current]
   const [salary, setSalary] = useState(file.agreed ?? file.offers.at(-1) ?? 100)
   const remaining = vacancy.budget - salaryUsed(game)
@@ -265,23 +268,29 @@ export function DeskTools({
                 ? 'After the security check'
                 : null
           return (
-            <button
-              key={check}
-              className={`hiring-tool hiring-question${seen ? ' is-asked' : ''}`}
-              onClick={() => dispatch({ type: 'check', check })}
-              disabled={!canCheck(game, check)}
-            >
-              <small>
-                {seen ? <CheckIcon size={13} /> : <Icon size={13} />}
-                {label}
-              </small>
-              <span>{ask}</span>
-              <small>
-                {seen
-                  ? 'Answer added to the file'
-                  : (prerequisite ?? `Finds out: ${reveals}`)}
-              </small>
-            </button>
+            <Fragment key={check}>
+              <button
+                className={`hiring-tool hiring-question${seen ? ' is-asked' : ''}`}
+                onClick={() => dispatch({ type: 'check', check })}
+                disabled={!canCheck(game, check)}
+              >
+                <small>
+                  {seen ? <CheckIcon size={13} /> : <Icon size={13} />}
+                  {label}
+                </small>
+                <span>{ask}</span>
+                <small>
+                  {seen
+                    ? 'Answer added to the file'
+                    : (prerequisite ?? `Finds out: ${reveals}`)}
+                </small>
+              </button>
+              {said === check && seen && (
+                <p className="hiring-answer" aria-hidden="true">
+                  {candidate.evidence[check]}
+                </p>
+              )}
+            </Fragment>
           )
         })}
       </div>
@@ -319,6 +328,11 @@ export function DeskTools({
               <Send size={16} />
               Make offer
             </button>
+            {said === 'salary' && file.reply && (
+              <p className="hiring-answer" aria-hidden="true">
+                {file.reply}
+              </p>
+            )}
             {salary > limit && (
               <p className="hiring-meta">
                 {remaining} credits remain for both seats.

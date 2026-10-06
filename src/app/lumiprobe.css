@@ -79,6 +79,9 @@
 .lumi-stage.is-stacked {
   height: clamp(560px, 78dvh, 620px);
 }
+.lumi-full {
+  display: none;
+}
 .lumi-scene {
   position: absolute;
   inset: 0;

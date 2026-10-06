@@ -374,108 +374,13 @@
   margin-top: 18px;
 }
 
-@media (max-width: 560px) {
-  .k-story {
-    padding: 22px 18px 0;
-  }
-  .k-intro {
-    flex-direction: column;
-    gap: 8px;
-  }
-  .k-story,
-  .k-stage {
-    flex: none;
-  }
-  .k-stage {
-    --k-gutter: 18px;
-    display: flex;
-    flex-direction: column;
-  }
-  .k-stage figure {
-    position: relative;
-    order: 2;
-    height: min(140vw, 600px);
-  }
-  .k-step,
-  .k-step.is-intro {
-    position: relative;
-    left: auto;
-    top: auto;
-    translate: none;
-    max-width: none;
-    margin: 0 var(--k-gutter);
-    order: 1;
-  }
-  .k-inspect dialog {
-    grid-template-columns: 1fr;
-  }
-  .k-hud {
-    position: static;
-    order: 3;
-    max-width: none;
-    margin: 10px var(--k-gutter) 16px;
-    justify-content: center;
-  }
-  .k-hud > * {
-    background: #fff;
-  }
-  .k-hud .k-wallet em {
-    right: auto;
-    left: 0;
-  }
-  .k-note {
-    bottom: 66px;
-    max-width: calc(100% - var(--k-gutter) * 2);
-    animation:
-      k-note 0.6s ease both,
-      k-note-out 0.6s 12s ease forwards;
-  }
-}
-
-.k-wallet {
-  position: relative;
-}
-.k-wallet.is-broke {
-  animation: k-shake 0.4s ease;
-}
-.k-wallet em {
+.k-full {
   position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  padding: 4px 9px;
-  border-radius: 8px;
-  background: #e8574a;
-  color: #fff;
-  font:
-    600 12px Manrope,
-    sans-serif;
-  white-space: nowrap;
-  pointer-events: none;
-  animation: k-fade 1.8s ease forwards;
+  right: var(--k-gutter);
+  bottom: 18px;
+  z-index: 3;
+  color: var(--k-ink);
 }
-@keyframes k-shake {
-  0%,
-  100% {
-    translate: 0;
-    background: #ffffffe0;
-  }
-  20%,
-  60% {
-    translate: -5px 0;
-    background: #ffd9d4;
-  }
-  40%,
-  80% {
-    translate: 5px 0;
-    background: #ffd9d4;
-  }
-}
-@keyframes k-fade {
-  0%,
-  70% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
+.k-stage[data-full] {
+  background: #e6edf7;
 }

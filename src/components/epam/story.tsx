@@ -2,7 +2,8 @@
 
 import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ChevronUp, Maximize2, Minimize2, ScanSearch } from 'lucide-react'
+import { ChevronUp, ScanSearch } from 'lucide-react'
+import { FullscreenButton, useFullscreen } from '../fullscreen'
 import { SceneBoundary } from '../scene-boundary'
 import {
   loadSlide,
@@ -36,8 +37,8 @@ export default function EpamStory({
   const [status, setStatus] = useState<Status | null>(null)
   const [ready, setReady] = useState(0)
   const [more, setMore] = useState(false)
-  const [full, setFull] = useState(false)
   const stage = useRef<HTMLDivElement>(null)
+  const [full, onFull] = useFullscreen(stage)
   const bar = useRef<HTMLSpanElement>(null)
   const label = useRef<HTMLSpanElement>(null)
   const loaded = useRef<HTMLSpanElement>(null)
@@ -51,18 +52,6 @@ export default function EpamStory({
         onReady()
       })
   }, [onReady])
-
-  useEffect(() => {
-    const sync = () => setFull(document.fullscreenElement === stage.current)
-    document.addEventListener('fullscreenchange', sync)
-    return () => document.removeEventListener('fullscreenchange', sync)
-  }, [])
-
-  const onFull = () => {
-    if (!document.fullscreenEnabled) return setFull((f) => !f)
-    if (document.fullscreenElement) document.exitFullscreen()
-    else stage.current?.requestFullscreen()
-  }
 
   const onView = useCallback(
     (view: View) => {
@@ -164,14 +153,7 @@ export default function EpamStory({
               <span ref={loaded}>you loaded 0 · 0.0 MB (0%)</span>
             </p>
           )}
-          <button
-            type="button"
-            className="e-full"
-            onClick={onFull}
-            aria-label={full ? 'Exit full screen' : 'Full screen'}
-          >
-            {full ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-          </button>
+          <FullscreenButton full={full} onClick={onFull} className="e-full" />
           <div className="e-hud" data-more={more ? '' : undefined}>
             <div className="e-command">
               <button

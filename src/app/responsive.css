@@ -241,3 +241,22 @@
     font-size: 14px;
   }
 }
+@media (max-width: 700px), (max-height: 500px) {
+  dialog.project-dialog {
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+  }
+  .project-window-bar {
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    padding: 0 6px;
+  }
+  .project-window-bar button {
+    width: 44px;
+    height: 44px;
+  }
+}

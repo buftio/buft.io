@@ -28,6 +28,7 @@ import { isEnd, socketsFor, useDrag, type Source } from './use-drag'
 import { useLab } from './use-lab'
 import { useBoardMotion } from './board-motion'
 import { ChemistryTerm } from './chemistry-term'
+import { FullscreenButton, useFullscreen } from '../fullscreen'
 
 const Bench = dynamic(() => import('./bench'), { ssr: false })
 const STEP = 0.35
@@ -62,8 +63,14 @@ export default function LumiprobeStory({
   const lab = useLab()
   const stage = useRef<HTMLDivElement>(null)
   const size = useSize(stage)
+  const [full, toggleFull] = useFullscreen(stage)
   const view = useMemo(
-    () => viewFor(size.width, size.height),
+    () =>
+      viewFor(
+        size.width,
+        size.height,
+        size.width > 0 && matchMedia('(max-height: 500px)').matches,
+      ),
     [size.width, size.height],
   )
   const board = useBoardMotion(view, lab.phase ?? 'intro', reduced)
@@ -241,7 +248,11 @@ export default function LumiprobeStory({
       </header>
 
       <section className="lumi-bench" aria-label="Chemistry bench">
-        <div className={stageClass} ref={stage}>
+        <div
+          className={stageClass}
+          ref={stage}
+          data-full={full ? '' : undefined}
+        >
           <figure
             className="lumi-scene"
             aria-label="A pale clay chemistry bench with five puzzle bottles on the back shelf, a task board on the left, and a laptop on the right. Charcoal carbon beads and a terracotta OH bead connect in the middle. Two dishes of spare beads and a tin bin sit along the front."
@@ -371,6 +382,11 @@ export default function LumiprobeStory({
               {drag.element === 'C' ? 'C' : 'OH'}
             </span>
           )}
+          <FullscreenButton
+            full={full}
+            onClick={toggleFull}
+            className="lumi-full"
+          />
         </div>
       </section>
 

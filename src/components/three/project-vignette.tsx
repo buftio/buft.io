@@ -90,6 +90,7 @@ export default function ProjectVignette({
         <Canvas
           shadows={{ type: PCFShadowMap }}
           dpr={[1, 1.5]}
+          resize={{ offsetSize: true }}
           camera={{ position: cameraPosition, fov: conversation ? 26 : 29 }}
         >
           <color

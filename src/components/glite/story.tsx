@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { ArrowUpRight, RotateCcw, LampDesk } from 'lucide-react'
 import { SceneBoundary } from '../scene-boundary'
@@ -17,6 +17,7 @@ export default function GliteStory({
   const [corrected, setCorrected] = useState(false)
   const [word, setWord] = useState('desert')
   const [evening, setEvening] = useState(true)
+  const cafe = useRef<HTMLElement>(null)
   const lookup = (value: string) => {
     setWord(value)
     document.getElementById('glite-dictionary')?.scrollIntoView({
@@ -74,6 +75,11 @@ export default function GliteStory({
             onClick={() => {
               setCorrected((value) => !value)
               setWord(corrected ? 'desert' : 'dessert')
+              if (matchMedia('(max-width: 700px), (max-height: 500px)').matches)
+                cafe.current?.scrollIntoView({
+                  behavior: reduced ? 'instant' : 'smooth',
+                  block: 'nearest',
+                })
             }}
           >
             {corrected ? (
@@ -88,6 +94,7 @@ export default function GliteStory({
           </button>
         </div>
         <figure
+          ref={cafe}
           className="glite-cafe"
           aria-label={
             corrected

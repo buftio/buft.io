@@ -25,6 +25,16 @@ const scatter: [number, number, number][] = [
   [0.27, 0.7, 8],
   [0.4, 0.04, -5],
 ]
+const wide: [number, number][] = [
+  [0, 0.52],
+  [0.74, 0.04],
+  [0.19, 0.56],
+  [0.84, 0.54],
+  [0.74, 0.58],
+  [0.85, 0.08],
+]
+const deal = [4, 0, 5, 2, 3, 1]
+const PHONE = '(max-width: 700px), (max-height: 500px)'
 
 function edge(
   x0: number,
@@ -129,7 +139,14 @@ export function Jigsaw({ onSolved }: { onSolved: () => void }) {
   const stage = useRef<HTMLDivElement>(null)
   const { width, height } = useSize(stage)
   const [pieces, setPieces] = useState(() =>
-    scatter.map(([fx, fy, tilt]) => ({ fx, fy, tilt, z: 0, locked: false })),
+    scatter.map(([fx, fy, tilt]) => ({
+      fx,
+      fy,
+      tilt,
+      z: 0,
+      locked: false,
+      moved: false,
+    })),
   )
   const [drag, setDrag] = useState<{
     index: number
@@ -142,13 +159,38 @@ export function Jigsaw({ onSolved }: { onSolved: () => void }) {
     const timer = setTimeout(onSolved, 1100)
     return () => clearTimeout(timer)
   }, [solved, onSolved])
-  const boardW = Math.min(width * 0.46, 520)
+  const phone = width > 0 && matchMedia(PHONE).matches
+  const tall = phone && height > width
+  const boardW = tall
+    ? width * 0.86
+    : phone
+      ? Math.min(width * 0.46, 520, height)
+      : Math.min(width * 0.46, 520)
   const boardH = boardW * 0.6
   const w = boardW / COLS
   const h = boardH / ROWS
   const tab = Math.min(w, h) * 0.22
-  const boardX = width * 0.42 - boardW / 2
-  const boardY = (height - boardH) / 2
+  const boardX = tall
+    ? (width - boardW) / 2
+    : width * (phone ? 0.58 : 0.42) - boardW / 2
+  const boardY = tall ? Math.max(height * 0.2, 140) : (height - boardH) / 2
+  const pw = (w + tab * 2) / width
+  const ph = (h + tab * 2) / height
+  const below = (boardY + boardH + 12) / height
+  const spot = (index: number) => {
+    const piece = pieces[index]
+    if (piece.moved || !phone) return { fx: piece.fx, fy: piece.fy }
+    if (!tall)
+      return {
+        fx: Math.min(wide[index][0], 1 - pw),
+        fy: Math.min(wide[index][1], 1 - ph),
+      }
+    const slot = deal[index]
+    return {
+      fx: [0.01, (1 - pw) / 2, 0.99 - pw][slot % COLS],
+      fy: slot < COLS ? below : Math.max(below, 0.99 - ph),
+    }
+  }
   const home = (index: number) => ({
     x: boardX + (index % COLS) * w - tab,
     y: boardY + Math.floor(index / COLS) * h - tab,
@@ -168,10 +210,11 @@ export function Jigsaw({ onSolved }: { onSolved: () => void }) {
         /* Synthetic pointers cannot be captured; dragging still works while over the piece. */
       }
     const rect = stage.current!.getBoundingClientRect()
+    const { fx, fy } = spot(index)
     setDrag({
       index,
-      dx: event.clientX - rect.left - pieces[index].fx * width,
-      dy: event.clientY - rect.top - pieces[index].fy * height,
+      dx: event.clientX - rect.left - fx * width,
+      dy: event.clientY - rect.top - fy * height,
     })
     const z = Math.max(...pieces.map((piece) => piece.z)) + 1
     setPieces((list) =>
@@ -191,17 +234,16 @@ export function Jigsaw({ onSolved }: { onSolved: () => void }) {
       1 - (h + tab * 2) / height,
     )
     setPieces((list) =>
-      list.map((piece, i) => (i === drag.index ? { ...piece, fx, fy } : piece)),
+      list.map((piece, i) =>
+        i === drag.index ? { ...piece, fx, fy, moved: true } : piece,
+      ),
     )
   }
   const up = () => {
     if (!drag) return
-    const piece = pieces[drag.index]
+    const { fx, fy } = spot(drag.index)
     const target = home(drag.index)
-    if (
-      Math.hypot(piece.fx * width - target.x, piece.fy * height - target.y) <
-      SNAP
-    )
+    if (Math.hypot(fx * width - target.x, fy * height - target.y) < SNAP)
       lock(drag.index)
     setDrag(null)
   }
@@ -218,9 +260,10 @@ export function Jigsaw({ onSolved }: { onSolved: () => void }) {
           {pieces.map((piece, index) => {
             const col = index % COLS
             const row = Math.floor(index / COLS)
+            const { fx, fy } = spot(index)
             const at = piece.locked
               ? home(index)
-              : { x: piece.fx * width, y: piece.fy * height }
+              : { x: fx * width, y: fy * height }
             return (
               <button
                 key={index}

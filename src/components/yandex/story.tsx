@@ -19,6 +19,8 @@ import { DayReview, Receipt } from './review'
 import type { OfficeStage } from './office'
 
 const HiringOffice = dynamic(() => import('./office'), { ssr: false })
+const phone = () =>
+  matchMedia('(max-width: 700px), (max-height: 500px)').matches
 
 type Phase = 'brief' | 'arriving' | 'file'
 
@@ -40,6 +42,7 @@ export default function YandexStory({
   const paper = useRef<HTMLDivElement>(null)
   const desk = useRef<HTMLDivElement>(null)
   const feedback = useRef<HTMLDivElement>(null)
+  const office = useRef<HTMLDivElement>(null)
   const file = game.files[game.current]
   const candidate = candidates[game.current]
   const first = candidate.name.split(' ')[0]
@@ -48,10 +51,12 @@ export default function YandexStory({
   )
   const block = hireBlock(game)
   const instant = reduced || sceneFailed
+  const scroll = reduced ? 'instant' : 'smooth'
   const call = () => {
     setSaid(null)
     setStage('review')
     setPhase(instant ? 'file' : 'arriving')
+    if (phone()) office.current?.scrollIntoView({ behavior: scroll })
   }
   const act = (action: Action) => {
     dispatch(action)
@@ -74,9 +79,11 @@ export default function YandexStory({
     if (action.type === 'next' || action.type === 'restart') call()
   }
   useEffect(() => {
-    if (file.decision)
-      feedback.current?.querySelector('h3')?.focus({ preventScroll: true })
-  }, [file.decision])
+    if (!file.decision) return
+    feedback.current?.querySelector('h3')?.focus({ preventScroll: true })
+    if (phone())
+      feedback.current?.scrollIntoView({ block: 'nearest', behavior: scroll })
+  }, [file.decision, scroll])
   useEffect(() => {
     const heading = finished
       ? desk.current?.querySelector<HTMLElement>('.hiring-results h3')
@@ -105,7 +112,7 @@ export default function YandexStory({
           filters, and the candidate workflow.
         </p>
       </header>
-      <div className="hiring-office">
+      <div ref={office} className="hiring-office">
         <figure aria-label="A clay recruitment office, with a candidate at your desk, a computer, files, and a waiting area">
           <SceneBoundary
             compact
@@ -202,7 +209,12 @@ export default function YandexStory({
                     game={game}
                     dispatch={act}
                   />
-                  <DeskTools key={candidate.id} game={game} dispatch={act} />
+                  <DeskTools
+                    key={candidate.id}
+                    game={game}
+                    said={said}
+                    dispatch={act}
+                  />
                 </>
               ) : (
                 <div className="hiring-slot" aria-live="polite">

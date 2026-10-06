@@ -244,11 +244,6 @@
   }
 }
 @media (max-width: 650px) {
-  .glite-dialog {
-    width: 94vw;
-    inset: 15% 3% 3%;
-    max-height: 82dvh;
-  }
   .glite-story {
     padding: 24px 20px;
   }
@@ -282,9 +277,10 @@
     margin-top: 17px;
   }
   .glite-scene-controls {
-    order: 4;
-    margin-top: 8px;
-    gap: 5px;
+    position: absolute;
+    top: 230px;
+    right: 0;
+    margin: 0;
   }
   .glite-correction {
     order: 2;
@@ -343,5 +339,10 @@
   }
   .glite-outro a {
     margin-top: 20px;
+  }
+}
+@media (max-width: 700px), (max-height: 500px) {
+  .glite-cafe {
+    scroll-margin-top: 49px;
   }
 }
