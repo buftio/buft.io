@@ -94,6 +94,7 @@ export function Base({
         alarm.needsUpdate = true
       }
       const s = c.known && c.x <= dawn.current ? kinds[k].size : 0
+      mesh.visible = s > 0
       mesh.setColorAt(0, c.lit ? LIT : DARK)
       const bob = 1 + 0.015 * Math.sin(t * 2 + k)
       mesh.setMatrixAt(

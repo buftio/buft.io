@@ -70,7 +70,11 @@ export function Buildings({
     [],
   )
   const mine = useMemo(() => staged(mineGeometry(), room + SPARE), [room])
-  const towerLook = useMemo(() => animated(0.85), [])
+  const towerLook = useMemo(() => {
+    const material = animated(0.85)
+    material.forceSinglePass = true
+    return material
+  }, [])
   const mineLook = useMemo(() => animated(0.6), [])
   const still = useMemo(() => reduced ?? calm(), [reduced])
   useEffect(

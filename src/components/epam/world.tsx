@@ -56,7 +56,7 @@ export default function World({
   return (
     <Canvas
       orthographic
-      frameloop={reduced && !playing ? 'demand' : 'always'}
+      frameloop={playing ? 'always' : 'demand'}
       resize={{ offsetSize: true, debounce: 0 }}
       camera={{ position: [0, 0, EYE], zoom: 0.01, near: 1, far: 2 * EYE }}
       dpr={[1, 2]}

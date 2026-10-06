@@ -92,6 +92,8 @@ export function War({
     }
   }, [tap, war])
 
+  useEffect(() => () => texture.dispose(), [texture])
+
   const camera = useThree((state) => state.camera)
   useEffect(() => {
     field.war = war

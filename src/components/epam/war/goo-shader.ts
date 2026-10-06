@@ -111,7 +111,7 @@ export const gooFragment = /* glsl */ `
     vec4 a;
     float body;
     float h0 = macro(q, slow, bevel, f, a, body);
-    if (f.a < 0.01 && f.r < 0.01) discard;
+    if (f.g <= 0.3 || f.a <= 0.0 || (f.a < 0.01 && f.r < 0.01)) discard;
     float e = max(1.5 / uZoom, 24.0);
     vec4 fx;
     vec4 ax;

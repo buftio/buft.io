@@ -85,6 +85,7 @@ export function Deposits({
       )
       const mesh = meshes.current[k]
       if (!mesh) return
+      mesh.visible = on
       tick(mesh, t)
       mesh.setMatrixAt(
         0,

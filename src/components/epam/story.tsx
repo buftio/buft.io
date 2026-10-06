@@ -18,7 +18,8 @@ const COOLDOWN = 2
 const clock = (seconds: number) =>
   `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`
 
-const World = dynamic(() => import('./world'), { ssr: false })
+const world = () => import('./world')
+const World = dynamic(world, { ssr: false })
 
 export default function EpamStory({
   reduced,
@@ -38,6 +39,7 @@ export default function EpamStory({
   const loaded = useRef<HTMLSpanElement>(null)
 
   useEffect(() => {
+    world()
     loadSlide()
       .then(setMeta)
       .catch(() => {
@@ -50,8 +52,11 @@ export default function EpamStory({
     (view: View) => {
       if (!meta) return
       const { px, label: text } = scaleBar(meta.mpp, view.scale)
-      if (bar.current) bar.current.style.width = `${px}px`
-      if (label.current) label.current.textContent = text
+      const width = `${px}px`
+      if (bar.current && bar.current.style.width !== width)
+        bar.current.style.width = width
+      if (label.current && label.current.textContent !== text)
+        label.current.textContent = text
     },
     [meta],
   )

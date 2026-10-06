@@ -174,7 +174,7 @@ export function Ripples({ life }: { life: RefObject<Life> }) {
       ))}
       <instancedMesh
         ref={ref}
-        args={[undefined, undefined, TINGS]}
+        args={[undefined, undefined, TINGS + RELAYS.length]}
         frustumCulled={false}
         renderOrder={48}
       >

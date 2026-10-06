@@ -139,6 +139,7 @@ export function Lands({
   const ready = useRef(new Set<string>())
   const started = useRef(new Map<string, number>())
   const root = useRef<THREE.Group>(null)
+  const places = useRef<THREE.Group>(null)
   const frame = useRef(0)
   const camera = useThree((state) => state.camera)
   const scene = useThree((state) => state.scene)
@@ -171,6 +172,7 @@ export function Lands({
   useFrame((state) => {
     const n = frame.current++
     landFade.value = thin(state.camera.zoom)
+    if (places.current) places.current.visible = landFade.value > 0.01
     if (root.current && n % SETTLE === 0) settle(root.current)
     if (n % CHECK) return
     const view = state.camera as THREE.OrthographicCamera
@@ -242,19 +244,21 @@ export function Lands({
   return (
     <>
       <group ref={root}>
-        {mounted.map((id) => {
-          const land = LANDS.find((l) => l.id === id)
-          const Scene = scenes.get(id)
-          return land && Scene ? (
-            <Place
-              key={id}
-              land={land}
-              Scene={Scene}
-              reduced={reduced}
-              onReady={onReady}
-            />
-          ) : null
-        })}
+        <group ref={places}>
+          {mounted.map((id) => {
+            const land = LANDS.find((l) => l.id === id)
+            const Scene = scenes.get(id)
+            return land && Scene ? (
+              <Place
+                key={id}
+                land={land}
+                Scene={Scene}
+                reduced={reduced}
+                onReady={onReady}
+              />
+            ) : null
+          })}
+        </group>
         {lore && (
           <Html position={[lore.x, -lore.y, 0]} center zIndexRange={[5, 5]}>
             <aside

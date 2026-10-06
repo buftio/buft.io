@@ -230,8 +230,10 @@ export function eachCell(
   const r1 = Math.min(war.rows - 1, Math.floor((y + radius) / CELL))
   for (let r = r0; r <= r1; r++)
     for (let c = c0; c <= c1; c++) {
-      const d = Math.hypot((c + 0.5) * CELL - x, (r + 0.5) * CELL - y)
-      if (d <= radius) visit(r * war.cols + c, d)
+      const dx = (c + 0.5) * CELL - x
+      const dy = (r + 0.5) * CELL - y
+      const d2 = dx * dx + dy * dy
+      if (d2 <= radius * radius) visit(r * war.cols + c, Math.sqrt(d2))
     }
 }
 
@@ -263,9 +265,15 @@ function fight(war: War, dt: number) {
   war.squads = war.squads.filter((s) => s.crew > 0)
 }
 
+let scratch = new Float32Array(0)
+
 function spread(war: War, dt: number) {
   const { cols, rows, tissue, corrupt, owner, guard, pace } = war
-  const next = corrupt.slice()
+  const next =
+    scratch.length === corrupt.length
+      ? scratch
+      : (scratch = new Float32Array(corrupt.length))
+  next.set(corrupt)
   for (let r = 0; r < rows; r++)
     for (let c = 0; c < cols; c++) {
       const i = r * cols + c
@@ -355,7 +363,6 @@ function dusk(war: War, dt: number) {
 export function step(war: War, dt: number) {
   war.time += dt
   dusk(war, dt)
-  stampGuard(war)
   fight(war, dt)
   stampGuard(war)
   spread(war, dt)

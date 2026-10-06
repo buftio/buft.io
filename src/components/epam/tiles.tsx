@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { fitRelief, makeRelief, RELIEF } from './relief'
 import { tileExists, tileUrl, type SlideMeta } from './slide-data'
-import { fogged } from './war/fog'
+import { fog, fogged } from './war/fog'
 
 type Entry = {
   state: 'loading' | 'ready' | 'missing'
@@ -113,6 +113,7 @@ export function Tiles({
   }, [meta])
 
   const frame = useRef(0)
+  const drawn = useRef('')
   useFrame((state, delta) => {
     const camera = state.camera as THREE.OrthographicCamera
     const dpr = state.gl.getPixelRatio()
@@ -159,7 +160,10 @@ export function Tiles({
       const material = mesh.material as THREE.MeshBasicMaterial
       mesh.visible = shown.has(mesh)
       if (mesh.visible && material.opacity < 1) {
-        material.opacity = Math.min(1, material.opacity + delta * 5)
+        material.opacity = Math.min(
+          1,
+          material.opacity + Math.min(delta, 1 / 30) * 5,
+        )
         fading = true
       }
     }
@@ -167,6 +171,23 @@ export function Tiles({
     if (cache.current.size > CACHE_LIMIT) evict(cache.current, now)
     if (!relief) return
     state.gl.getDrawingBufferSize(buffer)
+    const map = fog.uFog.value
+    const key = [
+      camera.position.x,
+      camera.position.y,
+      scale,
+      buffer.x,
+      buffer.y,
+      fading,
+      map.uuid,
+      map.version,
+      fog.uFogOn.value,
+      fog.uFogSize.value.x,
+      fog.uFogSize.value.y,
+      ...[...shown].map((mesh) => mesh.id),
+    ].join()
+    if (key === drawn.current && !fading) return
+    drawn.current = key
     fitRelief(relief, buffer.x, buffer.y, scale * dpr, left, bottom, right, top)
     state.gl.setRenderTarget(relief.target)
     state.gl.render(stage, camera)

@@ -118,7 +118,10 @@ export function Controls({
       const now = local(event)
       pointers.set(event.pointerId, now)
       if (press)
-        press.far = Math.max(press.far, Math.hypot(now.x - press.x, now.y - press.y))
+        press.far = Math.max(
+          press.far,
+          Math.hypot(now.x - press.x, now.y - press.y),
+        )
       if (!press || press.far > TAP_PX) window.clearTimeout(timer)
       if (pointers.size === 1) {
         target.current = clampView(
@@ -193,20 +196,31 @@ export function Controls({
     const view = current.current
     const goal = target.current
     if (!view || !goal) return
-    const k = 1 - Math.exp(-delta * 14)
+    const camera = state.camera as THREE.OrthographicCamera
+    if (
+      camera.zoom === goal.scale &&
+      camera.position.x === goal.x &&
+      camera.position.y === -goal.y
+    )
+      return
+    const k = 1 - Math.exp(-Math.min(delta, 1 / 30) * 14)
     const logScale = Math.log(view.scale)
     view.scale = Math.exp(logScale + (Math.log(goal.scale) - logScale) * k)
     view.x += (goal.x - view.x) * k
     view.y += (goal.y - view.y) * k
-    const camera = state.camera as THREE.OrthographicCamera
-    camera.position.set(view.x, -view.y, EYE)
-    camera.zoom = view.scale
-    camera.updateProjectionMatrix()
-    onView(view)
     const settled =
       Math.abs(view.scale / goal.scale - 1) < 1e-4 &&
       Math.abs(view.x - goal.x) * view.scale < 0.1 &&
       Math.abs(view.y - goal.y) * view.scale < 0.1
+    if (settled) {
+      view.scale = goal.scale
+      view.x = goal.x
+      view.y = goal.y
+    }
+    camera.position.set(view.x, -view.y, EYE)
+    camera.zoom = view.scale
+    camera.updateProjectionMatrix()
+    onView(view)
     if (!settled) state.invalidate()
   })
 

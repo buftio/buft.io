@@ -25,11 +25,16 @@ export function fogTexture(war: War) {
 
 export function paintFog(war: War, texture: THREE.DataTexture) {
   const data = texture.image.data as Uint8Array
+  let changed = false
   for (let i = 0; i < war.light.length; i++) {
-    data[i * 4] = war.light[i] * 255
-    data[i * 4 + 1] = war.glow[i] * 255
+    const r = (war.light[i] * 255) | 0
+    const g = (war.glow[i] * 255) | 0
+    if (data[i * 4] === r && data[i * 4 + 1] === g) continue
+    data[i * 4] = r
+    data[i * 4 + 1] = g
+    changed = true
   }
-  texture.needsUpdate = true
+  if (changed) texture.needsUpdate = true
 }
 
 export function aimFog(war: War, texture: THREE.DataTexture) {

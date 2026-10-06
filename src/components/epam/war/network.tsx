@@ -100,7 +100,11 @@ export function Network({
     shape.setAttribute('aState', state(CARRIERS, [1, 1, 0]))
     return shape
   }, [])
-  const look = useMemo(() => animated(0.7), [])
+  const look = useMemo(() => {
+    const material = animated(0.7)
+    material.forceSinglePass = true
+    return material
+  }, [])
   const glow = useMemo(
     () =>
       new THREE.ShaderMaterial({

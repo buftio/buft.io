@@ -10,6 +10,8 @@ export type Folk = {
   traits: Float32Array
   mood: Float32Array
   fresh: Uint8Array
+  goal: Float32Array
+  sensed: Float64Array
 }
 export type Picks = {
   folk: Folk[]
@@ -41,6 +43,8 @@ export function folkOf(traits: Float32Array): Folk {
     traits,
     mood: new Float32Array(n * 4),
     fresh: new Uint8Array(n).fill(1),
+    goal: new Float32Array(n * 4),
+    sensed: new Float64Array(n).fill(-1),
   }
 }
 
@@ -122,23 +126,26 @@ function field(values: ArrayLike<number>, war: War, x: number, y: number) {
 }
 
 const goal = new Float32Array(4)
+const SPOKE = Array.from({ length: SPOKES }, (_, k) => [
+  Math.cos((k / SPOKES) * Math.PI * 2),
+  Math.sin((k / SPOKES) * Math.PI * 2),
+])
 
 function sense(war: War, x: number, y: number) {
   const sick = field(war.corrupt, war, x, y)
   let near = 0
   let px = 0
   let py = 0
-  for (let k = 0; k < SPOKES; k++) {
-    const a = (k / SPOKES) * Math.PI * 2
+  for (const [cos, sin] of SPOKE) {
     const v = field(
       war.corrupt,
       war,
-      x + Math.cos(a) * RING * CELL,
-      y + Math.sin(a) * RING * CELL,
+      x + cos * RING * CELL,
+      y + sin * RING * CELL,
     )
     near = Math.max(near, v)
-    px += Math.cos(a) * v
-    py += Math.sin(a) * v
+    px += cos * v
+    py += sin * v
   }
   const scar = field(war.scar, war, x, y)
   goal[1] = sick >= 0.5 ? 1 : 0
@@ -161,18 +168,23 @@ export function feel(
     const folk = picks.folk[picks.at[i * 2]]
     const k = picks.at[i * 2 + 1]
     const t = folk.traits
-    sense(war, t[k * STRIDE], t[k * STRIDE + 1])
-    const mood = folk.mood
     const o = k * 4
+    if (folk.sensed[k] !== war.time) {
+      sense(war, t[k * STRIDE], t[k * STRIDE + 1])
+      folk.goal.set(goal, o)
+      folk.sensed[k] = war.time
+    }
+    const want = folk.goal.subarray(o, o + 4)
+    const mood = folk.mood
     if (folk.fresh[k]) {
-      mood.set(goal, o)
+      mood.set(want, o)
       folk.fresh[k] = 0
     } else {
       for (let j = 0; j < 3; j++)
         mood[o + j] +=
-          (goal[j] - mood[o + j]) *
-          (goal[j] > mood[o + j] && j === 0 ? Math.min(1, dt * 8) : ease)
-      if (goal[0] > 0.05) mood[o + 3] = goal[3]
+          (want[j] - mood[o + j]) *
+          (want[j] > mood[o + j] && j === 0 ? Math.min(1, dt * 8) : ease)
+      if (want[0] > 0.05) mood[o + 3] = want[3]
     }
     data.set(mood.subarray(o, o + 4), i * 4)
   }

@@ -74,6 +74,7 @@ export function Haul({ life }: { life: RefObject<Life> }) {
       if (b.instanceColor) b.instanceColor.needsUpdate = true
     }
     b.visible = L.zoom > 0.1
+    if (!b.visible) return
     let i = 0
     WIRES.forEach((w, wi) => {
       for (let k = 0; k < PER; k++) {
