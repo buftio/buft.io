@@ -1,0 +1,216 @@
+'use client'
+
+import dynamic from 'next/dynamic'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { RotateCcw, ScanSearch } from 'lucide-react'
+import { SceneBoundary } from '../scene-boundary'
+import {
+  loadSlide,
+  mb,
+  scaleBar,
+  type SlideMeta,
+  type View,
+} from './slide-data'
+import { MINE, POST, SCAN } from './war/build'
+import type { Status } from './war/war'
+
+const COOLDOWN = 2
+const clock = (seconds: number) =>
+  `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`
+
+const World = dynamic(() => import('./world'), { ssr: false })
+
+export default function EpamStory({
+  reduced,
+  onReady,
+}: {
+  reduced: boolean
+  onReady: () => void
+}) {
+  const [meta, setMeta] = useState<SlideMeta | null>(null)
+  const [failed, setFailed] = useState(false)
+  const [scan, setScan] = useState(0)
+  const [round, setRound] = useState(0)
+  const [status, setStatus] = useState<Status | null>(null)
+  const [ready, setReady] = useState(0)
+  const bar = useRef<HTMLSpanElement>(null)
+  const label = useRef<HTMLSpanElement>(null)
+  const loaded = useRef<HTMLSpanElement>(null)
+
+  useEffect(() => {
+    loadSlide()
+      .then(setMeta)
+      .catch(() => {
+        setFailed(true)
+        onReady()
+      })
+  }, [onReady])
+
+  const onView = useCallback(
+    (view: View) => {
+      if (!meta) return
+      const { px, label: text } = scaleBar(meta.mpp, view.scale)
+      if (bar.current) bar.current.style.width = `${px}px`
+      if (label.current) label.current.textContent = text
+    },
+    [meta],
+  )
+
+  const cooldown =
+    status && status.time < ready ? Math.ceil(ready - status.time) : 0
+  const broke = !!status && status.fat < SCAN
+
+  const onStatus = useCallback((next: Status) => setStatus(next), [])
+
+  const onScan = () => {
+    setScan((n) => n + 1)
+    setReady((status?.time ?? 0) + COOLDOWN)
+  }
+
+  const onReplay = () => {
+    setRound((n) => n + 1)
+    setStatus(null)
+    setScan((n) => n + 1)
+    setReady(COOLDOWN)
+  }
+
+  const onLoaded = useCallback(
+    (tiles: number, bytes: number) => {
+      if (!meta || !loaded.current) return
+      loaded.current.textContent = `you loaded ${tiles.toLocaleString('en')} · ${mb(bytes)} (${Math.round((bytes / meta.bytes) * 100)}%)`
+    },
+    [meta],
+  )
+
+  return (
+    <article className="e-story">
+      <header className="e-intro">
+        <h2 id="project-heading">EPAM</h2>
+        <p>
+          A slide like this is billions of pixels. At EPAM I built the viewer
+          that let lab scientists fly through them like a map, mark what they
+          saw, and let AI point out what to look at next.
+        </p>
+      </header>
+      {failed ? (
+        <p className="e-fallback">
+          The slide could not load. It is a real lymph node section from the
+          CAMELYON16 dataset, with tumor regions outlined by pathologists.
+        </p>
+      ) : (
+        <div className="e-stage">
+          <figure aria-label="A zoomable microscope slide of a lymph node">
+            <SceneBoundary
+              compact
+              onFailure={() => {
+                setFailed(true)
+                onReady()
+              }}
+            >
+              {meta && (
+                <World
+                  meta={meta}
+                  scan={scan}
+                  round={round}
+                  reduced={reduced}
+                  onView={onView}
+                  onLoaded={onLoaded}
+                  onReady={onReady}
+                  onStatus={onStatus}
+                />
+              )}
+            </SceneBoundary>
+          </figure>
+          <p className="e-hint">
+            {scan
+              ? 'Build lighthouses in your light. Tap a gold ring to mine fat.'
+              : 'Scroll or pinch to zoom. Drag to move.'}
+          </p>
+          {status?.won != null && (
+            <output className="e-won">
+              <span>
+                All {status.tumors} tumors contained in {clock(status.won)}.
+              </span>
+              <button type="button" onClick={onReplay}>
+                <RotateCcw size={15} aria-hidden />
+                Play again
+              </button>
+            </output>
+          )}
+          {meta && (
+            <p className="e-stats" aria-live="off">
+              <span>
+                {meta.files.toLocaleString('en')} tiles · {mb(meta.bytes)} on
+                the server
+              </span>
+              <span ref={loaded}>you loaded 0 · 0.0 MB (0%)</span>
+            </p>
+          )}
+          <div className="e-hud">
+            <div className="e-command">
+              <button
+                type="button"
+                className="e-scan"
+                onClick={onScan}
+                disabled={!!scan && (cooldown > 0 || broke)}
+              >
+                <ScanSearch size={16} aria-hidden />
+                {!scan
+                  ? 'Scan for tumor'
+                  : broke
+                    ? `Scan needs ${SCAN} fat`
+                    : `Scan · ${SCAN} fat`}
+              </button>
+              {status && (
+                <p className="e-war" aria-live="polite">
+                  {status.contained} of {status.tumors} contained ·{' '}
+                  {clock(status.won ?? status.time)}
+                </p>
+              )}
+              {status && (
+                <p
+                  className="e-count"
+                  data-warriors={status.warriors}
+                  data-crowd={status.crowd}
+                  data-fallen={status.fallen}
+                  data-shown-fallen={status.shownFallen}
+                  data-shown-eaten={status.shownEaten}
+                  data-lost={status.lost}
+                >
+                  <span>{status.corrupted.toFixed(2)} mm² corrupted</span>
+                  <span>{status.warriors} warriors</span>
+                  <span>{status.fallen} fallen</span>
+                  <span>
+                    {(status.villagers - status.lost).toLocaleString('en')}{' '}
+                    villagers saved
+                  </span>
+                </p>
+              )}
+              {status && (
+                <p className="e-meter" data-fat={Math.floor(status.fat)}>
+                  <span className="e-fat">{Math.floor(status.fat)} fat</span>
+                  <span>
+                    {status.income >= 0 ? '+' : ''}
+                    {status.income.toFixed(1)}/s
+                  </span>
+                  <span>
+                    lighthouse {POST} · mine {MINE}
+                  </span>
+                </p>
+              )}
+            </div>
+            <div className="e-scale" aria-hidden>
+              <span className="e-bar" ref={bar} />
+              <span ref={label} />
+            </div>
+          </div>
+          <p className="e-credit">
+            Slide: CAMELYON16 tumor_091 (Radboud UMC and UMC Utrecht), CC0.
+            Outlines drawn by pathologists. The spread and the squads are a
+            game, not biology.
+          </p>
+        </div>
+      )}
+    </article>
+  )
+}
