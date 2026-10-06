@@ -39,6 +39,7 @@ export function Tiles({
   const seen = useRef(new Set<string>())
   const bytes = useRef(0)
   const frame = useRef(0)
+  const era = useRef({ n: 0 })
   const invalidate = useThree((state) => state.invalidate)
   const gl = useThree((state) => state.gl)
   const stage = useMemo(() => new THREE.Scene(), [])
@@ -72,6 +73,8 @@ export function Tiles({
   const load = (entry: Entry) => {
     const { key, z, x, y } = entry
     const stop = new AbortController()
+    const at = era.current.n
+    const next = () => era.current.n === at && pump(frame.current)
     entry.state = 'loading'
     entry.stop = stop
     fetch(tileUrl(meta, z, x, y), { signal: stop.signal })
@@ -83,12 +86,12 @@ export function Tiles({
         const bitmap = await createImageBitmap(blob, {
           imageOrientation: 'flipY',
         })
+        if (cache.current.get(key) !== entry) return bitmap.close()
         if (!seen.current.has(key)) {
           seen.current.add(key)
           bytes.current += blob.size
           onLoaded(seen.current.size, bytes.current)
         }
-        if (cache.current.get(key) !== entry) return bitmap.close()
         const texture = new THREE.Texture(bitmap)
         texture.flipY = false
         texture.needsUpdate = true
@@ -131,10 +134,10 @@ export function Tiles({
         entry.wait = performance.now() + delay
         setTimeout(() => {
           entry.wait = 0
-          pump(frame.current)
+          next()
         }, delay)
       })
-      .finally(() => pump(frame.current))
+      .finally(next)
   }
 
   const pump = (now: number) => {
@@ -167,7 +170,9 @@ export function Tiles({
     }
     pump(frame.current)
     const entries = cache.current
+    const epoch = era.current
     return () => {
+      epoch.n++
       for (const entry of entries.values()) dispose(entry)
       entries.clear()
     }
