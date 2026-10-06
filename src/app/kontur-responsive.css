@@ -21,13 +21,14 @@
   .k-stage {
     --k-gutter: 16px;
     display: grid;
-    grid-template: 'step' auto 'board' minmax(0, 1fr) / minmax(0, 1fr);
+    grid-template: 'board' minmax(0, 1fr) / minmax(0, 1fr);
     min-height: 0;
   }
   .k-stage[data-full] {
     padding-top: 10px;
   }
   .k-stage figure,
+  .k-step,
   .k-hud,
   .k-full,
   .k-note {
@@ -35,18 +36,18 @@
   }
   .k-step,
   .k-step.is-intro {
-    grid-area: step;
     position: relative;
     left: auto;
     top: auto;
     translate: none;
+    align-self: start;
     max-width: none;
-    max-height: 100%;
+    max-height: calc(100% - 70px);
     overflow: auto;
-    margin: 0 var(--k-gutter) 10px;
+    margin: 10px calc(var(--k-gutter) + 44px) 0 var(--k-gutter);
     padding: 10px 12px 12px;
     border-radius: 12px;
-    box-shadow: none;
+    box-shadow: 0 8px 24px #1f2a3d1f;
   }
   .k-step p,
   .k-step.is-intro p {
@@ -61,7 +62,8 @@
     font-size: 20px;
   }
   .k-hud {
-    top: 10px;
+    top: auto;
+    bottom: 12px;
     left: var(--k-gutter);
     right: calc(var(--k-gutter) + 44px);
     max-width: none;
@@ -73,7 +75,9 @@
     font-size: 12px;
   }
   .k-hud .k-wallet em {
+    top: auto;
     right: auto;
+    bottom: calc(100% + 6px);
     left: 0;
   }
   .k-full {
@@ -81,7 +85,7 @@
     bottom: auto;
   }
   .k-note {
-    bottom: 12px;
+    bottom: 58px;
     max-width: calc(100% - var(--k-gutter) * 2);
     animation:
       k-note 0.6s ease both,
@@ -108,13 +112,10 @@
   .k-intro p {
     margin-top: 0;
   }
-  .k-stage {
-    grid-template: 'step board' minmax(0, 1fr) / minmax(0, 250px) minmax(0, 1fr);
-  }
   .k-step,
   .k-step.is-intro {
-    align-self: start;
-    margin: 0 0 10px var(--k-gutter);
+    justify-self: start;
+    max-width: 260px;
   }
   .k-inspect dialog {
     grid-template-columns: 150px minmax(0, 1fr);
