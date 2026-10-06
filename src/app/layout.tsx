@@ -18,6 +18,7 @@ import './lumiprobe-glossary.css'
 import './lumiprobe-responsive.css'
 import './quantori.css'
 import './kontur.css'
+import './epam.css'
 
 const description =
   'Explore Igor Ostanin’s work in AI, science, games, and the tools people use.'

@@ -33,6 +33,7 @@ const SperasoftStory = dynamic(() => import('./sperasoft/story'))
 const LumiprobeStory = dynamic(() => import('./lumiprobe/story'))
 const QuantoriStory = dynamic(() => import('./quantori/story'))
 const KonturStory = dynamic(() => import('./kontur/story'))
+const EpamStory = dynamic(() => import('./epam/story'))
 const preloadVignette = () => import('./three/project-vignette')
 const projectPath = (index: number) => `/p/${projects[index].slug}`
 const HOME_TITLE = 'Igor Ostanin · buft.io'
@@ -418,7 +419,7 @@ export function Home({ initial = null }: { initial?: number | null }) {
       </div>
       {opened && (
         <dialog
-          className={`project-dialog ${opened.id === 'glite' ? 'glite-dialog' : opened.id === 'akts' ? 'market-dialog' : opened.id === 'yandex' ? 'yandex-dialog' : opened.id === 'sperasoft' ? 'spera-dialog' : opened.id === 'lumiprobe' ? 'lumiprobe-dialog' : opened.id === 'quantori' ? 'quantori-dialog' : opened.id === 'kontur' ? 'kontur-dialog' : ''}`}
+          className={`project-dialog ${opened.id === 'glite' ? 'glite-dialog' : opened.id === 'akts' ? 'market-dialog' : opened.id === 'yandex' ? 'yandex-dialog' : opened.id === 'sperasoft' ? 'spera-dialog' : opened.id === 'lumiprobe' ? 'lumiprobe-dialog' : opened.id === 'quantori' ? 'quantori-dialog' : opened.id === 'kontur' ? 'kontur-dialog' : opened.id === 'epam' ? 'epam-dialog' : ''}`}
           ref={dialog}
           onCancel={closeProject}
           aria-labelledby="project-heading"
@@ -473,6 +474,8 @@ export function Home({ initial = null }: { initial?: number | null }) {
               reduced={reduced}
               onReady={() => setWorldReady(true)}
             />
+          ) : opened.id === 'epam' ? (
+            <EpamStory reduced={reduced} onReady={() => setWorldReady(true)} />
           ) : (
             <article
               className="project-article"
