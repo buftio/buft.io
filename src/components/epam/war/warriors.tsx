@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, type RefObject } from 'react'
 import * as THREE from 'three'
 import { alive, CAPACITY, type Agent, type Crowd } from './crowd'
+import { dress } from './kinds'
 import { warriorGeometry } from './warrior-model'
 import { warriorFragment, warriorVertex } from './warrior-shader'
 import { sprite } from './warrior-sprite'
@@ -59,6 +60,7 @@ export function army(capacity: number, lift: number, move: boolean) {
       uSize: { value: 1 },
       uLift: { value: lift },
       uMove: { value: move ? 1 : 0 },
+      uShadow: { value: 1 },
     },
     vertexColors: true,
     transparent: true,
@@ -154,7 +156,7 @@ export function Warriors({
       for (const a of agents) {
         if (a.inside) continue
         position.setXYZ(k, a.x, hop(a) - a.y, 0)
-        look.setXYZW(k, a.state, a.age, a.seed, a.face)
+        look.setXYZW(k, dress(a.state, a.kind), a.age, a.seed, a.face)
         k++
       }
       upload(position, k)
@@ -187,7 +189,7 @@ export function Warriors({
           continue
         s[n * 2] = a.x
         s[n * 2 + 1] = a.y - hop(a)
-        l[n * 4] = a.state
+        l[n * 4] = dress(a.state, a.kind)
         l[n * 4 + 1] = a.age
         l[n * 4 + 2] = a.seed
         l[n * 4 + 3] = a.face

@@ -18,6 +18,7 @@ import {
 } from 'react'
 import * as THREE from 'three'
 import { explain } from '../war/explain'
+import { Garrison } from '../war/garrison'
 import { fogged, landFade } from '../war/fog'
 import { CELL } from '../war/sim'
 import { Clouds, thin } from './clouds'
@@ -273,6 +274,9 @@ export function Lands({
               </button>
               <h3>{lore.name}</h3>
               {lore.tag && <small>{lore.tag}</small>}
+              {'warrior' in lore && lore.warrior !== undefined && (
+                <Garrison kind={lore.warrior} />
+              )}
               {lore.story && <p>{lore.story}</p>}
               {lore.bio && <p>{lore.bio}</p>}
             </aside>

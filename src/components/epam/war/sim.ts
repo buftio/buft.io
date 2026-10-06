@@ -1,4 +1,16 @@
 import type { Deposit } from './fat'
+import {
+  attack,
+  COMET,
+  guarding,
+  KINDS,
+  lose,
+  recruit,
+  sight,
+  STAR,
+  widen,
+} from './kinds'
+import { CASTLES, siteAt } from './sites'
 
 export const CELL = 128
 export const RADIUS = 2000
@@ -9,6 +21,9 @@ const SIGHT = 0.3
 const LOSS = 0.01
 const START = 300
 const GLOW = 10
+export const BLAST = 420
+export const FALL = 0.9
+const TRAIL = 3
 
 export type Point = { x: number; y: number }
 
@@ -20,6 +35,8 @@ export type Squad = {
   wounds: number
   fighting: boolean
   from: Point | null
+  mix: number[]
+  comet: number
 }
 
 export type Mine = {
@@ -30,7 +47,8 @@ export type Mine = {
   from: Point | null
 }
 
-export type Keep = Point & { lit: boolean; known: boolean }
+export type Keep = Point & { lit: boolean; known: boolean; kind: number }
+export type Comet = Point & { at: number; hit: boolean }
 export type Seep = Deposit & { known: boolean }
 
 export type War = {
@@ -50,6 +68,7 @@ export type War = {
   guard: Uint8Array
   pace: Float32Array
   squads: Squad[]
+  comets: Comet[]
   mines: Mine[]
   deposits: Seep[]
   castles: Keep[]
@@ -67,7 +86,7 @@ export type War = {
   won: number | null
 }
 
-export const reach = (s: Squad) => RADIUS * Math.sqrt(s.crew / CREW)
+export const reach = (s: Squad) => RADIUS * Math.sqrt(s.crew / CREW) * widen(s)
 
 function random(seed: number) {
   let a = seed
@@ -172,6 +191,7 @@ export function createWar(
     guard: new Uint8Array(n),
     pace,
     squads: [],
+    comets: [],
     mines: [],
     deposits: land.deposits.map(({ x, y, rich }) => ({
       x,
@@ -182,6 +202,10 @@ export function createWar(
     castles: land.castles.map(({ x, y }) => ({
       x,
       y,
+      kind: Math.max(
+        0,
+        CASTLES.findIndex((c) => siteAt([c], { x, y })),
+      ),
       lit: x === first.x && y === first.y,
       known: false,
     })),
@@ -208,11 +232,14 @@ export function enlist(war: War, x: number, y: number, crew = CREW) {
     id: war.nextId++,
     x,
     y,
-    crew,
+    crew: 0,
     wounds: 0,
     fighting: false,
     from: null,
+    mix: KINDS.map(() => 0),
+    comet: war.time + COMET * Math.random(),
   }
+  recruit(war, squad, crew)
   war.squads.push(squad)
   return squad
 }
@@ -240,29 +267,66 @@ export function eachCell(
 function stampGuard(war: War) {
   war.guard.fill(0)
   for (const s of war.squads)
-    eachCell(war, s.x, s.y, reach(s), (i) => (war.guard[i] = 1))
+    eachCell(war, s.x, s.y, reach(s) * guarding(s), (i) => (war.guard[i] = 1))
 }
 
 function fight(war: War, dt: number) {
   for (const s of war.squads) {
     const r = reach(s)
+    const see = r * (SIGHT + sight(s))
+    const hit = ATTACK * attack(s) * dt
     let mass = 0
     eachCell(war, s.x, s.y, r, (i, d) => {
-      if (d <= r * SIGHT) war.seen[i] = 1
+      if (d <= see) war.seen[i] = 1
       if (!war.seen[i] || war.corrupt[i] <= 0) return
       mass += war.corrupt[i]
-      war.corrupt[i] = Math.max(0, war.corrupt[i] - ATTACK * dt)
+      war.corrupt[i] = Math.max(0, war.corrupt[i] - hit)
       if (war.corrupt[i] < 0.5) war.owner[i] = -1
     })
     s.fighting = mass > 0
     s.wounds += LOSS * mass * dt
     while (s.wounds >= 1 && s.crew > 0) {
       s.wounds--
-      s.crew--
+      lose(s)
       war.fallen++
     }
   }
   war.squads = war.squads.filter((s) => s.crew > 0)
+}
+
+function comets(war: War) {
+  war.comets = war.comets.filter((c) => war.time - c.at < TRAIL)
+  for (const c of war.comets) {
+    if (c.hit || war.time < c.at) continue
+    c.hit = true
+    eachCell(war, c.x, c.y, BLAST, (i) => {
+      war.corrupt[i] = 0
+      war.owner[i] = -1
+    })
+  }
+  for (const s of war.squads) {
+    if (!s.mix[STAR] || war.time < s.comet) continue
+    s.comet = war.time + COMET
+    let best = -1
+    let top = 0
+    let near = Infinity
+    eachCell(war, s.x, s.y, reach(s), (i, d) => {
+      const v = war.corrupt[i]
+      if (!war.seen[i] || v < 0.5) return
+      if (v > top + 1e-3 || (v > top - 1e-3 && d < near)) {
+        best = i
+        top = v
+        near = d
+      }
+    })
+    if (best < 0) continue
+    war.comets.push({
+      x: ((best % war.cols) + 0.5) * CELL,
+      y: (Math.floor(best / war.cols) + 0.5) * CELL,
+      at: war.time + FALL,
+      hit: false,
+    })
+  }
 }
 
 let scratch = new Float32Array(0)
@@ -364,6 +428,7 @@ export function step(war: War, dt: number) {
   war.time += dt
   dusk(war, dt)
   fight(war, dt)
+  comets(war)
   stampGuard(war)
   spread(war, dt)
   measure(war)

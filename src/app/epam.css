@@ -435,3 +435,34 @@
   color: #fff;
   cursor: pointer;
 }
+.e-garrison {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  align-items: center;
+  gap: 4px 12px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgb(255 255 255 / 0.14);
+}
+.e-garrison .e-mini {
+  width: 120px !important;
+  height: 140px !important;
+  border-radius: 10px;
+  background: radial-gradient(circle at 50% 80%, rgb(125 255 230 / 0.18), transparent 70%);
+}
+.e-garrison h4 {
+  margin: 0;
+  font: 800 14px Manrope, sans-serif;
+}
+.e-garrison small {
+  margin: 2px 0 6px;
+}
+.e-lore .e-garrison p {
+  margin: 0;
+  color: #fff;
+}
+.e-lore .e-garrison .e-cell {
+  grid-column: 1 / -1;
+  margin-top: 6px;
+  color: #ffd36b;
+}

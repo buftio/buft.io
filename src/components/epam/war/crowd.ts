@@ -26,6 +26,7 @@ export type Agent = {
   look: number
   face: number
   inside: boolean
+  kind: number
 }
 
 export type Crowd = {
@@ -70,7 +71,7 @@ function die(crowd: Crowd, war: War, a: Agent) {
   else crowd.fallen++
 }
 
-function spawn(crowd: Crowd, s: Squad) {
+function spawn(crowd: Crowd, s: Squad, kind: number) {
   const { next } = crowd
   const angle = next() * Math.PI * 2
   const ring = Math.sqrt(next())
@@ -91,6 +92,7 @@ function spawn(crowd: Crowd, s: Squad) {
     look: 0,
     face: 0,
     inside: false,
+    kind,
   })
 }
 
@@ -192,13 +194,20 @@ export function syncCrowd(crowd: Crowd, war: War, dt: number) {
     if (!squads.has(id)) for (const a of list) die(crowd, war, a)
   for (const s of war.squads) {
     const list = groups.get(s.id) ?? []
-    const extra = list.length - s.crew
-    if (extra > 0) {
+    const extra = s.mix.map((n) => -n)
+    for (const a of list) extra[a.kind]++
+    if (list.length > s.crew || extra.some((n) => n > 0)) {
       list.sort((a, b) => danger(war, b) - danger(war, a))
-      for (let k = 0; k < extra; k++) die(crowd, war, list[k])
+      for (const a of list)
+        if (extra[a.kind] > 0) {
+          extra[a.kind]--
+          die(crowd, war, a)
+        }
     }
-    for (let k = list.length; k < s.crew && crowd.agents.length < CAPACITY; k++)
-      spawn(crowd, s)
+    extra.forEach((n, kind) => {
+      for (let k = n; k < 0 && crowd.agents.length < CAPACITY; k++)
+        spawn(crowd, s, kind)
+    })
   }
   crowd.ready = true
   crowd.cheer = war.won !== null

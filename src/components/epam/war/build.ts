@@ -1,3 +1,4 @@
+import { recruit } from './kinds'
 import {
   CELL,
   CREW,
@@ -138,7 +139,7 @@ export function economy(war: War, dt: number) {
       Math.round(REFILL * dt),
       Math.floor(war.fat / UPKEEP),
     )
-    s.crew += n
+    recruit(war, s, n)
     war.fat -= n * UPKEEP
     spent += n * UPKEEP
   }
