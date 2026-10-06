@@ -8,6 +8,7 @@ import { SWEEP } from '../tumors'
 import { Base } from './base'
 import { field } from '../lands/threat'
 import { Corruption, fieldTexture } from './corruption'
+import { Comets } from './comets'
 import { Fireworks } from './fireworks'
 import { Question, isWhy, type Ask } from './ask'
 import { build, charge, economy, MINE, POST, spotAt } from './build'
@@ -217,6 +218,7 @@ export function War({
       {ask && <Question key={ask.at} ask={ask} />}
       <Warriors crowd={crowd} mpp={meta.mpp} dawn={dawn} />
       <Base war={war} dawn={dawn} reduced={reduced} />
+      <Comets war={war} />
       <Fireworks war={war} reduced={reduced} />
     </group>
   )

@@ -1,3 +1,5 @@
+import * as THREE from 'three'
+import { KINDS, STATES } from './kinds'
 import {
   BANNER,
   BODY,
@@ -7,25 +9,41 @@ import {
   SHADOW,
   SHIELD,
   SPEAR,
-} from './warrior-model'
+} from './warrior-part'
+
+const vec = (c: THREE.Color) =>
+  `vec3(${c.r.toFixed(4)}, ${c.g.toFixed(4)}, ${c.b.toFixed(4)})`
+
+export const skins = (linear: boolean) =>
+  `const vec3 SKINS[${KINDS.length}] = vec3[${KINDS.length}](${KINDS.map(
+    (k) => {
+      const c = new THREE.Color(k.skin)
+      if (!linear) c.convertLinearToSRGB()
+      return vec(c)
+    },
+  ).join(', ')});`
 
 export const warriorVertex = /* glsl */ `
   attribute float aPart;
   attribute vec3 aPivot;
   attribute vec2 aSpot;
   attribute vec4 aLook;
+  attribute vec2 aTag;
   uniform float uSize;
   uniform float uLift;
   uniform float uMove;
+  uniform float uShadow;
   varying vec3 vColor;
   varying vec3 vPos;
   varying float vAlpha;
   varying float vFlat;
   varying float vFight;
+  ${skins(true)}
   const float PITCH = 0.8726646;
   vec2 rot(vec2 v, float a) { float c = cos(a), s = sin(a); return vec2(c * v.x - s * v.y, s * v.x + c * v.y); }
   void main() {
-    float state = aLook.x;
+    float kind = floor(aLook.x / ${STATES}.0);
+    float state = aLook.x - kind * ${STATES}.0;
     float age = aLook.y;
     float seed = aLook.z;
     float face = aLook.w;
@@ -40,10 +58,10 @@ export const warriorVertex = /* glsl */ `
     float jab = sin(t * 9.0 + seed * 40.0);
     float turn = min(1.0, abs(face) * 1.3);
     float side = face < 0.0 ? -1.0 : 1.0;
-    bool bearer = seed < 0.35;
+    bool bearer = seed < 0.35 && kind < 0.5;
     vec3 p = position;
     vec3 q = p - aPivot;
-    if ((k == ${BANNER} && !bearer) || (k == ${SHIELD} && bearer)) q = vec3(0.0);
+    if ((k == ${BANNER} && !bearer) || (k == ${SHIELD} && bearer) || (aTag.x > -0.5 && abs(aTag.x - kind) > 0.5)) q = vec3(0.0);
     float blink = calm * uMove * step(0.965, fract(age * 0.31 + seed * 7.0));
     float shut = max(blink, 1.0 - live);
     if (k == ${EYE} || k == ${PUPIL}) q.y *= mix(1.0, 0.14, shut) * (q.y > 0.0 ? 1.0 - 0.4 * fight : 1.0);
@@ -87,7 +105,8 @@ export const warriorVertex = /* glsl */ `
       p.y += 0.06;
     }
     vPos = p * uSize;
-    vec3 tint = color;
+    vec3 skin = SKINS[int(kind + 0.5)];
+    vec3 tint = aTag.y > 1.5 ? mix(skin, vec3(1.0), 0.3) : aTag.y > 0.5 ? skin : color;
     if (k == ${BODY} || k == ${FOOT}) tint = mix(tint, vec3(0.3, 0.03, 0.42), fight * 0.35);
     if (k == ${EYE}) tint = mix(tint, vec3(0.03, 0.01, 0.04), shut);
     tint = mix(tint, vec3(0.32), fallen * min(1.0, age / 0.8) * 0.6);
@@ -96,7 +115,7 @@ export const warriorVertex = /* glsl */ `
     vFlat = k == ${SHADOW} ? 1.0 : 0.0;
     vFight = fight - (1.0 - live);
     float fade = 1.0 - smoothstep(2.6, 4.0, age) * fallen - smoothstep(0.6, 3.2, age) * eaten;
-    vAlpha = fade * (k == ${SHADOW} ? 0.24 : 1.0);
+    vAlpha = fade * (k == ${SHADOW} ? 0.24 * uShadow : 1.0);
     vec3 world = vec3(aSpot.x, -aSpot.y, uLift) + vPos;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(world, 1.0);
   }`

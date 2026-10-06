@@ -1,5 +1,5 @@
 import { hubs, LINK } from './build'
-import { CELL, type Point, type War } from './sim'
+import { CELL, type Keep, type Point, type War } from './sim'
 
 const MARGIN = 8
 const GRAIN = 5
@@ -8,7 +8,12 @@ const BARE = 4
 const ROT = 12
 const SMOOTH = 3
 
-export type Route = { points: Point[]; along: number[]; rich: number }
+export type Route = {
+  points: Point[]
+  along: number[]
+  rich: number
+  kind: number
+}
 
 const hash = (x: number, y: number, seed: number) => {
   let h =
@@ -212,7 +217,7 @@ export function routes(war: War, cache: Map<string, Point[]>) {
     if (end < 0) continue
     const chain: Point[] = []
     for (let i = end; i >= 0; i = prev[i]) chain.unshift(nodes[i])
-    carry.push({ ...stitch(war, chain, cache, used), rich: mine.rich })
+    carry.push({ ...stitch(war, chain, cache, used), rich: mine.rich, kind: 0 })
   }
   const parents = new Set(war.squads.map((s) => s.from))
   const march: Route[] = []
@@ -225,7 +230,11 @@ export function routes(war: War, cache: Map<string, Point[]>) {
       p = 'from' in p ? (p.from as Point | null) : null
     )
       chain.unshift(p)
-    march.push({ ...stitch(war, chain, cache, used), rich: 1 })
+    march.push({
+      ...stitch(war, chain, cache, used),
+      rich: 1,
+      kind: 'kind' in chain[0] ? (chain[0] as Keep).kind : 0,
+    })
   }
   for (const key of cache.keys()) if (!used.has(key)) cache.delete(key)
   return { carry, march }

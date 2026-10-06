@@ -6,6 +6,7 @@ import * as THREE from 'three'
 import { MAX_POSTS } from './build'
 import { carrierGeometry } from './castle'
 import { animated, state } from './fortress-shade'
+import { dress } from './kinds'
 import { routes, type Route } from './roads'
 import type { Point, War } from './sim'
 import { army, BODY, FINE_PX, upload } from './warriors'
@@ -190,7 +191,13 @@ export function Network({
         if (p.x > dawn.current) continue
         const off = (i % 2 ? SIDE : -SIDE) * 0.5 + Math.sin(seed * 40) * 14
         spot.setXY(n, p.x - p.dy * off, p.y + p.dx * off)
-        face.setXYZW(n, 0, t + seed * 20, seed, (Math.sign(p.dx) || 1) * 0.8)
+        face.setXYZW(
+          n,
+          dress(0, route.kind),
+          t + seed * 20,
+          seed,
+          (Math.sign(p.dx) || 1) * 0.8,
+        )
         n++
       }
     }

@@ -13,6 +13,7 @@ export type Note = {
   tag: string
   story: string
   bio: string
+  warrior?: number
 }
 
 const far = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y)
@@ -47,6 +48,7 @@ export function explain(p: Point): Note | null {
     return {
       kind: 'castle',
       ...keep,
+      warrior: castle.kind,
       tag: castle.lit
         ? 'Lit. Your lighthouses draw their light from here.'
         : 'Dark. Reach it with your light to bring it over.',

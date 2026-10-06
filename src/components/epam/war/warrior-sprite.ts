@@ -1,3 +1,6 @@
+import { STATES } from './kinds'
+import { skins } from './warrior-shader'
+
 export const sprite = {
   vertexShader: /* glsl */ `
     attribute vec4 aLook;
@@ -7,7 +10,7 @@ export const sprite = {
     varying vec4 vLook;
     void main() {
       vLook = aLook;
-      float shrink = aLook.x > 2.5 ? 1.0 - 0.55 * min(1.0, aLook.y / 3.0) : 1.0;
+      float shrink = mod(aLook.x, ${STATES}.0) > 2.5 ? 1.0 - 0.55 * min(1.0, aLook.y / 3.0) : 1.0;
       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       gl_PointSize = position.x > uDawn ? 0.0 : max(4.0, uPx * shrink) * 1.25 * uDpr;
     }`,
@@ -15,6 +18,7 @@ export const sprite = {
     uniform float uPx;
     uniform float uFade;
     varying vec4 vLook;
+    ${skins(false)}
     float disk(vec2 p, float r) { return smoothstep(r, r - 0.06, length(p)); }
     float bar(vec2 p, vec2 a, vec2 b, float w) {
       vec2 pa = p - a, ba = b - a;
@@ -22,7 +26,8 @@ export const sprite = {
       return smoothstep(w, w - 0.04, length(pa - ba * h));
     }
     void main() {
-      float state = vLook.x;
+      float kind = floor(vLook.x / ${STATES}.0);
+      float state = vLook.x - kind * ${STATES}.0;
       float age = vLook.y;
       float seed = vLook.z;
       float face = vLook.w;
@@ -40,6 +45,7 @@ export const sprite = {
       float body = smoothstep(1.0, 0.93, d);
       if (body <= 0.0) discard;
       vec3 skin = mix(vec3(0.66, 0.93, 1.0), vec3(0.88, 1.0, 0.95), seed);
+      skin = mix(skin, SKINS[int(kind + 0.5)], 0.55);
       vec3 color = skin * mix(1.0, 0.55, smoothstep(0.7, 0.86, d));
       color = mix(color, vec3(0.05, 0.22, 0.38), smoothstep(0.86, 0.92, d));
       color += 0.3 * smoothstep(0.38, 0.0, length(q - vec2(-0.32, 0.38)));
