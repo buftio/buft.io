@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ScanSearch } from 'lucide-react'
+import { ChevronUp, Maximize2, Minimize2, ScanSearch } from 'lucide-react'
 import { SceneBoundary } from '../scene-boundary'
 import {
   loadSlide,
@@ -35,6 +35,9 @@ export default function EpamStory({
   const [round, setRound] = useState(0)
   const [status, setStatus] = useState<Status | null>(null)
   const [ready, setReady] = useState(0)
+  const [more, setMore] = useState(false)
+  const [full, setFull] = useState(false)
+  const stage = useRef<HTMLDivElement>(null)
   const bar = useRef<HTMLSpanElement>(null)
   const label = useRef<HTMLSpanElement>(null)
   const loaded = useRef<HTMLSpanElement>(null)
@@ -48,6 +51,18 @@ export default function EpamStory({
         onReady()
       })
   }, [onReady])
+
+  useEffect(() => {
+    const sync = () => setFull(document.fullscreenElement === stage.current)
+    document.addEventListener('fullscreenchange', sync)
+    return () => document.removeEventListener('fullscreenchange', sync)
+  }, [])
+
+  const onFull = () => {
+    if (!document.fullscreenEnabled) return setFull((f) => !f)
+    if (document.fullscreenElement) document.exitFullscreen()
+    else stage.current?.requestFullscreen()
+  }
 
   const onView = useCallback(
     (view: View) => {
@@ -89,7 +104,7 @@ export default function EpamStory({
   )
 
   return (
-    <article className="e-story">
+    <article className="e-story" data-playing={scan ? '' : undefined}>
       <header className="e-intro">
         <h2 id="project-heading">EPAM</h2>
         <p>
@@ -104,7 +119,7 @@ export default function EpamStory({
           CAMELYON16 dataset, with tumor regions outlined by pathologists.
         </p>
       ) : (
-        <div className="e-stage">
+        <div className="e-stage" ref={stage} data-full={full ? '' : undefined}>
           <figure aria-label="A zoomable microscope slide of a lymph node">
             <SceneBoundary
               compact
@@ -149,7 +164,15 @@ export default function EpamStory({
               <span ref={loaded}>you loaded 0 · 0.0 MB (0%)</span>
             </p>
           )}
-          <div className="e-hud">
+          <button
+            type="button"
+            className="e-full"
+            onClick={onFull}
+            aria-label={full ? 'Exit full screen' : 'Full screen'}
+          >
+            {full ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+          </button>
+          <div className="e-hud" data-more={more ? '' : undefined}>
             <div className="e-command">
               <button
                 type="button"
@@ -166,8 +189,13 @@ export default function EpamStory({
               </button>
               {status && (
                 <p className="e-war" aria-live="polite">
-                  {status.contained} of {status.tumors} contained ·{' '}
-                  {clock(status.won ?? status.time)}
+                  <span className="e-long">
+                    {status.contained} of {status.tumors} contained
+                  </span>
+                  <span className="e-short">
+                    {status.contained}/{status.tumors}
+                  </span>{' '}
+                  · {clock(status.won ?? status.time)}
                 </p>
               )}
               {status && (
@@ -200,6 +228,17 @@ export default function EpamStory({
                     lighthouse {POST} · mine {MINE}
                   </span>
                 </p>
+              )}
+              {status && (
+                <button
+                  type="button"
+                  className="e-more"
+                  onClick={() => setMore((m) => !m)}
+                  aria-expanded={more}
+                  aria-label={more ? 'Fewer stats' : 'More stats'}
+                >
+                  <ChevronUp size={16} />
+                </button>
               )}
             </div>
             <div className="e-scale" aria-hidden>

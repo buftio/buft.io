@@ -34,6 +34,18 @@ const WAIT = 3
 const ORDER = 45
 const SETTLE = 20
 const CHECK = 6
+const spot = new THREE.Vector3()
+
+function place(
+  el: THREE.Object3D,
+  camera: THREE.Camera,
+  size: { width: number; height: number },
+) {
+  if (innerWidth <= 700 || innerHeight <= 500)
+    return [size.width / 2, size.height]
+  spot.setFromMatrixPosition(el.matrixWorld).project(camera)
+  return [((spot.x + 1) * size.width) / 2, ((1 - spot.y) * size.height) / 2]
+}
 
 function settle(root: THREE.Object3D) {
   root.traverse((o) => {
@@ -261,7 +273,12 @@ export function Lands({
           })}
         </group>
         {lore && (
-          <Html position={[lore.x, -lore.y, 0]} center zIndexRange={[5, 5]}>
+          <Html
+            position={[lore.x, -lore.y, 0]}
+            center
+            zIndexRange={[5, 5]}
+            calculatePosition={place}
+          >
             <aside
               className="e-lore"
               data-land={lore.land?.id}
