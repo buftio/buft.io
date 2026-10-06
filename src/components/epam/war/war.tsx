@@ -95,6 +95,20 @@ export function War({
   useEffect(() => () => texture.dispose(), [texture])
 
   const camera = useThree((state) => state.camera)
+  const gl = useThree((state) => state.gl)
+  const scene = useThree((state) => state.scene)
+  const root = useRef<THREE.Group>(null)
+  useEffect(() => {
+    const group = root.current
+    if (!group) return
+    let live = true
+    gl.compileAsync(group, camera, scene).then(() => {
+      if (live) group.visible = true
+    })
+    return () => {
+      live = false
+    }
+  }, [gl, camera, scene])
   useEffect(() => {
     field.war = war
     field.tumors = meta.tumors
@@ -180,7 +194,7 @@ export function War({
   })
 
   return (
-    <group>
+    <group ref={root} visible={false}>
       <Corruption
         war={war}
         texture={texture}

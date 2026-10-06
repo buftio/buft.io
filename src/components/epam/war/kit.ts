@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
-import { K } from './fortress-shade'
+import { K, repeat } from './fortress-shade'
 
 export const STONE = '#f3ebf4'
 export const WALL = '#dccbe4'
@@ -26,13 +26,7 @@ export const TAU = Math.PI * 2
 
 function fill(g: THREE.BufferGeometry, name: string, v: number[]) {
   const n = g.getAttribute('position').count
-  g.setAttribute(
-    name,
-    new THREE.BufferAttribute(
-      Float32Array.from({ length: n * v.length }, (_, i) => v[i % v.length]),
-      v.length,
-    ),
-  )
+  g.setAttribute(name, new THREE.BufferAttribute(repeat(v, n), v.length))
 }
 
 export function part(

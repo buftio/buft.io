@@ -127,11 +127,14 @@ export function animated(roughness: number) {
   return material
 }
 
+export function repeat(values: ArrayLike<number>, n: number) {
+  const out = new Float32Array(n * values.length)
+  for (let i = 0; i < out.length; i += values.length) out.set(values, i)
+  return out
+}
+
 export function state(n: number, fill: [number, number, number]) {
-  return new THREE.InstancedBufferAttribute(
-    Float32Array.from({ length: n * 3 }, (_, i) => fill[i % 3]),
-    3,
-  )
+  return new THREE.InstancedBufferAttribute(repeat(fill, n), 3)
 }
 
 export const tick = (mesh: THREE.Mesh | null, t: number) => {

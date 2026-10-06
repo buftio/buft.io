@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
+import { repeat } from './fortress-shade'
 
 export const BODY = 0
 export const SPEAR = 1
@@ -38,11 +39,7 @@ function part(
   g.deleteAttribute('normal')
   const c = new THREE.Color(color)
   const n = g.getAttribute('position').count
-  const fill = (values: number[]) =>
-    Float32Array.from(
-      { length: n * values.length },
-      (_, i) => values[i % values.length],
-    )
+  const fill = (values: number[]) => repeat(values, n)
   g.setAttribute('color', new THREE.BufferAttribute(fill([c.r, c.g, c.b]), 3))
   g.setAttribute('aPart', new THREE.BufferAttribute(fill([kind]), 1))
   g.setAttribute('aPivot', new THREE.BufferAttribute(fill(pivot), 3))

@@ -8,7 +8,7 @@ import { Lands } from './lands/lands'
 import { EYE, GLASS, type SlideMeta, type View } from './slide-data'
 import { Tiles } from './tiles'
 import { Tumors } from './tumors'
-import { loadTerrain } from './war/mask'
+import { landOf } from './war/land'
 import type { Terrain } from './war/terrain'
 import { War, type Status, type Tap } from './war/war'
 
@@ -40,7 +40,12 @@ export default function World({
 
   useEffect(onReady, [onReady])
   useEffect(() => {
-    loadTerrain(meta).then(setLand, () => setLand(null))
+    const stop = new AbortController()
+    landOf(meta, stop.signal).then(
+      (next) => !stop.signal.aborted && setLand(next),
+      () => setLand(null),
+    )
+    return () => stop.abort()
   }, [meta])
 
   const onTap = useCallback(
