@@ -63,7 +63,7 @@ const beam = {
     }`,
 }
 
-function walk(route: Route, s: number): [Point, number] {
+function walk(route: Route, s: number) {
   const { points, along } = route
   let lo = 0
   let hi = along.length - 1
@@ -73,12 +73,14 @@ function walk(route: Route, s: number): [Point, number] {
     else hi = mid
   }
   const [p, q] = [points[lo], points[hi]]
-  const f =
-    along[hi] > along[lo] ? (s - along[lo]) / (along[hi] - along[lo]) : 0
-  return [
-    { x: p.x + (q.x - p.x) * f, y: p.y + (q.y - p.y) * f },
-    Math.sign(q.x - p.x) || 1,
-  ]
+  const span = along[hi] - along[lo]
+  const f = span > 0 ? (s - along[lo]) / span : 0
+  return {
+    x: p.x + (q.x - p.x) * f,
+    y: p.y + (q.y - p.y) * f,
+    dx: span > 0 ? (q.x - p.x) / span : 1,
+    dy: span > 0 ? (q.y - p.y) / span : 0,
+  }
 }
 
 export function Network({
@@ -129,7 +131,8 @@ export function Network({
   const carriers = useRef<THREE.InstancedMesh>(null)
   const roads = useRef({
     key: '\0',
-    routes: [] as Route[],
+    carry: [] as Route[],
+    march: [] as Route[],
     cache: new Map<string, Point[]>(),
   })
 
@@ -151,6 +154,11 @@ export function Network({
     const face = near.geometry.getAttribute(
       'aLook',
     ) as THREE.InstancedBufferAttribute
+    const r = roads.current
+    if (r.key !== war.lights) {
+      r.key = war.lights
+      Object.assign(r, routes(war, r.cache))
+    }
     let k = 0
     let n = 0
     for (const b of [...war.squads, ...war.mines]) {
@@ -169,24 +177,23 @@ export function Network({
           size.set(length, width, 1),
         ),
       )
-      const nx = -dy / length
-      const ny = dx / length
-      const count = Math.max(2, Math.floor(length / gap))
-      for (const lane of [1, -1]) {
-        const toward = Math.sign(dx * lane) || 1
-        for (let i = 0; i < count && n < WALKERS; i++) {
-          const seed = ((b.x * 7 + i * 13 + (lane > 0 ? 3 : 0)) % 97) / 97
-          const u0 = (i + seed * 0.5) / count + (t * PACE * lane) / length
-          const u = u0 - Math.floor(u0)
-          const off = SIDE * lane + Math.sin(seed * 40) * 14
-          spot.setXY(n, a.x + dx * u + nx * off, a.y + dy * u + ny * off)
-          face.setXYZW(n, 0, t + seed * 20, seed, toward * 0.8)
-          n++
-        }
-      }
     }
     beams.count = k
     beams.instanceMatrix.needsUpdate = true
+    for (const route of r.march) {
+      const total = route.along[route.along.length - 1]
+      const count = Math.max(2, Math.floor((total * 2) / gap))
+      for (let i = 0; i < count && n < WALKERS; i++) {
+        const seed = ((route.points.length * 7 + i * 13) % 97) / 97
+        const u0 = (i + seed * 0.5) / count + (t * PACE) / total
+        const p = walk(route, (u0 - Math.floor(u0)) * total)
+        if (p.x > dawn.current) continue
+        const off = (i % 2 ? SIDE : -SIDE) * 0.5 + Math.sin(seed * 40) * 14
+        spot.setXY(n, p.x - p.dy * off, p.y + p.dx * off)
+        face.setXYZW(n, 0, t + seed * 20, seed, (Math.sign(p.dx) || 1) * 0.8)
+        n++
+      }
+    }
     upload(spot, n)
     upload(face, n)
     const body = (BODY_UM / mpp) * BODY
@@ -200,13 +207,8 @@ export function Network({
       mesh.material.uniforms.uSize.value = body
     }
 
-    const r = roads.current
-    if (r.key !== war.lights) {
-      r.key = war.lights
-      r.routes = routes(war, r.cache)
-    }
     let m = 0
-    for (const route of r.routes) {
+    for (const route of r.carry) {
       const total = route.along[route.along.length - 1]
       if (total < 1) continue
       const count = Math.max(
@@ -215,7 +217,8 @@ export function Network({
       )
       for (let i = 0; i < count && m < CARRIERS; i++) {
         const u0 = i / count + (t * WALK) / total
-        const [p, toward] = walk(route, (u0 - Math.floor(u0)) * total)
+        const p = walk(route, (u0 - Math.floor(u0)) * total)
+        const toward = Math.sign(p.dx) || 1
         const hop = Math.abs(Math.sin(t * 9 + i * 1.7)) * CARRY * 0.3
         turn
           .setFromAxisAngle(

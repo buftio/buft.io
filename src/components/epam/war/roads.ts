@@ -135,7 +135,40 @@ function road(war: War, a: Point, b: Point): Point[] {
   return chaikin([a, ...cells.reverse().slice(0, -1), b])
 }
 
-export function routes(war: War, cache: Map<string, Point[]>): Route[] {
+function stitch(
+  war: War,
+  chain: Point[],
+  cache: Map<string, Point[]>,
+  used: Set<string>,
+) {
+  const points: Point[] = [chain[0]]
+  for (let k = 0; k < chain.length - 1; k++) {
+    const [a, b] = [chain[k], chain[k + 1]]
+    const flip = a.x > b.x || (a.x === b.x && a.y > b.y)
+    const key = flip
+      ? `${b.x},${b.y}>${a.x},${a.y}`
+      : `${a.x},${a.y}>${b.x},${b.y}`
+    used.add(key)
+    let path = cache.get(key)
+    if (!path) {
+      path = flip ? road(war, b, a) : road(war, a, b)
+      cache.set(key, path)
+    }
+    points.push(...(flip ? [...path].reverse() : path).slice(1))
+  }
+  const along = [0]
+  for (let i = 1; i < points.length; i++)
+    along.push(
+      along[i - 1] +
+        Math.hypot(
+          points[i].x - points[i - 1].x,
+          points[i].y - points[i - 1].y,
+        ),
+    )
+  return { points, along }
+}
+
+export function routes(war: War, cache: Map<string, Point[]>) {
   const nodes = hubs(war)
   const castle = new Set<Point>(war.castles.filter((c) => c.lit))
   const near = nodes.map((p) =>
@@ -148,7 +181,7 @@ export function routes(war: War, cache: Map<string, Point[]>): Route[] {
       ),
   )
   const used = new Set<string>()
-  const out: Route[] = []
+  const carry: Route[] = []
   for (const mine of war.mines) {
     const source = nodes.indexOf(mine)
     if (source < 0) continue
@@ -179,32 +212,23 @@ export function routes(war: War, cache: Map<string, Point[]>): Route[] {
     if (end < 0) continue
     const chain: Point[] = []
     for (let i = end; i >= 0; i = prev[i]) chain.unshift(nodes[i])
-    const points: Point[] = [chain[0]]
-    for (let k = 0; k < chain.length - 1; k++) {
-      const [a, b] = [chain[k], chain[k + 1]]
-      const flip = a.x > b.x || (a.x === b.x && a.y > b.y)
-      const key = flip
-        ? `${b.x},${b.y}>${a.x},${a.y}`
-        : `${a.x},${a.y}>${b.x},${b.y}`
-      used.add(key)
-      let path = cache.get(key)
-      if (!path) {
-        path = flip ? road(war, b, a) : road(war, a, b)
-        cache.set(key, path)
-      }
-      points.push(...(flip ? [...path].reverse() : path).slice(1))
-    }
-    const along = [0]
-    for (let i = 1; i < points.length; i++)
-      along.push(
-        along[i - 1] +
-          Math.hypot(
-            points[i].x - points[i - 1].x,
-            points[i].y - points[i - 1].y,
-          ),
-      )
-    out.push({ points, along, rich: mine.rich })
+    carry.push({ ...stitch(war, chain, cache, used), rich: mine.rich })
+  }
+  const parents = new Set(
+    [...war.squads, ...war.mines].map((b) => b.from).filter(Boolean),
+  )
+  const march: Route[] = []
+  for (const leaf of war.squads) {
+    if (!leaf.from || parents.has(leaf)) continue
+    const chain: Point[] = []
+    for (
+      let p: Point | null = leaf;
+      p;
+      p = 'from' in p ? (p.from as Point | null) : null
+    )
+      chain.unshift(p)
+    march.push({ ...stitch(war, chain, cache, used), rich: 1 })
   }
   for (const key of cache.keys()) if (!used.has(key)) cache.delete(key)
-  return out
+  return { carry, march }
 }
