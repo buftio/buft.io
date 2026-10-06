@@ -239,11 +239,6 @@
   }
 }
 @media (max-width: 650px) {
-  .market-dialog {
-    width: 94vw;
-    inset: 15% 3% 3%;
-    max-height: 82dvh;
-  }
   .workshop-status {
     top: 42px;
   }
@@ -293,7 +288,7 @@
     width: 67%;
   }
   .market-copy-costs {
-    top: 57%;
+    top: 53%;
     right: 0;
   }
   .market-copy-owner {
@@ -323,5 +318,32 @@
   }
   .carpet-party-world {
     aspect-ratio: var(--party-mobile-ratio);
+  }
+}
+@media (max-width: 700px), (max-height: 500px) {
+  .workshop-status {
+    padding: 3px 0;
+    margin-bottom: 16px;
+  }
+  .workshop-actions button {
+    min-width: 36px;
+    min-height: 36px;
+  }
+  .rug-palettes button {
+    height: 32px;
+  }
+  .rug-patterns button,
+  .draw-toggle,
+  .rug-surprise {
+    min-height: 32px;
+  }
+  .rug-brushes button {
+    width: 32px;
+    height: 32px;
+  }
+}
+@media (min-width: 651px) and (max-height: 500px) {
+  .market-stop-mill {
+    left: 3%;
   }
 }

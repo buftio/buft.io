@@ -11,6 +11,7 @@ import { partyLayout } from './party-layout'
 import Collection from './collection'
 
 const WorkshopScene = dynamic(() => import('./scene'), { ssr: false })
+const phone = '(max-width: 700px), (max-height: 500px)'
 
 export default function CarpetFactoryStory({
   reduced,
@@ -54,12 +55,16 @@ export default function CarpetFactoryStory({
           </div>
           <div className="workshop-actions">
             <button
-              onClick={() =>
-                carpetPosition.current?.scrollIntoView({
-                  block: 'center',
-                  behavior: reduced ? 'instant' : 'smooth',
-                })
-              }
+              onClick={() => {
+                const marker = carpetPosition.current
+                if (!marker) return
+                if (!reduced && matchMedia(phone).matches) follow(marker)
+                else
+                  marker.scrollIntoView({
+                    block: 'center',
+                    behavior: reduced ? 'instant' : 'smooth',
+                  })
+              }}
               aria-label="Find my carpet"
             >
               <ArrowDown size={16} />
@@ -178,6 +183,29 @@ export default function CarpetFactoryStory({
       </div>
     </article>
   )
+}
+
+function follow(marker: HTMLElement) {
+  const dialog = marker.closest('dialog')
+  if (!dialog) return
+  const end = performance.now() + 2500
+  let frame = 0
+  const stop = () => {
+    cancelAnimationFrame(frame)
+    dialog.removeEventListener('touchstart', stop)
+    dialog.removeEventListener('wheel', stop)
+  }
+  const step = () => {
+    const box = dialog.getBoundingClientRect()
+    const gap =
+      marker.getBoundingClientRect().top - (box.top + box.bottom) / 2 - 40
+    dialog.scrollTop += gap * 0.15
+    if (performance.now() < end) frame = requestAnimationFrame(step)
+    else stop()
+  }
+  dialog.addEventListener('touchstart', stop, { passive: true })
+  dialog.addEventListener('wheel', stop, { passive: true })
+  step()
 }
 
 function storageErrorMessage(failed: boolean) {

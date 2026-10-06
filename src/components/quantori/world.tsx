@@ -2,7 +2,7 @@
 
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, type RefObject } from 'react'
-import { Vector3 } from 'three'
+import { MathUtils, Vector3, type PerspectiveCamera } from 'three'
 import { Sparkles } from '@react-three/drei'
 import { Arena } from './arena'
 import type { Game } from './defense'
@@ -34,6 +34,12 @@ function CameraRig({ phase, reduced }: { phase: Phase; reduced: boolean }) {
   const aspect = useThree(
     (state) => state.size.width / Math.max(1, state.size.height),
   )
+  const fov =
+    aspect < 0.75
+      ? MathUtils.radToDeg(
+          2 * Math.atan((Math.tan(MathUtils.degToRad(20)) * 0.75) / aspect),
+        )
+      : 40
   const look = useRef(new Vector3(...stations.dock.target))
   const first = useRef(true)
   const goal = useMemo(() => {
@@ -47,7 +53,18 @@ function CameraRig({ phase, reduced }: { phase: Phase; reduced: boolean }) {
       .add(lift)
     return { position, target: target.add(lift) }
   }, [phase, aspect])
-  useFrame((_, dt) => {
+  useFrame((state, dt) => {
+    const lens = state.camera as PerspectiveCamera
+    const { width, height } = state.size
+    lens.fov = fov
+    lens.setViewOffset(
+      width,
+      height,
+      aspect > 1.7 ? width * -0.16 : 0,
+      0,
+      width,
+      height,
+    )
     const k =
       reduced || first.current
         ? 1

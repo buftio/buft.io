@@ -1,16 +1,24 @@
 'use client'
 
 import { Maximize2, Minimize2 } from 'lucide-react'
-import { useEffect, useState, type RefObject } from 'react'
+import { useEffect, useRef, useState, type RefObject } from 'react'
 
 export function useFullscreen(target: RefObject<HTMLElement | null>) {
   const [full, setFull] = useState(false)
+  const top = useRef<number | null>(null)
   useEffect(() => {
     const sync = () => setFull(document.fullscreenElement === target.current)
     document.addEventListener('fullscreenchange', sync)
     return () => document.removeEventListener('fullscreenchange', sync)
   }, [target])
+  useEffect(() => {
+    if (full || top.current === null) return
+    target.current?.closest('dialog')?.scrollTo({ top: top.current })
+    top.current = null
+  }, [full, target])
   const toggle = () => {
+    if (!full)
+      top.current = target.current?.closest('dialog')?.scrollTop ?? null
     if (!document.fullscreenEnabled) return setFull((f) => !f)
     if (document.fullscreenElement) document.exitFullscreen()
     else target.current?.requestFullscreen()

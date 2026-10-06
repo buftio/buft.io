@@ -1,7 +1,13 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useEffect, useRef, useState, type PointerEvent } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent,
+} from 'react'
 import { ArrowDown, RotateCcw, StepForward } from 'lucide-react'
 import { SceneBoundary } from '../scene-boundary'
 import { useGame } from './use-game'
@@ -176,6 +182,12 @@ export default function SperasoftStory({
           className="spera-throw-area"
           aria-label="Throw grenade. Drag back and release, or aim with arrow keys and press Enter."
           disabled={!canThrow}
+          style={
+            {
+              '--tx': `${game.scene.trooper.x}%`,
+              '--ty': `${worldPercent(game.scene.trooper.y)}%`,
+            } as CSSProperties
+          }
           onPointerDown={(event) => {
             event.currentTarget.setPointerCapture(event.pointerId)
             if (drag.current) return
@@ -357,7 +369,7 @@ export default function SperasoftStory({
             aria-label={`Poke fan ${id + 1}`}
             data-fan={id}
             style={{
-              left: `${fan.x}%`,
+              left: `${fan.x.toFixed(2)}%`,
               top: `${worldPercent(fan.y - 1.6)}%`,
             }}
             onClick={() => game.pokeFan(id)}

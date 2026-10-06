@@ -206,8 +206,8 @@ function layoutFor(
   }
 }
 
-export function viewFor(width: number, height: number): View {
-  const narrow = width < 800
+export function viewFor(width: number, height: number, wide = false): View {
+  const narrow = width < 800 && !wide
   const minSpan = narrow ? 8.5 : 12
   const minRows = narrow ? 14 : 7.6
   const unit =

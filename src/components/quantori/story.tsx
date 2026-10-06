@@ -1,9 +1,10 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Heart, HeartCrack, RotateCcw, Siren, Trophy } from 'lucide-react'
 import { Agent } from './agent'
+import { FullscreenButton, useFullscreen } from '../fullscreen'
 import { SceneBoundary } from '../scene-boundary'
 import { DURATION, LIVES, collect, fireAhead, newGame } from './defense'
 import { Jigsaw, Page, Sparks } from './jigsaw'
@@ -26,7 +27,7 @@ import { alarm, boop, fanfare, oink, pickup, pop, sad, squeak } from './sound'
 
 const World = dynamic(() => import('./world'), { ssr: false })
 
-const steps: Record<Phase, [string, string]> = {
+const steps: Record<Phase, [string, ReactNode]> = {
   dock: [
     '01 · Docking',
     'In 2024, before tools like this were popular, I built a Claude Code–style agent that ran supercomputers for scientists doing docking. Drag three fragments into the pocket and the supercomputer checks each one: green binds there, gold belongs in another pocket, grey doesn’t bind.',
@@ -46,7 +47,11 @@ const steps: Record<Phase, [string, string]> = {
   ],
   play: [
     '04 · Patients',
-    'Click anywhere to fire a syringe. Hold to spray. Grab golden capsules.',
+    <>
+      <span className="q-mouse">Click</span>
+      <span className="q-touch">Tap</span> anywhere to fire a syringe. Hold to
+      spray. Grab golden capsules.
+    </>,
   ],
   won: ['04 · Patients', 'The patient stayed healthy.'],
   lost: ['04 · Patients', 'The patient caught it.'],
@@ -75,6 +80,8 @@ export default function QuantoriStory({
   const popped = useRef(0)
   const armed = useRef(-1)
   const finished = useRef(false)
+  const stage = useRef<HTMLDivElement>(null)
+  const [full, onFull] = useFullscreen(stage)
   const docked = isSolved(dock)
   const pending = isPending(dock)
 
@@ -239,7 +246,11 @@ export default function QuantoriStory({
           ))}
         </ol>
       ) : (
-        <div className={`q-stage is-${phase}`}>
+        <div
+          className={`q-stage is-${phase}`}
+          ref={stage}
+          data-full={full ? '' : undefined}
+        >
           <figure aria-label="A clay protein, a glowing molecule, researchers, a pig, and a patient">
             <SceneBoundary
               compact
@@ -271,6 +282,7 @@ export default function QuantoriStory({
               </p>
             )}
           </div>
+          <FullscreenButton full={full} onClick={onFull} className="q-full" />
           {phase === 'dock' && <Agent dock={dock} note={note} onAsk={onAsk} />}
           {phase === 'papers' && !rolling && <Jigsaw onSolved={solved} />}
           {brute && (

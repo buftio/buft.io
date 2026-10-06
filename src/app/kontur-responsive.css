@@ -1,0 +1,170 @@
+@media (max-width: 700px), (max-height: 500px) {
+  .k-story {
+    padding: 16px 16px 0;
+  }
+  .k-intro {
+    display: block;
+  }
+  .k-intro h2 {
+    font-size: 26px;
+  }
+  .k-intro p {
+    margin-top: 6px;
+    font-size: 14px;
+  }
+  .k-story[data-playing] {
+    padding-top: 0;
+  }
+  .k-story[data-playing] .k-intro {
+    display: none;
+  }
+  .k-stage {
+    --k-gutter: 16px;
+    display: grid;
+    grid-template: 'step' auto 'board' minmax(0, 1fr) / minmax(0, 1fr);
+    min-height: 0;
+  }
+  .k-stage[data-full] {
+    padding-top: 10px;
+  }
+  .k-stage figure,
+  .k-hud,
+  .k-full,
+  .k-note {
+    grid-area: board;
+  }
+  .k-step,
+  .k-step.is-intro {
+    grid-area: step;
+    position: relative;
+    left: auto;
+    top: auto;
+    translate: none;
+    max-width: none;
+    max-height: 100%;
+    overflow: auto;
+    margin: 0 var(--k-gutter) 10px;
+    padding: 10px 12px 12px;
+    border-radius: 12px;
+    box-shadow: none;
+  }
+  .k-step p,
+  .k-step.is-intro p {
+    font-size: 13px;
+  }
+  .k-step button.k-stamp {
+    margin-top: 10px;
+    padding: 9px 16px 9px 14px;
+    font-size: 15px;
+  }
+  .k-approved {
+    font-size: 20px;
+  }
+  .k-hud {
+    top: 10px;
+    left: var(--k-gutter);
+    right: calc(var(--k-gutter) + 44px);
+    max-width: none;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+  .k-hud > * {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .k-hud .k-wallet em {
+    right: auto;
+    left: 0;
+  }
+  .k-full {
+    top: 10px;
+    bottom: auto;
+  }
+  .k-note {
+    bottom: 12px;
+    max-width: calc(100% - var(--k-gutter) * 2);
+    animation:
+      k-note 0.6s ease both,
+      k-note-out 0.6s 12s ease forwards;
+  }
+  .k-inspect dialog {
+    grid-template-columns: 1fr;
+    max-height: calc(100% - 20px);
+    overflow: auto;
+    padding: 14px;
+  }
+  .k-inspect h3 {
+    font-size: 20px;
+  }
+  .k-inspect p {
+    font-size: 14px;
+  }
+}
+@media (max-height: 500px) {
+  .k-intro {
+    display: flex;
+    gap: 18px;
+  }
+  .k-intro p {
+    margin-top: 0;
+  }
+  .k-stage {
+    grid-template: 'step board' minmax(0, 1fr) / minmax(0, 250px) minmax(0, 1fr);
+  }
+  .k-step,
+  .k-step.is-intro {
+    align-self: start;
+    margin: 0 0 10px var(--k-gutter);
+  }
+  .k-inspect dialog {
+    grid-template-columns: 150px minmax(0, 1fr);
+  }
+}
+
+.k-wallet {
+  position: relative;
+}
+.k-wallet.is-broke {
+  animation: k-shake 0.4s ease;
+}
+.k-wallet em {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  padding: 4px 9px;
+  border-radius: 8px;
+  background: #e8574a;
+  color: #fff;
+  font:
+    600 12px Manrope,
+    sans-serif;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: k-fade 1.8s ease forwards;
+}
+@keyframes k-shake {
+  0%,
+  100% {
+    translate: 0;
+    background: #ffffffe0;
+  }
+  20%,
+  60% {
+    translate: -5px 0;
+    background: #ffd9d4;
+  }
+  40%,
+  80% {
+    translate: 5px 0;
+    background: #ffd9d4;
+  }
+}
+@keyframes k-fade {
+  0%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}

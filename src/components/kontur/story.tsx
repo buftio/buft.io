@@ -10,6 +10,7 @@ import {
   SquareChevronUp,
   Stamp,
 } from 'lucide-react'
+import { FullscreenButton, useFullscreen } from '../fullscreen'
 import { SceneBoundary } from '../scene-boundary'
 import { boop, fanfare, pickup, pop, squeak } from '../quantori/sound'
 import {
@@ -137,6 +138,8 @@ export default function KonturStory({
   const [broke, setBroke] = useState(0)
   const [look, setLook] = useState<Look | null>(null)
   const [stamped, setStamped] = useState(false)
+  const stage = useRef<HTMLDivElement>(null)
+  const [full, onFull] = useFullscreen(stage)
   const close = useCallback(() => setLook(null), [])
   const onSignal = useCallback((signal: Signal) => {
     sounds[signal]()
@@ -153,7 +156,10 @@ export default function KonturStory({
 
   const [eyebrow, line] = stepOf(state)
   return (
-    <article className="k-story">
+    <article
+      className="k-story"
+      data-playing={state.registered ? '' : undefined}
+    >
       <header className="k-intro">
         <h2 id="project-heading">Kontur</h2>
         <p>
@@ -166,7 +172,7 @@ export default function KonturStory({
       {failed ? (
         <p className="k-fallback">{line}</p>
       ) : (
-        <div className="k-stage">
+        <div className="k-stage" ref={stage} data-full={full ? '' : undefined}>
           <figure aria-label="A small clay factory: a shop, a tax office, a border with customs, and a rocket site">
             <SceneBoundary
               compact
@@ -240,6 +246,7 @@ export default function KonturStory({
               service, the bank API and the customs logs were real.
             </p>
           )}
+          <FullscreenButton full={full} onClick={onFull} className="k-full" />
           {look && (
             <Inspect
               game={game}

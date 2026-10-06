@@ -17,7 +17,9 @@ import './lumiprobe-furniture.css'
 import './lumiprobe-glossary.css'
 import './lumiprobe-responsive.css'
 import './quantori.css'
+import './quantori-responsive.css'
 import './kontur.css'
+import './kontur-responsive.css'
 import './epam.css'
 
 const description =
