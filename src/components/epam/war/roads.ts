@@ -214,9 +214,7 @@ export function routes(war: War, cache: Map<string, Point[]>) {
     for (let i = end; i >= 0; i = prev[i]) chain.unshift(nodes[i])
     carry.push({ ...stitch(war, chain, cache, used), rich: mine.rich })
   }
-  const parents = new Set(
-    [...war.squads, ...war.mines].map((b) => b.from).filter(Boolean),
-  )
+  const parents = new Set(war.squads.map((s) => s.from))
   const march: Route[] = []
   for (const leaf of war.squads) {
     if (!leaf.from || parents.has(leaf)) continue

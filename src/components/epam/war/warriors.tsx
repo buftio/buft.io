@@ -108,7 +108,8 @@ export function Warriors({
       }),
     [],
   )
-  const troops = useMemo(() => army(CAPACITY, LIFT, !calm()), [])
+  const still = useMemo(() => calm(), [])
+  const troops = useMemo(() => army(CAPACITY, LIFT, !still), [still])
   useEffect(
     () => () => {
       for (const g of [geometry, troops.fine, troops.rough]) g.dispose()
@@ -142,7 +143,7 @@ export function Warriors({
     shaded.uniforms.uFade.value = 1 - solid
     sprites.visible = solid < 1
     const hop = (a: Agent) =>
-      crowd.cheer && alive(a)
+      crowd.cheer && !still && alive(a)
         ? Math.abs(Math.sin(a.age * 7 + a.seed * 40)) * cell * HOP
         : 0
     if (sprites.visible) {
