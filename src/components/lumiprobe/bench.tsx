@@ -240,7 +240,7 @@ export default function Bench(props: Props) {
   return (
     <Canvas
       orthographic
-      shadows="soft"
+      shadows="percentage"
       frameloop={props.reduced ? 'demand' : 'always'}
       resize={{ offsetSize: true, debounce: 0 }}
       camera={{ position: [0, 40, 40], zoom: 60, near: 0.1, far: 200 }}

@@ -152,7 +152,7 @@ function Environment(props: Props) {
 export default function WorkshopScene(props: Props) {
   return (
     <Canvas
-      shadows="soft"
+      shadows="percentage"
       resize={{ offsetSize: true, debounce: 0 }}
       orthographic
       camera={{ position: [0, 100, 150], zoom: 70, near: 0.1, far: 2000 }}

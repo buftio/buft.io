@@ -203,7 +203,7 @@ function Scene({
 export default function World(props: Props) {
   return (
     <Canvas
-      shadows
+      shadows="percentage"
       dpr={[1, 1.5]}
       resize={{ offsetSize: true, debounce: 0 }}
       camera={{ fov: 40, near: 0.1, far: 80, position: stations.dock.position }}
