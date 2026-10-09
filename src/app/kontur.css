@@ -73,6 +73,45 @@
     translate: 0 8px;
   }
 }
+.k-toll {
+  position: relative;
+  translate: -50% -100%;
+  padding: 6px 11px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 3px 10px #1f2a3d33;
+  font:
+    800 14px/1 Manrope,
+    sans-serif;
+  color: var(--k-ink);
+  white-space: nowrap;
+  opacity: 0;
+  scale: 0.4;
+  transform-origin: 50% 100%;
+  transition:
+    opacity 0.15s,
+    scale 0.15s;
+}
+.k-toll::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  translate: -50% 0;
+  border: 7px solid transparent;
+  border-bottom: 0;
+  border-top-color: #fff;
+}
+.k-toll.is-on {
+  opacity: 1;
+  scale: 1;
+  animation: k-toll 0.4s ease-in-out 3;
+}
+@keyframes k-toll {
+  50% {
+    rotate: -6deg;
+  }
+}
 @keyframes k-note-out {
   to {
     opacity: 0;

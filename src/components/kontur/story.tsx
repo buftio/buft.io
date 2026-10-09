@@ -18,11 +18,12 @@ import {
   FACTORY,
   ROCKET,
   connectBanks,
+  isOpen,
   newGame,
   register,
   type Game,
 } from './factory'
-import { cheer, chink, gate, lift, thud } from './sound'
+import { cheer, chink, gate, lift, nag, thud } from './sound'
 import type { Look } from './input'
 import type { Signal } from './world'
 
@@ -142,7 +143,8 @@ export default function KonturStory({
   const [full, onFull] = useFullscreen(stage)
   const close = useCallback(() => setLook(null), [])
   const onSignal = useCallback((signal: Signal) => {
-    sounds[signal]()
+    if (signal === 'denied' && !isOpen(game.current)) nag()
+    else sounds[signal]()
     if (signal === 'broke') setBroke((n) => n + 1)
   }, [])
   const restart = () => {

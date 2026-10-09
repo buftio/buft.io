@@ -55,6 +55,21 @@ export const cheer = () =>
     ),
   )
 
+export const nag = () => {
+  chink()
+  ;[0.18, 0.34].forEach((delay) =>
+    tone(
+      [
+        [0, 240],
+        [0.11, 300],
+      ],
+      'square',
+      0.045,
+      delay,
+    ),
+  )
+}
+
 export const gate = () =>
   tone(
     [
