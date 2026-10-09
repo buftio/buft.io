@@ -109,6 +109,7 @@ export function Input({ game, onSignal, onInspect }: Props) {
       from: 'workshop' | 'belt' | null
     } | null = null
     let tile: Tile | null = null
+    let drag: { x: number; z: number } | null = null
     let bumped = false
     let press = 0
     const pick = (event: { clientX: number; clientY: number }) => {
@@ -134,6 +135,8 @@ export function Input({ game, onSignal, onInspect }: Props) {
       !!cell && state.minted && siteAt(...cell) === 'workshop'
     const fits = (cell: Cell) =>
       canBuild(state, ...cell) && !state.belts.has(at(cell))
+    const loose = (cell: Cell) =>
+      canBuild(state, ...cell) && state.belts.has(at(cell))
     const show = () =>
       setGhost(
         tile && {
@@ -165,16 +168,20 @@ export function Input({ game, onSignal, onInspect }: Props) {
       else if (site && (site !== 'workshop' || state.minted))
         onInspect({ site })
     }
-    const carry = (point: Vector3) => {
-      if (!hand.current) return
-      const moved = slide(hand.current, point, isOpen(state))
-      hand.current = { x: moved.x, z: moved.z }
+    const push = (from: { x: number; z: number }, point: Vector3) => {
+      const moved = slide(from, point, isOpen(state))
       if (moved.blocked && !bumped) {
         bumped = true
         if (!isOpen(state)) state.denied = state.time
         onSignal('denied')
       }
       if (!moved.blocked) bumped = false
+      return moved
+    }
+    const carry = (point: Vector3) => {
+      if (!hand.current) return
+      const moved = push(hand.current, point)
+      hand.current = { x: moved.x, z: moved.z }
     }
     const take = (from: 'workshop' | 'belt', cell: Cell) => {
       if (from === 'workshop') {
@@ -187,6 +194,8 @@ export function Input({ game, onSignal, onInspect }: Props) {
         if (!belt || !remove(state, ...cell)) return
         tile = { at: cell, dir: belt.dir, from: { cell, dir: belt.dir } }
       }
+      const [x, z] = toWorld(...cell)
+      drag = { x, z }
       aim('grabbing')
       onSignal('lift')
       show()
@@ -203,6 +212,7 @@ export function Input({ game, onSignal, onInspect }: Props) {
       unhold(state)
       if (tile?.from) build(state, ...tile.from.cell, tile.from.dir)
       tile = null
+      drag = null
       show()
       hand.current = null
       aim('')
@@ -241,7 +251,7 @@ export function Input({ game, onSignal, onInspect }: Props) {
       } else if (workshop(aimed)) {
         down.cell = aimed!
         down.from = 'workshop'
-      } else if (state.belts.get(at(cell))?.fixed === false) down.from = 'belt'
+      } else if (loose(cell)) down.from = 'belt'
       canvas.setPointerCapture(event.pointerId)
     }
     const onMove = (event: PointerEvent) => {
@@ -250,7 +260,7 @@ export function Input({ game, onSignal, onInspect }: Props) {
         const found = state.held ? null : nearest(event)
         lit.current = found?.id ?? null
         const cell = point ? toCell(point.x, point.z) : null
-        const belt = cell && state.belts.get(at(cell))?.fixed === false
+        const belt = cell && loose(cell)
         aim(found || belt || workshop(under(event)) ? 'grab' : '')
         return
       }
@@ -264,9 +274,12 @@ export function Input({ game, onSignal, onInspect }: Props) {
         take(down.from, down.cell)
         down.from = null
       }
-      if (!tile) return
+      if (!tile || !drag) return
+      const moved = push(drag, point)
+      drag = { x: moved.x, z: moved.z }
       const aimed = under(event)
-      const target = workshop(aimed) ? aimed! : toCell(point.x, point.z)
+      const target =
+        workshop(aimed) && !moved.blocked ? aimed! : toCell(moved.x, moved.z)
       if (same(target, tile.at)) return
       tile.dir = dirTo(tile.at, target)
       tile.at = target
@@ -281,7 +294,7 @@ export function Input({ game, onSignal, onInspect }: Props) {
       if (!down || down.id !== event.pointerId) return
       clearTimeout(press)
       const tapped = state.held?.from ?? down.cell
-      const turns = !down.moved && state.belts.get(at(tapped))?.fixed === false
+      const turns = !down.moved && loose(tapped)
       if (state.held && turns) {
         unhold(state)
         turn(tapped)
@@ -307,6 +320,7 @@ export function Input({ game, onSignal, onInspect }: Props) {
       } else if (tile) put(tile)
       else if (turns) turn(down.cell)
       tile = null
+      drag = null
       show()
       hand.current = null
       aim('')

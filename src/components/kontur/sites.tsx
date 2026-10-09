@@ -14,6 +14,7 @@ import { Lot } from './models/lot'
 import { RocketSite } from './models/rocket'
 import { Shop } from './models/shop'
 import { TaxOffice } from './models/tax'
+import { Toll } from './models/toll'
 import { Workshop } from './models/workshop'
 
 function grid(tint: string) {
@@ -147,6 +148,7 @@ export function Sites({
                 <RocketSite key={stage} game={game} stage={stage} />
               )}
             </Bounce>
+            {name === 'booth' && <Toll game={game} />}
           </group>
         )
       })}
