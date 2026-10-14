@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ChevronUp, ScanSearch } from 'lucide-react'
-import { FullscreenButton, useFullscreen } from '../fullscreen'
+import { FullscreenButton, PlayCover, useFullscreen } from '../fullscreen'
 import { SceneBoundary } from '../scene-boundary'
 import {
   loadSlide,
@@ -153,6 +153,7 @@ export default function EpamStory({
               <span ref={loaded}>you loaded 0 · 0.0 MB (0%)</span>
             </p>
           )}
+          <PlayCover full={full} onClick={onFull} />
           <FullscreenButton full={full} onClick={onFull} className="e-full" />
           <div className="e-hud" data-more={more ? '' : undefined}>
             <div className="e-command">

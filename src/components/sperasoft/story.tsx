@@ -9,6 +9,7 @@ import {
   type PointerEvent,
 } from 'react'
 import { ArrowDown, RotateCcw, StepForward } from 'lucide-react'
+import { FullscreenButton, PlayCover, useFullscreen } from '../fullscreen'
 import { SceneBoundary } from '../scene-boundary'
 import { useGame } from './use-game'
 import { clamp } from './game'
@@ -46,6 +47,7 @@ export default function SperasoftStory({
     return () => watch.disconnect()
   }, [setPitchLive])
   const [scrolled, setScrolled] = useState(false)
+  const [full, onFull] = useFullscreen(world)
   const keeperDrag = useRef<number | null>(null)
   const released = game.scene.gate >= 1
   const canThrow =
@@ -137,7 +139,11 @@ export default function SperasoftStory({
           the editor stable.
         </p>
       </aside>
-      <div className="spera-world" ref={world}>
+      <div
+        className="spera-world"
+        ref={world}
+        data-full={full ? '' : undefined}
+      >
         <div className="spera-pitch-zone" ref={pitch} aria-hidden="true" />
         <figure
           className="spera-canvas"
@@ -166,6 +172,10 @@ export default function SperasoftStory({
             get there
             <ArrowDown size={16} />
           </span>
+        )}
+        <PlayCover full={full} onClick={onFull} />
+        {full && (
+          <FullscreenButton full onClick={onFull} className="spera-full" />
         )}
         <div className="spera-tools">
           {reduced && released && (

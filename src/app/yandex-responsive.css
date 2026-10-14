@@ -148,3 +148,16 @@
     transition: none !important;
   }
 }
+@media (max-width: 700px) and (min-height: 501px) {
+  .hiring-story {
+    overflow: clip;
+  }
+  .hiring-office {
+    position: sticky;
+    top: 42px;
+    z-index: 3;
+  }
+  .hiring-daybar {
+    top: 247px;
+  }
+}

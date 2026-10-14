@@ -377,4 +377,12 @@
   inset: 0;
   z-index: 30;
   margin: 0;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+.project-dialog:has([data-full]) {
+  overflow: hidden;
+}
+.play-cover {
+  display: none;
 }
