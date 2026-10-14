@@ -403,13 +403,13 @@
   .spera-fan-hit {
     touch-action: pan-y;
   }
-  .spera-world[data-full] {
+  .spera-frame[data-full] {
+    background: #eae9dd;
+  }
+  .spera-frame[data-full] .spera-world {
     width: auto;
     height: 100%;
-    max-width: 100%;
-    margin: auto;
-    background: #eae9dd;
-    box-shadow: 0 0 0 100vmax #eae9dd;
+    margin: 0 auto;
   }
   .spera-full {
     position: absolute;
@@ -422,6 +422,9 @@
   .spera-world {
     width: min(100%, calc((100dvh - 49px) * 1.45));
     margin-inline: auto;
+  }
+  .spera-frame[data-full] .spera-narrative {
+    display: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {

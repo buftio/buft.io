@@ -156,6 +156,7 @@
     position: sticky;
     top: 42px;
     z-index: 3;
+    height: 205px;
   }
   .hiring-daybar {
     top: 247px;
