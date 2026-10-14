@@ -295,6 +295,7 @@
   dialog.project-dialog :has(> .play-cover) {
     overflow: clip;
     touch-action: pan-y;
+    isolation: isolate;
   }
   :not(.lumi-stage):has(> .play-cover)
     > :not(figure, .play-cover, .spera-narrative) {
