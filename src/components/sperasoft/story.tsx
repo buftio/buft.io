@@ -9,6 +9,7 @@ import {
   type PointerEvent,
 } from 'react'
 import { ArrowDown, RotateCcw, StepForward } from 'lucide-react'
+import { FullscreenButton, PlayCover, useFullscreen } from '../fullscreen'
 import { SceneBoundary } from '../scene-boundary'
 import { useGame } from './use-game'
 import { clamp } from './game'
@@ -46,6 +47,8 @@ export default function SperasoftStory({
     return () => watch.disconnect()
   }, [setPitchLive])
   const [scrolled, setScrolled] = useState(false)
+  const frame = useRef<HTMLDivElement>(null)
+  const [full, onFull] = useFullscreen(frame)
   const keeperDrag = useRef<number | null>(null)
   const released = game.scene.gate >= 1
   const canThrow =
@@ -137,289 +140,302 @@ export default function SperasoftStory({
           the editor stable.
         </p>
       </aside>
-      <div className="spera-world" ref={world}>
-        <div className="spera-pitch-zone" ref={pitch} aria-hidden="true" />
-        <figure
-          className="spera-canvas"
-          aria-label="Grenade playground connected by football chutes to a stadium"
-        >
-          <SceneBoundary compact onFailure={onReady}>
-            <GameScene state={game.scene} onReady={onReady} />
-          </SceneBoundary>
-        </figure>
-        <aside className="spera-narrative spera-artists">
-          <h3>For the artists</h3>
-          <p>
-            Artists make the game too. My Maya and Perforce integrations cut a
-            typical art task from 4 hours to 2.
-          </p>
-        </aside>
-        <aside className="spera-narrative spera-fifa">
-          <h3>Over to FIFA</h3>
-          <p>
-            On FIFA 2022 I worked on team management systems and the menus
-            around them, together with designers and QA.
-          </p>
-        </aside>
-        {!released && (
-          <span className="spera-sign" aria-hidden="true">
-            get there
-            <ArrowDown size={16} />
-          </span>
-        )}
-        <div className="spera-tools">
-          {reduced && released && (
-            <button
-              className="spera-icon"
-              aria-label="Advance footballs"
-              onClick={game.advance}
-            >
-              <StepForward size={22} />
-            </button>
-          )}
-        </div>
-        <button
-          className="spera-throw-area"
-          aria-label="Throw grenade. Drag back and release, or aim with arrow keys and press Enter."
-          disabled={!canThrow}
-          style={
-            {
-              '--tx': `${game.scene.trooper.x}%`,
-              '--ty': `${worldPercent(game.scene.trooper.y)}%`,
-            } as CSSProperties
-          }
-          onPointerDown={(event) => {
-            event.currentTarget.setPointerCapture(event.pointerId)
-            if (drag.current) return
-            drag.current = { ...point(event), pointerId: event.pointerId }
-            game.aim(keyboardAim.current, 0)
-          }}
-          onPointerMove={aimFrom}
-          onPointerUp={(event) => {
-            if (drag.current?.pointerId !== event.pointerId) return
-            aimFrom(event)
-            drag.current = null
-            game.throwGrenade()
-          }}
-          onLostPointerCapture={(event) => {
-            if (drag.current?.pointerId !== event.pointerId) return
-            drag.current = null
-            game.cancelThrow()
-          }}
-          onPointerCancel={(event) => {
-            if (drag.current?.pointerId !== event.pointerId) return
-            drag.current = null
-            game.cancelThrow()
-          }}
-          onKeyDown={(event) => {
-            if (event.key === 'Escape') {
-              event.preventDefault()
-              event.stopPropagation()
-              drag.current = null
-              game.cancelThrow()
-              return
-            }
-            const shift = {
-              ArrowLeft: [-3, 0],
-              ArrowRight: [3, 0],
-              ArrowUp: [0, -3],
-              ArrowDown: [0, 3],
-            }[event.key]
-            if (shift) {
-              event.preventDefault()
-              keyboardAim.current = {
-                x: clamp(keyboardAim.current.x + shift[0], -40, 66),
-                y: clamp(keyboardAim.current.y + shift[1], -62, -4),
-              }
-              game.aim(keyboardAim.current)
-            }
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault()
-              game.throwGrenade()
-            }
-          }}
-        />
-        <div
-          className="spera-score"
-          aria-label={`${game.scene.score[0]} to ${game.scene.score[1]}`}
-        >
-          <span key={`h${game.scene.score[0]}`}>{game.scene.score[0]}</span>
-          <span key={`a${game.scene.score[1]}`}>{game.scene.score[1]}</span>
-        </div>
-        {game.arrived && (
-          <button
-            className="spera-keeper-hit"
-            aria-label="Blue keeper. Drag, or use arrow left and right to move."
-            style={{
-              left: `${game.scene.homeKeeper.x}%`,
-              top: `${worldPercent(game.scene.homeKeeper.y)}%`,
-            }}
-            onPointerDown={(event) => {
-              keeperDrag.current = event.pointerId
-              event.currentTarget.setPointerCapture(event.pointerId)
-              game.moveKeeper(point(event).x)
-            }}
-            onPointerMove={(event) => {
-              if (keeperDrag.current === event.pointerId)
-                game.moveKeeper(point(event).x)
-            }}
-            onPointerUp={() => {
-              keeperDrag.current = null
-            }}
-            onPointerCancel={() => {
-              keeperDrag.current = null
-            }}
-            onLostPointerCapture={() => {
-              keeperDrag.current = null
-            }}
-            onKeyDown={(event) => {
-              if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-                event.preventDefault()
-                game.moveKeeper(
-                  game.scene.homeKeeper.x +
-                    (event.key === 'ArrowLeft' ? -2 : 2),
-                )
-              }
-            }}
-          />
-        )}
-        {football && (
-          <button
-            className={`spera-ball-hit ${canKick ? 'is-waiting' : ''}`}
-            aria-label="Flick football. Drag back and release. Arrow left and right aim, up and down change power, Enter kicks."
-            disabled={!canKick}
-            style={{
-              left: `${game.scene.player.x}%`,
-              top: `${worldPercent(game.scene.player.y - 1.75)}%`,
-            }}
-            onPointerDown={(event) => {
-              event.currentTarget.setPointerCapture(event.pointerId)
-              if (ballDrag.current) return
-              ballDrag.current = { ...point(event), pointerId: event.pointerId }
-              game.grabKick(true)
-            }}
-            onPointerMove={aimBall}
-            onPointerUp={(event) => {
-              if (ballDrag.current?.pointerId !== event.pointerId) return
-              aimBall(event)
-              ballDrag.current = null
-              game.grabKick(false)
-              game.play(shotAim.current)
-            }}
-            onLostPointerCapture={(event) => {
-              if (ballDrag.current?.pointerId !== event.pointerId) return
-              ballDrag.current = null
-              game.grabKick(false)
-            }}
-            onPointerCancel={(event) => {
-              if (ballDrag.current?.pointerId !== event.pointerId) return
-              ballDrag.current = null
-              game.grabKick(false)
-            }}
-            onKeyDown={(event) => {
-              if (event.key === 'Escape' && ballDrag.current) {
-                event.preventDefault()
-                event.stopPropagation()
-                ballDrag.current = null
-                game.grabKick(false)
-                return
-              }
-              if (
-                ![
-                  'ArrowLeft',
-                  'ArrowRight',
-                  'ArrowUp',
-                  'ArrowDown',
-                  'Enter',
-                  ' ',
-                ].includes(event.key)
-              )
-                return
-              event.preventDefault()
-              if (event.key === 'Enter' || event.key === ' ') {
-                game.play(shotAim.current)
-                return
-              }
-              let angle = Math.atan2(shotAim.current.y, shotAim.current.x)
-              let power = Math.hypot(shotAim.current.x, shotAim.current.y)
-              if (event.key === 'ArrowLeft') angle -= Math.PI / 36
-              if (event.key === 'ArrowRight') angle += Math.PI / 36
-              if (event.key === 'ArrowUp')
-                power = Math.min(MAX_POWER, power + 4)
-              if (event.key === 'ArrowDown') power = Math.max(8, power - 4)
-              shotAim.current = {
-                x: Math.cos(angle) * power,
-                y: Math.sin(angle) * power,
-              }
-              game.aimKick(shotAim.current)
-            }}
-          />
-        )}
-        <LooseBalls
-          balls={game.scene.balls}
-          world={world}
-          grab={game.grabBall}
-          move={game.moveBall}
-          drop={game.dropBall}
-        />
-        {fans.map((fan, id) => (
-          <button
-            key={id}
-            className="spera-fan-hit"
-            aria-label={`Poke fan ${id + 1}`}
-            data-fan={id}
-            style={{
-              left: `${fan.x.toFixed(2)}%`,
-              top: `${worldPercent(fan.y - 1.6)}%`,
-            }}
-            onClick={() => game.pokeFan(id)}
-          />
-        ))}
-        {(game.scene.outcome === 'won' || game.scene.outcome === 'lost') && (
-          <aside className="spera-narrative spera-ending">
-            <h3>Full time</h3>
+      <div
+        className="spera-frame"
+        ref={frame}
+        data-full={full ? '' : undefined}
+      >
+        <div className="spera-world" ref={world}>
+          <div className="spera-pitch-zone" ref={pitch} aria-hidden="true" />
+          <figure
+            className="spera-canvas"
+            aria-label="Grenade playground connected by football chutes to a stadium"
+          >
+            <SceneBoundary compact onFailure={onReady}>
+              <GameScene state={game.scene} onReady={onReady} />
+            </SceneBoundary>
+          </figure>
+          <aside className="spera-narrative spera-artists">
+            <h3>For the artists</h3>
             <p>
-              Most of what I built at Sperasoft was for the people making the
-              game: designers, artists and QA.
+              Artists make the game too. My Maya and Perforce integrations cut a
+              typical art task from 4 hours to 2.
             </p>
           </aside>
-        )}
-        <div className="spera-match" aria-label="Football controls">
-          <span className="spera-kicks">
-            <span className="sr-only">
-              {game.scene.shotsLeft} kicks remaining
+          <aside className="spera-narrative spera-fifa">
+            <h3>Over to FIFA</h3>
+            <p>
+              On FIFA 2022 I worked on team management systems and the menus
+              around them, together with designers and QA.
+            </p>
+          </aside>
+          {!released && (
+            <span className="spera-sign" aria-hidden="true">
+              get there
+              <ArrowDown size={16} />
             </span>
-            {[0, 1, 2].map((i) => (
-              <i
-                key={i}
-                aria-hidden="true"
-                className={i < game.scene.shotsLeft ? 'available' : ''}
-              />
-            ))}
-          </span>
+          )}
+          <PlayCover full={full} onClick={onFull} />
+          {full && (
+            <FullscreenButton full onClick={onFull} className="spera-full" />
+          )}
+          <div className="spera-tools">
+            {reduced && released && (
+              <button
+                className="spera-icon"
+                aria-label="Advance footballs"
+                onClick={game.advance}
+              >
+                <StepForward size={22} />
+              </button>
+            )}
+          </div>
           <button
-            className="spera-icon"
-            aria-label="Retry"
-            disabled={
-              game.scene.outcome !== 'won' && game.scene.outcome !== 'lost'
+            className="spera-throw-area"
+            aria-label="Throw grenade. Drag back and release, or aim with arrow keys and press Enter."
+            disabled={!canThrow}
+            style={
+              {
+                '--tx': `${game.scene.trooper.x}%`,
+                '--ty': `${worldPercent(game.scene.trooper.y)}%`,
+              } as CSSProperties
             }
-            onClick={() => {
-              ballDrag.current = null
-              shotAim.current = { x: 0, y: -44 }
-              game.retry()
+            onPointerDown={(event) => {
+              event.currentTarget.setPointerCapture(event.pointerId)
+              if (drag.current) return
+              drag.current = { ...point(event), pointerId: event.pointerId }
+              game.aim(keyboardAim.current, 0)
             }}
+            onPointerMove={aimFrom}
+            onPointerUp={(event) => {
+              if (drag.current?.pointerId !== event.pointerId) return
+              aimFrom(event)
+              drag.current = null
+              game.throwGrenade()
+            }}
+            onLostPointerCapture={(event) => {
+              if (drag.current?.pointerId !== event.pointerId) return
+              drag.current = null
+              game.cancelThrow()
+            }}
+            onPointerCancel={(event) => {
+              if (drag.current?.pointerId !== event.pointerId) return
+              drag.current = null
+              game.cancelThrow()
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') {
+                event.preventDefault()
+                event.stopPropagation()
+                drag.current = null
+                game.cancelThrow()
+                return
+              }
+              const shift = {
+                ArrowLeft: [-3, 0],
+                ArrowRight: [3, 0],
+                ArrowUp: [0, -3],
+                ArrowDown: [0, 3],
+              }[event.key]
+              if (shift) {
+                event.preventDefault()
+                keyboardAim.current = {
+                  x: clamp(keyboardAim.current.x + shift[0], -40, 66),
+                  y: clamp(keyboardAim.current.y + shift[1], -62, -4),
+                }
+                game.aim(keyboardAim.current)
+              }
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                game.throwGrenade()
+              }
+            }}
+          />
+          <div
+            className="spera-score"
+            aria-label={`${game.scene.score[0]} to ${game.scene.score[1]}`}
           >
-            <RotateCcw size={22} />
-          </button>
-          {reduced && !game.arrived && released && (
+            <span key={`h${game.scene.score[0]}`}>{game.scene.score[0]}</span>
+            <span key={`a${game.scene.score[1]}`}>{game.scene.score[1]}</span>
+          </div>
+          {game.arrived && (
+            <button
+              className="spera-keeper-hit"
+              aria-label="Blue keeper. Drag, or use arrow left and right to move."
+              style={{
+                left: `${game.scene.homeKeeper.x}%`,
+                top: `${worldPercent(game.scene.homeKeeper.y)}%`,
+              }}
+              onPointerDown={(event) => {
+                keeperDrag.current = event.pointerId
+                event.currentTarget.setPointerCapture(event.pointerId)
+                game.moveKeeper(point(event).x)
+              }}
+              onPointerMove={(event) => {
+                if (keeperDrag.current === event.pointerId)
+                  game.moveKeeper(point(event).x)
+              }}
+              onPointerUp={() => {
+                keeperDrag.current = null
+              }}
+              onPointerCancel={() => {
+                keeperDrag.current = null
+              }}
+              onLostPointerCapture={() => {
+                keeperDrag.current = null
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                  event.preventDefault()
+                  game.moveKeeper(
+                    game.scene.homeKeeper.x +
+                      (event.key === 'ArrowLeft' ? -2 : 2),
+                  )
+                }
+              }}
+            />
+          )}
+          {football && (
+            <button
+              className={`spera-ball-hit ${canKick ? 'is-waiting' : ''}`}
+              aria-label="Flick football. Drag back and release. Arrow left and right aim, up and down change power, Enter kicks."
+              disabled={!canKick}
+              style={{
+                left: `${game.scene.player.x}%`,
+                top: `${worldPercent(game.scene.player.y - 1.75)}%`,
+              }}
+              onPointerDown={(event) => {
+                event.currentTarget.setPointerCapture(event.pointerId)
+                if (ballDrag.current) return
+                ballDrag.current = {
+                  ...point(event),
+                  pointerId: event.pointerId,
+                }
+                game.grabKick(true)
+              }}
+              onPointerMove={aimBall}
+              onPointerUp={(event) => {
+                if (ballDrag.current?.pointerId !== event.pointerId) return
+                aimBall(event)
+                ballDrag.current = null
+                game.grabKick(false)
+                game.play(shotAim.current)
+              }}
+              onLostPointerCapture={(event) => {
+                if (ballDrag.current?.pointerId !== event.pointerId) return
+                ballDrag.current = null
+                game.grabKick(false)
+              }}
+              onPointerCancel={(event) => {
+                if (ballDrag.current?.pointerId !== event.pointerId) return
+                ballDrag.current = null
+                game.grabKick(false)
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape' && ballDrag.current) {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  ballDrag.current = null
+                  game.grabKick(false)
+                  return
+                }
+                if (
+                  ![
+                    'ArrowLeft',
+                    'ArrowRight',
+                    'ArrowUp',
+                    'ArrowDown',
+                    'Enter',
+                    ' ',
+                  ].includes(event.key)
+                )
+                  return
+                event.preventDefault()
+                if (event.key === 'Enter' || event.key === ' ') {
+                  game.play(shotAim.current)
+                  return
+                }
+                let angle = Math.atan2(shotAim.current.y, shotAim.current.x)
+                let power = Math.hypot(shotAim.current.x, shotAim.current.y)
+                if (event.key === 'ArrowLeft') angle -= Math.PI / 36
+                if (event.key === 'ArrowRight') angle += Math.PI / 36
+                if (event.key === 'ArrowUp')
+                  power = Math.min(MAX_POWER, power + 4)
+                if (event.key === 'ArrowDown') power = Math.max(8, power - 4)
+                shotAim.current = {
+                  x: Math.cos(angle) * power,
+                  y: Math.sin(angle) * power,
+                }
+                game.aimKick(shotAim.current)
+              }}
+            />
+          )}
+          <LooseBalls
+            balls={game.scene.balls}
+            world={world}
+            grab={game.grabBall}
+            move={game.moveBall}
+            drop={game.dropBall}
+          />
+          {fans.map((fan, id) => (
+            <button
+              key={id}
+              className="spera-fan-hit"
+              aria-label={`Poke fan ${id + 1}`}
+              data-fan={id}
+              style={{
+                left: `${fan.x.toFixed(2)}%`,
+                top: `${worldPercent(fan.y - 1.6)}%`,
+              }}
+              onClick={() => game.pokeFan(id)}
+            />
+          ))}
+          {(game.scene.outcome === 'won' || game.scene.outcome === 'lost') && (
+            <aside className="spera-narrative spera-ending">
+              <h3>Full time</h3>
+              <p>
+                Most of what I built at Sperasoft was for the people making the
+                game: designers, artists and QA.
+              </p>
+            </aside>
+          )}
+          <div className="spera-match" aria-label="Football controls">
+            <span className="spera-kicks">
+              <span className="sr-only">
+                {game.scene.shotsLeft} kicks remaining
+              </span>
+              {[0, 1, 2].map((i) => (
+                <i
+                  key={i}
+                  aria-hidden="true"
+                  className={i < game.scene.shotsLeft ? 'available' : ''}
+                />
+              ))}
+            </span>
             <button
               className="spera-icon"
-              aria-label="Advance footballs"
-              onClick={game.advance}
+              aria-label="Retry"
+              disabled={
+                game.scene.outcome !== 'won' && game.scene.outcome !== 'lost'
+              }
+              onClick={() => {
+                ballDrag.current = null
+                shotAim.current = { x: 0, y: -44 }
+                game.retry()
+              }}
             >
-              <StepForward size={22} />
+              <RotateCcw size={22} />
             </button>
-          )}
+            {reduced && !game.arrived && released && (
+              <button
+                className="spera-icon"
+                aria-label="Advance footballs"
+                onClick={game.advance}
+              >
+                <StepForward size={22} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
       {released && !scrolled && (

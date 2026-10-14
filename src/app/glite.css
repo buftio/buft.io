@@ -346,3 +346,22 @@
     scroll-margin-top: 49px;
   }
 }
+@media (max-width: 650px) and (min-height: 501px) {
+  .glite-story {
+    overflow: clip;
+  }
+  .glite-cafe {
+    position: sticky;
+    top: 42px;
+    z-index: 3;
+    background: linear-gradient(#ead8b0 90%, #ead8b000);
+  }
+  .glite-scene-controls {
+    position: sticky;
+    top: 260px;
+    z-index: 4;
+    align-self: flex-end;
+    order: 0;
+    margin: -48px 0 8px;
+  }
+}

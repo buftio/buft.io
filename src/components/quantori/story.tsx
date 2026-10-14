@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Heart, HeartCrack, RotateCcw, Siren, Trophy } from 'lucide-react'
 import { Agent } from './agent'
-import { FullscreenButton, useFullscreen } from '../fullscreen'
+import { FullscreenButton, PlayCover, useFullscreen } from '../fullscreen'
 import { SceneBoundary } from '../scene-boundary'
 import { DURATION, LIVES, collect, fireAhead, newGame } from './defense'
 import { Jigsaw, Page, Sparks } from './jigsaw'
@@ -282,6 +282,7 @@ export default function QuantoriStory({
               </p>
             )}
           </div>
+          <PlayCover full={full} onClick={onFull} />
           <FullscreenButton full={full} onClick={onFull} className="q-full" />
           {phase === 'dock' && <Agent dock={dock} note={note} onAsk={onAsk} />}
           {phase === 'papers' && !rolling && <Jigsaw onSolved={solved} />}

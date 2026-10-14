@@ -259,4 +259,46 @@
     width: 44px;
     height: 44px;
   }
+  dialog.project-dialog {
+    overscroll-behavior: contain;
+  }
+  html:has(dialog.project-dialog[open]) {
+    overflow: hidden;
+  }
+  .play-cover {
+    position: absolute;
+    inset: 0;
+    z-index: 25;
+    display: grid;
+    place-items: end center;
+    padding: 0 0 22px;
+    border: 0;
+    background: transparent;
+    touch-action: pan-y;
+    cursor: pointer;
+  }
+  .play-cover span {
+    position: sticky;
+    bottom: 22px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: 999px;
+    background: #1f2a3d;
+    color: #fff;
+    font:
+      600 15px Manrope,
+      sans-serif;
+    box-shadow: 0 10px 30px #1f2a3d40;
+  }
+  dialog.project-dialog :has(> .play-cover) {
+    overflow: clip;
+    touch-action: pan-y;
+    isolation: isolate;
+  }
+  :not(.lumi-stage):has(> .play-cover)
+    > :not(figure, .play-cover, .spera-narrative) {
+    visibility: hidden;
+  }
 }

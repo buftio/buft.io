@@ -28,7 +28,7 @@ import { isEnd, socketsFor, useDrag, type Source } from './use-drag'
 import { useLab } from './use-lab'
 import { useBoardMotion } from './board-motion'
 import { ChemistryTerm } from './chemistry-term'
-import { FullscreenButton, useFullscreen } from '../fullscreen'
+import { FullscreenButton, PlayCover, useFullscreen } from '../fullscreen'
 
 const Bench = dynamic(() => import('./bench'), { ssr: false })
 const STEP = 0.35
@@ -382,6 +382,7 @@ export default function LumiprobeStory({
               {drag.element === 'C' ? 'C' : 'OH'}
             </span>
           )}
+          <PlayCover full={full} onClick={toggleFull} />
           <FullscreenButton
             full={full}
             onClick={toggleFull}

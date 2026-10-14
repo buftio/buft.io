@@ -10,7 +10,7 @@ import {
   SquareChevronUp,
   Stamp,
 } from 'lucide-react'
-import { FullscreenButton, useFullscreen } from '../fullscreen'
+import { FullscreenButton, PlayCover, useFullscreen } from '../fullscreen'
 import { SceneBoundary } from '../scene-boundary'
 import { boop, fanfare, pickup, pop, squeak } from '../quantori/sound'
 import {
@@ -248,6 +248,7 @@ export default function KonturStory({
               service, the bank API and the customs logs were real.
             </p>
           )}
+          <PlayCover full={full} onClick={onFull} />
           <FullscreenButton full={full} onClick={onFull} className="k-full" />
           {look && (
             <Inspect

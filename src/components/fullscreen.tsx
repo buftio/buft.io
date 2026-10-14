@@ -1,6 +1,6 @@
 'use client'
 
-import { Maximize2, Minimize2 } from 'lucide-react'
+import { Maximize2, Minimize2, Play } from 'lucide-react'
 import { useEffect, useRef, useState, type RefObject } from 'react'
 
 export function useFullscreen(target: RefObject<HTMLElement | null>) {
@@ -43,6 +43,24 @@ export function FullscreenButton({
       aria-label={full ? 'Exit full screen' : 'Full screen'}
     >
       {full ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+    </button>
+  )
+}
+
+export function PlayCover({
+  full,
+  onClick,
+}: {
+  full: boolean
+  onClick: () => void
+}) {
+  if (full) return null
+  return (
+    <button type="button" className="play-cover" onClick={onClick}>
+      <span>
+        <Play size={15} />
+        Tap to play
+      </span>
     </button>
   )
 }
